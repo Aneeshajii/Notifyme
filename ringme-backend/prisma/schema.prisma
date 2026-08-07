@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password     String?
+  name         String?
+  lastName     String?
+  googleId     String?   @unique
+  phone        String?   @unique
+  address      String?
+  pincode      String?
+  city         String?
+  state        String?
+  isPremium    Boolean   @default(false)
+  premiumGrantType String? // e.g., "Friend", "Family", "Influencer"
+  premiumExpiresAt DateTime?
+  role              String    @default("FREE_USER") // MASTER_ADMIN, ADMIN, MODERATOR, PREMIUM_USER, FREE_USER
+  isBlocked         Boolean   @default(false)
+  profilePicUrl     String?
+  
+  // MFA Fields
+  mfaEnabled        Boolean   @default(false)
+  mfaSecret         String?
+
+  // Social Auth Fields
+  appleId           String?   @unique
+  phoneVerified     Boolean   @default(false)
+  subscriptionId    String?
+  pendingSubscriptionId String?
+  subscription      SubscriptionPlan? @relation(fields: [subscriptionId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  tags              Tag[]
+  payments          Payment[]
+  notifications     Notification[]
+  familyShares      FamilyShare[] @relation("FamilyOwner")
+  otpCodes          OtpVerification[]
+  sessions          Session[]
+  blockedScanners   BlockedScanner[]
+}
+
+model BlockedScanner {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  scannerId String
+  createdAt DateTime @default(now())
+  
+  @@unique([ownerId, scannerId])
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  price       Float
+  maxQrCodes  Int
+  benefits    String   @default("[]") // JSON string array of benefits
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users       User[]
+}
+
+model SystemSetting {
+  id             String   @id @default("global") // Single record
+  allowVoice     Boolean  @default(true)
+  allowFile      Boolean  @default(true)
+  allowLocation  Boolean  @default(true)
+  allowVideoCall Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
+
+model Session {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String    @unique
+  deviceInfo   String?
+  ipAddress    String?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+}
+
+model AuditLog {
+  id           String    @id @default(uuid())
+  adminId      String
+  action       String    // e.g., "BLOCK_USER", "GRANT_PREMIUM"
+  entityId     String?   // ID of the user or tag affected
+  details      String?   // JSON string of changes or reason
+  ipAddress    String?
+  createdAt    DateTime  @default(now())
+}
+
+model Tag {
+  id           String    @id @default(uuid())
+  ownerId      String
+  owner        User      @relation(fields: [ownerId], references: [id])
+  tagId        String    @unique // The unique 6-char ID printed on the QR
+  name         String
+  plateNumber  String?
+  status       String    @default("active") // active, paused
+  isActive     Boolean   @default(true)
+  qrCodeDataUrl String?
+  placeholderMessage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  messages     Message[]
+  calls        CallLog[]
+  scans        ScanHistory[]
+  conversations Conversation[]
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  tagId     String
+  tag       Tag       @relation(fields: [tagId], references: [id])
+  scannerId String?   // Unique ID to track the scanner across sessions
+  status    String    @default("open") // open, closed
+  startedAt DateTime  @default(now())
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  content        String
+  senderInfo     String       @default("Anonymous")
+  senderRole     String       @default("scanner") // 'owner' or 'scanner'
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tagId          String
+  tag            Tag          @relation(fields: [tagId], references: [id])
+  status         String       @default("sent") // sent, delivered, read
+  mediaUrl       String?
+  mediaType      String?      // image, audio, file
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime     @default(now())
+}
+
+model CallLog {
+  id           String    @id @default(uuid())
+  callerId     String?
+  tagId        String
+  tag          Tag       @relation(fields: [tagId], references: [id])
+  status       String    @default("completed") // completed, missed, rejected
+  duration     Int?      // Duration in seconds
+  createdAt    DateTime  @default(now())
+  endedAt      DateTime?
+}
+
+model Payment {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  amount       Float
+  method       String    // Google Pay, PhonePe, Paytm
+  status       String    @default("pending") // pending, completed, failed
+  createdAt    DateTime  @default(now())
+}
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  role         String    @default("admin") // super_admin, admin, moderator, support
+  is2FAEnabled Boolean   @default(false)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model SupportTicket {
+  id           String    @id @default(uuid())
+  userId       String
+  subject      String
+  description  String
+  status       String    @default("open") // open, in_progress, closed
+  priority     String    @default("medium") // low, medium, high, urgent
+  adminReply   String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model AbuseReport {
+  id           String    @id @default(uuid())
+  reportedId   String    // ID of user or tag being reported
+  reportType   String    // spam, fake_account, harassment
+  description  String?
+  status       String    @default("pending") // pending, reviewed, resolved
+  createdAt    DateTime  @default(now())
+}
+
+model SystemLog {
+  id           String    @id @default(uuid())
+  level        String    // info, warning, error, critical
+  action       String
+  description  String
+  adminId      String?
+  createdAt    DateTime  @default(now())
+}
+
+model ScanHistory {
+  id           String    @id @default(uuid())
+  tagId        String
+  tag          Tag       @relation(fields: [tagId], references: [id])
+  scannedAt    DateTime  @default(now())
+  deviceInfo   String?
+  latitude     Float?
+  longitude    Float?
+}
+
+model Notification {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  title        String
+  message      String
+  type         String    // system, scan, message, subscription
+  isRead       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+model FamilyShare {
+  id           String    @id @default(uuid())
+  ownerId      String
+  owner        User      @relation("FamilyOwner", fields: [ownerId], references: [id])
+  memberEmail  String
+  status       String    @default("pending") // pending, accepted, rejected
+  createdAt    DateTime  @default(now())
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  phone     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
