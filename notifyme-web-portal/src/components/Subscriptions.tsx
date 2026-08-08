@@ -139,7 +139,7 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
                           onMouseOver={(e) => { if (!isCurrent) e.currentTarget.style.transform = 'translateY(-1px)'; }}
                           onMouseOut={(e) => { if (!isCurrent) e.currentTarget.style.transform = 'translateY(0)'; }}
                       >
-                          {isCurrent ? 'Active Subscription' : 'Get Started'}
+                          {isCurrent ? 'Current Plan' : (profileData?.isPremium ? 'Downgrade' : `Upgrade to ${plan.name}`)}
                       </button>
 
                       <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>What's included</div>

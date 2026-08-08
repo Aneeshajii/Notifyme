@@ -11,6 +11,7 @@ import SubscriptionsTab from './components/SubscriptionsTab';
 import CommunicationsTab from './components/CommunicationsTab';
 import GlobalSettings from './components/GlobalSettings';
 import ChatViewer from './components/ChatViewer';
+import SecurityAlertsTab from './components/SecurityAlertsTab';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -46,7 +47,7 @@ interface TagType {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'tags' | 'communications' | 'subscriptions' | 'analytics' | 'notifications' | 'support' | 'abuse' | 'security' | 'content' | 'monitoring' | 'settings' | 'reports'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'tags' | 'communications' | 'subscriptions' | 'analytics' | 'notifications' | 'support' | 'abuse' | 'security' | 'content' | 'monitoring' | 'settings' | 'reports' | 'ai-alerts'>('dashboard');
   const [users, setUsers] = useState<UserType[]>([]);
   const [tags, setTags] = useState<TagType[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -57,6 +58,7 @@ function App() {
   // Auth State
   const [token, setToken] = useState<string | null>(localStorage.getItem('adminToken'));
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const [isCheckingSession, setIsCheckingSession] = useState(!!token);
   // Auth states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,6 +78,9 @@ function App() {
   // Detailed User View State
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [selectedUserMessages, setSelectedUserMessages] = useState<any[]>([]);
+  const [selectedUserAuditLogs, setSelectedUserAuditLogs] = useState<any[]>([]);
+  const [auditLogCategoryFilter, setAuditLogCategoryFilter] = useState<string>('All Activity');
+  const [auditLogSearchQuery, setAuditLogSearchQuery] = useState<string>('');
   const [loadingDetails, setLoadingDetails] = useState(false);
   
   // Advanced User Management State
@@ -104,6 +109,8 @@ function App() {
     setIsBlockingUser(false);
     setBlockReason('');
     setEditingTagPlaceholder(null);
+    setAuditLogCategoryFilter('All Activity');
+    setAuditLogSearchQuery('');
     setLoadingDetails(true);
 
     try {
@@ -114,10 +121,14 @@ function App() {
     }
 
     try {
-      const res = await axios.get(`${API_BASE}/messages/user/${user.id}`);
-      setSelectedUserMessages(res.data);
+      const [msgRes, auditRes] = await Promise.all([
+          axios.get(`${API_BASE}/messages/user/${user.id}`),
+          axios.get(`${API_BASE}/auth/users/${user.id}/audit-logs`)
+      ]);
+      setSelectedUserMessages(msgRes.data);
+      setSelectedUserAuditLogs(auditRes.data);
     } catch (err) {
-      console.error("Error fetching user messages", err);
+      console.error("Error fetching user details", err);
     } finally {
       setLoadingDetails(false);
     }
@@ -309,6 +320,7 @@ function App() {
         }
       } finally {
         setLoading(false);
+        setIsCheckingSession(false);
       }
     };
     fetchData();
@@ -381,12 +393,31 @@ function App() {
       }
   };
 
-  const handleLogout = () => {
-      localStorage.removeItem('adminToken');
-      setToken(null);
-      setIsAuthenticated(false);
-      setIsMfaStep(false);
+  const handleLogout = async () => {
+      try {
+          await axios.post(`${API_BASE}/auth/logout`);
+      } catch (err) {
+          console.error("Logout API failed", err);
+      } finally {
+          localStorage.removeItem('adminToken');
+          setToken(null);
+          setIsAuthenticated(false);
+          setIsMfaStep(false);
+          setIsCheckingSession(false);
+      }
   };
+
+  if (isCheckingSession) {
+      return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f1f5f9' }}>
+              <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+                  <ShieldAlert size={64} color="#4f46e5" />
+              </div>
+              <p style={{ marginTop: '16px', color: '#64748b', fontWeight: 'bold' }}>Verifying Admin Session...</p>
+              <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }`}</style>
+          </div>
+      );
+  }
 
   if (!token) {
       return (
@@ -480,6 +511,9 @@ function App() {
           <button className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'analytics' ? '#4f46e5' : '#94a3b8' }}>
             <BarChart size={20} /> Analytics & Reports
           </button>
+          <button className={`nav-item ${activeTab === 'ai-alerts' ? 'active' : ''}`} onClick={() => { setActiveTab('ai-alerts'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'ai-alerts' ? '#4f46e5' : '#94a3b8' }}>
+            <ShieldAlert size={20} /> Security Alerts
+          </button>
           <button className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => { setActiveTab('security'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'security' ? '#4f46e5' : '#94a3b8' }}>
             <Shield size={20} /> Security Dashboard
           </button>
@@ -491,9 +525,6 @@ function App() {
           </button>
           <button className={`nav-item ${activeTab === 'abuse' ? 'active' : ''}`} onClick={() => { setActiveTab('abuse'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'abuse' ? '#4f46e5' : '#94a3b8' }}>
             <AlertTriangle size={20} /> Abuse & Spam
-          </button>
-          <button className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => { setActiveTab('security'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'security' ? '#4f46e5' : '#94a3b8' }}>
-            <Lock size={20} /> Security Dashboard
           </button>
           <button className={`nav-item ${activeTab === 'content' ? 'active' : ''}`} onClick={() => { setActiveTab('content'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'content' ? '#4f46e5' : '#94a3b8' }}>
             <FileText size={20} /> Content Management
@@ -508,7 +539,7 @@ function App() {
             <Settings size={20} /> Platform Settings
           </button>
         </nav>
-        <button className="nav-item logout" style={{ color: '#ef4444', marginTop: 'auto' }}>
+        <button onClick={handleLogout} className="nav-item logout" style={{ color: '#ef4444', marginTop: 'auto' }}>
           <LogOut size={20} /> Sign Out
         </button>
       </aside>
@@ -707,6 +738,19 @@ function App() {
                                       )}
                                       
                                       <div style={{ marginTop: '12px' }}><strong>Joined:</strong> {new Date(selectedUser.createdAt).toLocaleDateString()}</div>
+                                      <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                          <strong>Account Status:</strong> 
+                                          <span style={{ 
+                                              padding: '2px 8px', 
+                                              borderRadius: '12px', 
+                                              fontSize: '12px', 
+                                              fontWeight: 'bold',
+                                              background: selectedUser.isBlocked ? '#fef2f2' : '#ecfdf5',
+                                              color: selectedUser.isBlocked ? '#ef4444' : '#10b981' 
+                                          }}>
+                                              {selectedUser.isBlocked ? 'Blocked' : 'Active'}
+                                          </span>
+                                      </div>
                                   </div>
                               </div>
 
@@ -752,22 +796,33 @@ function App() {
                           {/* Right Column: Tags & Activity */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                               <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                  <h3 style={{ margin: '0 0 20px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}><QrCode size={20} color="#4f46e5"/> Active QR Tags ({tags.filter(t => t.ownerId === selectedUser.id).length})</h3>
-                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                      {tags.filter(t => t.ownerId === selectedUser.id).map(tag => (
-                                          <div key={tag.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                  <strong style={{ color: '#0f172a' }}>{tag.name}</strong>
-                                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                      <span style={{ fontSize: '12px', background: tag.status === 'active' ? '#ecfdf5' : '#fef3c7', color: tag.status === 'active' ? '#10b981' : '#d97706', padding: '2px 8px', borderRadius: '100px', fontWeight: 'bold' }}>{tag.status}</span>
-                                                      <button onClick={() => handleTagStatusUpdate(tag.tagId, tag.status)} style={{ padding: '2px 8px', background: tag.status === 'active' ? '#fef3c7' : '#ecfdf5', color: tag.status === 'active' ? '#d97706' : '#10b981', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>{tag.status === 'active' ? 'Pause' : 'Resume'}</button>
-                                                      <button onClick={() => handleDeleteTag(tag.tagId)} style={{ padding: '2px 8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Del</button>
-                                                  </div>
-                                              </div>
-                                              <div style={{ fontSize: '14px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                                                  <span>Tag ID: <strong style={{color:'#4f46e5'}}>{tag.tagId}</strong></span>
-                                              </div>
-                                              <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h3 style={{ margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <QrCode size={20} color="#4f46e5"/> QR Code Management
+                                        </h3>
+                                        <span style={{ fontSize: '12px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '100px', color: '#475569', fontWeight: 'bold' }}>
+                                            Limit: {tags.filter(t => t.ownerId === selectedUser.id).length} / {selectedUser.subscription?.maxQrCodes || 1} Used
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        {tags.filter(t => t.ownerId === selectedUser.id).map(tag => (
+                                            <div key={tag.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <strong style={{ color: '#0f172a' }}>{tag.name}</strong>
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '12px', background: tag.status === 'active' ? '#ecfdf5' : (tag.status === 'paused' ? '#fef3c7' : '#fef2f2'), color: tag.status === 'active' ? '#10b981' : (tag.status === 'paused' ? '#d97706' : '#ef4444'), padding: '2px 8px', borderRadius: '100px', fontWeight: 'bold' }}>{tag.status}</span>
+                                                        <button onClick={() => handleTagStatusUpdate(tag.tagId, tag.status)} style={{ padding: '2px 8px', background: tag.status === 'active' ? '#fef3c7' : '#ecfdf5', color: tag.status === 'active' ? '#d97706' : '#10b981', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>{tag.status === 'active' ? 'Pause' : 'Resume'}</button>
+                                                        <button onClick={() => handleDeleteTag(tag.tagId)} style={{ padding: '2px 8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Del</button>
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '14px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span>Tag ID: <strong style={{color:'#4f46e5'}}>{tag.tagId}</strong></span>
+                                                    <span style={{ fontSize: '12px' }}>Scans: <strong>{tag._count?.scans || 0}</strong></span>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                    Created: {new Date(tag.createdAt).toLocaleDateString()}
+                                                </div>
+                                                <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
                                                   <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
                                                       <span>Scanner Placeholder:</span>
                                                       {!editingTagPlaceholder || editingTagPlaceholder !== tag.tagId ? (
@@ -797,6 +852,76 @@ function App() {
                                         <ChatViewer messages={selectedUserMessages} user={selectedUser} />
                                     )}
                                 </div>
+
+                                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                                      <h3 style={{ margin: '0 0 20px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}><ShieldAlert size={20} color="#4f46e5"/> Audit Logs</h3>
+                                      
+                                      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                                          <select 
+                                            value={auditLogCategoryFilter} 
+                                            onChange={(e) => setAuditLogCategoryFilter(e.target.value)}
+                                            style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', flex: 1 }}
+                                          >
+                                              <option>All Activity</option>
+                                              <option>Authentication</option>
+                                              <option>Profile</option>
+                                              <option>QR Codes</option>
+                                              <option>Subscription</option>
+                                              <option>Security</option>
+                                              <option>Support</option>
+                                          </select>
+                                          <div style={{ position: 'relative', flex: 2 }}>
+                                              <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                                              <input 
+                                                type="text" 
+                                                value={auditLogSearchQuery} 
+                                                onChange={(e) => setAuditLogSearchQuery(e.target.value)}
+                                                placeholder="Search activity..." 
+                                                style={{ width: '100%', padding: '8px 8px 8px 32px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                              />
+                                          </div>
+                                      </div>
+
+                                      {(() => {
+                                          const filteredLogs = selectedUserAuditLogs.filter(log => {
+                                              const actionLower = log.action.toLowerCase();
+                                              const detailsLower = (log.details || '').toLowerCase();
+                                              const matchesSearch = actionLower.includes(auditLogSearchQuery.toLowerCase()) || detailsLower.includes(auditLogSearchQuery.toLowerCase());
+                                              if (!matchesSearch) return false;
+                                              
+                                              switch(auditLogCategoryFilter) {
+                                                  case 'Authentication': return actionLower.includes('login') || actionLower.includes('logout') || actionLower.includes('account');
+                                                  case 'Profile': return actionLower.includes('profile');
+                                                  case 'QR Codes': return actionLower.includes('qr_');
+                                                  case 'Subscription': return actionLower.includes('subscrib');
+                                                  case 'Security': return actionLower.includes('password') || actionLower.includes('mfa') || actionLower.includes('block');
+                                                  case 'Support': return actionLower.includes('ticket');
+                                                  default: return true;
+                                              }
+                                          });
+
+                                          return filteredLogs.length > 0 ? (
+                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                                                  {filteredLogs.map(log => (
+                                                      <div key={log.id} style={{ padding: '12px', borderLeft: '4px solid #4f46e5', background: '#f8fafc', borderRadius: '0 8px 8px 0' }}>
+                                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                              <strong style={{ color: '#0f172a', fontSize: '14px' }}>{log.action.replace(/_/g, ' ')}</strong>
+                                                              <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(log.createdAt).toLocaleString()}</span>
+                                                          </div>
+                                                          <p style={{ margin: 0, fontSize: '12px', color: '#475569' }}>Admin ID: {log.adminId} | IP: {log.ipAddress || 'Unknown'}</p>
+                                                          {log.details && (
+                                                              <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', background: '#e2e8f0', padding: '8px', borderRadius: '4px', wordBreak: 'break-word' }}>
+                                                                  {log.details}
+                                                              </div>
+                                                          )}
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          ) : (
+                                              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No audit logs found matching criteria.</p>
+                                          );
+                                      })()}
+                                  </div>
                           </div>
                       </div>
                     </>
@@ -839,6 +964,7 @@ function App() {
               )}
 
               {activeTab === 'analytics' && <AnalyticsTab />}
+              {activeTab === 'ai-alerts' && <SecurityAlertsTab />}
               {activeTab === 'monitoring' && <MonitoringTab />}
               {activeTab === 'support' && <SupportTab />}
               {activeTab === 'reports' && <ReportsTab />}

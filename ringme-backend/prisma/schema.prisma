@@ -49,6 +49,7 @@ model User {
   otpCodes          OtpVerification[]
   sessions          Session[]
   blockedScanners   BlockedScanner[]
+  securityAlerts    SecurityAlert[]
 }
 
 model BlockedScanner {
@@ -200,8 +201,21 @@ model AbuseReport {
   reportedId   String    // ID of user or tag being reported
   reportType   String    // spam, fake_account, harassment
   description  String?
-  status       String    @default("pending") // pending, reviewed, resolved
+  status       String    @default("pending") // pending, reviewed, dismissed
   createdAt    DateTime  @default(now())
+}
+
+model SecurityAlert {
+  id              String   @id @default(uuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  riskLevel       String   // LOW, MEDIUM, HIGH, CRITICAL
+  reason          String
+  explanation     String?
+  conversationRef String?
+  status          String   @default("new") // new, reviewing, resolved, dismissed, escalated
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model SystemLog {

@@ -25,6 +25,15 @@ router.post('/purchase', verifyToken, async (req, res) => {
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
         
         if (!plan) {
+            await prisma.auditLog.create({
+                data: {
+                    adminId: req.user.id,
+                    action: 'USER_SUBSCRIPTION_FAILED',
+                    entityId: req.user.id,
+                    details: JSON.stringify({ reason: 'Subscription plan not found', location: 'POST /api/subscriptions/purchase', inputPlanId: planId }),
+                    ipAddress: req.ip || req.connection.remoteAddress
+                }
+            });
             return res.status(404).json({ error: 'Subscription plan not found.' });
         }
 
@@ -35,8 +44,27 @@ router.post('/purchase', verifyToken, async (req, res) => {
             }
         });
 
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'USER_SUBSCRIBED',
+                entityId: req.user.id,
+                details: JSON.stringify({ planId: plan.id, planName: plan.name }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+
         res.json({ message: 'Payment successful! Please verify your phone number to activate.', user: updatedUser });
     } catch (error) {
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'USER_SUBSCRIPTION_FAILED',
+                entityId: req.user.id,
+                details: JSON.stringify({ reason: error.message, location: 'POST /api/subscriptions/purchase' }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
         res.status(500).json({ error: error.message });
     }
 });

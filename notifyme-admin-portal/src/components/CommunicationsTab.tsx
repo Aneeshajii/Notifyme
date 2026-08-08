@@ -18,6 +18,7 @@ interface Conversation {
         name: string;
     };
     messages: Message[];
+    ownerName?: string;
 }
 
 interface Message {
@@ -75,12 +76,15 @@ const CommunicationsTab: React.FC = () => {
     const fetchAllConversations = async () => {
         try {
             // We'll fetch all users first, then map to get their conversations.
-            // Ideally we'd have a backend route for this, but let's just make it work for the demo.
             const usersRes = await axios.get(`${API_BASE}/auth/users`);
             const allConvs: Conversation[] = [];
             for (const user of usersRes.data) {
                 const convRes = await axios.get(`${API_BASE}/messages/conversations/user/${user.id}`);
-                allConvs.push(...convRes.data);
+                const userConvs = convRes.data.map((conv: any) => ({
+                    ...conv,
+                    ownerName: `${user.name} ${user.lastName || ''}`.trim()
+                }));
+                allConvs.push(...userConvs);
             }
             setConversations(allConvs);
             setLoading(false);
@@ -158,7 +162,7 @@ const CommunicationsTab: React.FC = () => {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                 <strong style={{ color: '#0f172a', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <User size={14} /> {conv.scannerId === 'ADMIN' ? 'Admin Direct Message' : `Scanner: ${conv.scannerId.substring(0,6)}...`}
+                                    <User size={14} /> {conv.scannerId === 'ADMIN' ? (conv.ownerName || 'User') : `Scanner: ${conv.scannerId.substring(0,6)}...`}
                                 </strong>
                                 <span style={{ fontSize: '12px', color: '#64748b' }}>
                                     {new Date(conv.startedAt).toLocaleDateString()}
@@ -184,7 +188,7 @@ const CommunicationsTab: React.FC = () => {
                     <>
                         <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <h3 style={{ margin: '0 0 4px', color: '#0f172a' }}>Thread with Scanner: {activeConv.scannerId}</h3>
+                                <h3 style={{ margin: '0 0 4px', color: '#0f172a' }}>Thread with: {activeConv.scannerId === 'ADMIN' ? (activeConv.ownerName || 'User') : activeConv.scannerId}</h3>
                                 <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Regarding Tag: {activeConv.tag.name}</p>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

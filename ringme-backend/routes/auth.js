@@ -86,7 +86,7 @@ router.post('/register', async (req, res) => {
           password: hashedPassword, 
           googleId, 
           phone,
-          isPremium: !!basicPlan,
+          isPremium: false,
           subscriptionId: basicPlan ? basicPlan.id : null,
           premiumGrantType: basicPlan ? basicPlan.name : null
       },
@@ -94,6 +94,16 @@ router.post('/register', async (req, res) => {
     });
     
     const tokens = generateTokens(user);
+    
+    await prisma.auditLog.create({
+      data: {
+          adminId: user.id,
+          action: 'ACCOUNT_CREATED',
+          entityId: user.id,
+          ipAddress: req.ip || req.connection.remoteAddress
+      }
+    });
+
     res.status(201).json({ message: 'User created successfully', user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
   } catch (error) {
     console.error("Register Error:", error);
@@ -164,6 +174,15 @@ router.post('/login', async (req, res) => {
                 title: 'New Login Alert',
                 message: `Your account was accessed from a new device (${deviceInfo || req.headers['user-agent']}) on IP ${req.ip || req.connection.remoteAddress}.`,
                 type: 'security'
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: user.id,
+                action: 'USER_LOGIN',
+                entityId: user.id,
+                ipAddress: req.ip || req.connection.remoteAddress
             }
         });
 
@@ -257,6 +276,15 @@ router.post('/login/verify-mfa', async (req, res) => {
             }
         });
 
+        await prisma.auditLog.create({
+            data: {
+                adminId: user.id,
+                action: 'USER_LOGIN_MFA',
+                entityId: user.id,
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+
         res.json({ message: 'Login successful', ...tokens, user: { id: user.id, name: user.name, role: user.role } });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -275,7 +303,7 @@ router.post('/google/verify', async (req, res) => {
 
         // Use the access token to fetch user profile from Google
         const googleRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: Bearer  }
+            headers: { Authorization: `Bearer ${token}` }
         });
 
         const { email, name, sub: googleId } = googleRes.data;
@@ -340,12 +368,20 @@ router.post('/google/verify', async (req, res) => {
             }
         });
 
+        await prisma.auditLog.create({
+            data: {
+                adminId: user.id,
+                action: 'USER_LOGIN_GOOGLE',
+                entityId: user.id,
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+
         res.json({ message: 'Google login successful', user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     } catch (error) {
         console.error("Google Auth Error:", error);
         res.status(500).json({ error: error.message || 'Google authentication failed' });
     }
-});
 });
 
 router.post('/google/callback', async (req, res) => {
@@ -366,6 +402,24 @@ router.post('/phone/request-otp', (req, res) => {
 
 router.post('/phone/verify-otp', (req, res) => {
     res.json({ message: 'OTP verified (Scaffolding)' });
+});
+
+// POST /api/auth/logout
+router.post('/logout', verifyToken, async (req, res) => {
+    try {
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'USER_LOGOUT',
+                entityId: req.user.id,
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+        res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+        console.error("Logout Error:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // GET /api/auth/me
@@ -500,6 +554,15 @@ router.put('/profile/:id', async (req, res) => {
     
     const io = req.app.get('io');
     if (io) io.to(`user-room-${req.params.id}`).emit('account-updated');
+
+    await prisma.auditLog.create({
+        data: {
+            adminId: req.params.id,
+            action: 'PROFILE_UPDATED',
+            entityId: req.params.id,
+            ipAddress: req.ip || req.connection.remoteAddress
+        }
+    });
 
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
@@ -809,6 +872,19 @@ router.post('/users/:id/revoke-premium', verifyToken, requireRole('MASTER_ADMIN'
       res.json({ message: `Subscription revoked for user`, user: updatedUser });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/auth/users/:id/audit-logs
+router.get('/users/:id/audit-logs', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
+    try {
+        const logs = await prisma.auditLog.findMany({
+            where: { entityId: req.params.id },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

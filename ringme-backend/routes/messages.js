@@ -2,9 +2,16 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../prismaClient');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+const messageRateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // Max 10 messages per minute per IP
+    message: { error: 'You are sending messages too quickly. Please wait a moment.' }
+});
 
 // POST /api/messages/send
-router.post('/send', async (req, res) => {
+router.post('/send', messageRateLimiter, async (req, res) => {
     try {
         const { tagId, content, senderInfo, scannerId, senderRole } = req.body;
         let tag = await prisma.tag.findUnique({ where: { tagId: tagId } });
@@ -12,6 +19,10 @@ router.post('/send', async (req, res) => {
             tag = await prisma.tag.findUnique({ where: { id: tagId } });
         }
         if (!tag) return res.status(404).json({ message: 'Tag not found' });
+
+        if (tag.status === 'dnd' || tag.status === 'paused' || !tag.isActive) {
+            return res.status(403).json({ error: 'This QR code is currently paused and cannot receive messages.' });
+        }
         
         let conversationId = req.body.conversationId;
         let conv = null;

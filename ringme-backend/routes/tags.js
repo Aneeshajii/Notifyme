@@ -5,16 +5,19 @@ const crypto = require('crypto');
 const prisma = require('../prismaClient');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
+const rateLimit = require('express-rate-limit');
+
 const generateTagId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
-const SIGNING_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-qr';
 
-const signTagId = (tagId) => {
-    return crypto.createHmac('sha256', SIGNING_SECRET).update(tagId).digest('hex').substring(0, 16);
-};
+// Rate limiter for QR scans
+const qrScanLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 30, // Limit each IP to 30 requests per window
+    message: { error: 'Too many QR scan attempts from this IP, please try again later.' }
+});
 
-const getScanUrl = (tagId) => {
-    const signature = signTagId(tagId);
-    return `http://localhost:5173/tag/${tagId}?sig=${signature}`;
+const getScanUrl = (uuid) => {
+    return `http://localhost:5174/scan/${uuid}`;
 };
 
 // POST /api/tags/create
@@ -45,8 +48,8 @@ router.post('/create', async (req, res) => {
     }
 
     const tagId = generateTagId();
-    const signature = signTagId(tagId);
-    const scanUrl = `http://localhost:5173/tag/${tagId}?sig=${signature}`;
+    const uuid = crypto.randomUUID();
+    const scanUrl = getScanUrl(uuid);
     
     const qrCodeDataUrl = await qrcode.toDataURL(scanUrl, {
         color: { dark: '#171a21', light: '#ffffff' },
@@ -55,6 +58,7 @@ router.post('/create', async (req, res) => {
 
     const newTag = await prisma.tag.create({
       data: {
+        id: uuid,
         tagId,
         ownerId,
         name,
@@ -62,6 +66,16 @@ router.post('/create', async (req, res) => {
         qrCodeDataUrl,
         status: 'active'
       }
+    });
+
+    await prisma.auditLog.create({
+        data: {
+            adminId: ownerId,
+            action: 'QR_CREATED',
+            entityId: ownerId,
+            details: JSON.stringify({ tagId: newTag.tagId, name: newTag.name }),
+            ipAddress: req.ip || req.connection.remoteAddress
+        }
     });
     
     res.status(201).json({ 
@@ -74,54 +88,52 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// GET /api/tags/:tagId
-router.get('/:tagId', async (req, res) => {
+// GET /api/tags/:uuid
+router.get('/:uuid', qrScanLimiter, async (req, res) => {
   try {
-    const { tagId } = req.params;
-    const { sig } = req.query; // Scanner will send ?sig=...
-
-    if (!sig) {
-        // We enforce signature for production security
-        return res.status(403).json({ error: 'Missing security signature. QR Code may be forged.' });
-    }
-
-    const expectedSig = signTagId(tagId);
-    if (sig !== expectedSig) {
-        return res.status(403).json({ error: 'Invalid security signature. QR Code tampering detected.' });
-    }
+    const { uuid } = req.params;
+    const scannerId = req.headers['x-scanner-id'];
 
     const tag = await prisma.tag.findUnique({
-      where: { tagId },
+      where: { id: uuid },
       include: {
         owner: {
-          select: { name: true, phone: true }
+          select: { id: true, name: true, phone: true, isBlocked: true, isPremium: true }
         }
       }
     });
     
     if (!tag) {
-      return res.status(404).json({ message: 'Tag not found or invalid' });
+      return res.status(404).json({ message: 'This QR code is invalid or no longer exists.' });
     }
     
-    if (tag.status === 'dnd' || tag.status === 'paused') {
-      return res.status(403).json({ message: 'Owner is currently unavailable or Tag is paused.', placeholderMessage: tag.placeholderMessage });
+    if (tag.status === 'dnd' || tag.status === 'paused' || !tag.isActive) {
+      return res.status(403).json({ message: 'The owner of this item is currently unavailable.', placeholderMessage: tag.placeholderMessage });
     }
 
     if (tag.owner.isBlocked) {
-      return res.status(403).json({ message: 'This account has been suspended by the administrator.', placeholderMessage: tag.placeholderMessage });
+      return res.status(403).json({ message: 'This account is currently unavailable.' });
+    }
+
+    if (scannerId) {
+        const isScannerBlocked = await prisma.blockedScanner.findFirst({
+            where: { ownerId: tag.owner.id, scannerId }
+        });
+        if (isScannerBlocked) {
+            return res.status(403).json({ message: 'You are blocked from communicating with this owner.' });
+        }
     }
 
     res.json({
-        tagId: tag.tagId,
+        id: tag.id,
         name: tag.name,
-        plateNumber: tag.plateNumber,
         status: tag.status,
         ownerName: tag.owner.name,
         isPremium: tag.owner.isPremium,
         placeholderMessage: tag.placeholderMessage
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'An unexpected error occurred. Please try again.' });
   }
 });
 
@@ -132,7 +144,7 @@ router.get('/user/:ownerId', async (req, res) => {
       where: { ownerId: req.params.ownerId }
     });
     // Append scanUrl for testing purposes
-    const tagsWithUrl = tags.map(t => ({ ...t, scanUrl: getScanUrl(t.tagId) }));
+    const tagsWithUrl = tags.map(t => ({ ...t, scanUrl: getScanUrl(t.id) }));
     res.json(tagsWithUrl);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -143,7 +155,12 @@ router.get('/user/:ownerId', async (req, res) => {
 router.get('/admin/all', async (req, res) => {
   try {
     const tags = await prisma.tag.findMany({
-      include: { owner: true }
+      include: { 
+          owner: true,
+          _count: {
+              select: { scans: true }
+          }
+      }
     });
     res.json(tags);
   } catch (error) {
@@ -159,6 +176,17 @@ router.post('/admin/:tagId/status', async (req, res) => {
       where: { tagId: req.params.tagId },
       data: { status }
     });
+
+    await prisma.auditLog.create({
+        data: {
+            adminId: req.user ? req.user.id : 'SYSTEM',
+            action: status === 'active' ? 'QR_ACTIVATED' : (status === 'paused' ? 'QR_PAUSED' : 'QR_STATUS_CHANGED'),
+            entityId: tag.ownerId,
+            details: JSON.stringify({ tagId: tag.tagId, status }),
+            ipAddress: req.ip || req.connection.remoteAddress
+        }
+    });
+
     res.json({ message: `Tag status updated to ${status}`, tag });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -173,6 +201,17 @@ router.post('/admin/:tagId/placeholder', async (req, res) => {
       where: { tagId: req.params.tagId },
       data: { placeholderMessage }
     });
+
+    await prisma.auditLog.create({
+        data: {
+            adminId: req.user ? req.user.id : 'SYSTEM',
+            action: 'QR_RENAMED',
+            entityId: tag.ownerId,
+            details: JSON.stringify({ tagId: tag.tagId, placeholderMessage }),
+            ipAddress: req.ip || req.connection.remoteAddress
+        }
+    });
+
     res.json({ message: 'Placeholder message updated', tag });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -194,6 +233,17 @@ router.delete('/admin/:tagId', async (req, res) => {
     await prisma.tag.delete({
       where: { id: tag.id }
     });
+
+    await prisma.auditLog.create({
+        data: {
+            adminId: req.user ? req.user.id : 'SYSTEM',
+            action: 'QR_DELETED',
+            entityId: tag.ownerId,
+            details: JSON.stringify({ tagId: tag.tagId, name: tag.name }),
+            ipAddress: req.ip || req.connection.remoteAddress
+        }
+    });
+
     res.json({ message: 'Tag deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -220,6 +270,16 @@ router.put('/:id', verifyToken, async (req, res) => {
             }
         });
         
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'QR_RENAMED',
+                entityId: req.user.id,
+                details: JSON.stringify({ tagId: updatedTag.tagId, name: updatedTag.name, status: updatedTag.status }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+
         res.json(updatedTag);
     } catch (error) {
         res.status(500).json({ error: error.message });

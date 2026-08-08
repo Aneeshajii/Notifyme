@@ -122,6 +122,8 @@ const subscriptionsRoutes = require('./routes/subscriptions');
 const notificationsRoutes = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const callsRoutes = require('./routes/calls');
+const aiRoutes = require('./routes/ai');
+const adminRoutes = require('./routes/admin'); // we will create this for admin security alerts
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -131,6 +133,8 @@ app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/calls', callsRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve uploaded profile pictures statically
 const path = require('path');

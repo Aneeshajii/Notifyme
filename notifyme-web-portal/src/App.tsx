@@ -15,9 +15,11 @@ import Subscriptions from './components/Subscriptions';
 import ScanHistory from './components/ScanHistory';
 import SupportCenter from './components/SupportCenter';
 import AboutUs from './components/AboutUs';
+import QRDownloadModal from './components/QRDownloadModal';
+import FloatingAssistant from './components/FloatingAssistant';
 import { useGoogleLogin } from '@react-oauth/google';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'http://localhost:5000/api';
 const socket: Socket = io('http://localhost:5000');
 
 interface UserType {
@@ -54,12 +56,14 @@ interface MessageType {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingSession, setIsCheckingSession] = useState<boolean>(true);
   const [user, setUser] = useState<UserType | null>(null);
   const [tags, setTags] = useState<TagType[]>([]);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard'|'tags'|'analytics'|'inbox'|'notifications'|'scan_history'|'vehicle'|'home'|'emergency'|'business'|'subscriptions'|'privacy'|'security'|'family'|'about_us'|'support'|'profile'|'settings'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [downloadingTag, setDownloadingTag] = useState<any>(null);
   
   // Expanded sidebar category toggle state
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({
@@ -87,9 +91,14 @@ function App() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isSpeaker, setIsSpeaker] = useState(true);
   const [callStartTime, setCallStartTime] = useState<number | null>(null);
   const callerAudio = useRef<HTMLAudioElement>(null);
   const connectionRef = useRef<any>();
+
+  const toggleMute = () => { if (stream) { stream.getAudioTracks()[0].enabled = isMuted; setIsMuted(!isMuted); } };
+  const toggleCamera = () => { if (stream) { stream.getVideoTracks()[0].enabled = !isCameraOn; setIsCameraOn(!isCameraOn); } };
+  const toggleSpeaker = () => setIsSpeaker(!isSpeaker);
 
   const logCall = async (tagId: string, status: string, duration?: number) => {
     try {
@@ -199,15 +208,25 @@ function App() {
           }).catch(() => {
               localStorage.removeItem('userToken');
               delete axios.defaults.headers.common['Authorization'];
+          }).finally(() => {
+              setIsCheckingSession(false);
           });
+      } else {
+          setIsCheckingSession(false);
       }
   }, []);
 
-  const handleLogout = () => {
-      localStorage.removeItem('userToken');
-      delete axios.defaults.headers.common['Authorization'];
-      setIsAuthenticated(false);
-      setUser(null);
+  const handleLogout = async () => {
+      try {
+          await axios.post(`${API_BASE}/auth/logout`);
+      } catch (err) {
+          console.error("Logout API failed", err);
+      } finally {
+          localStorage.removeItem('userToken');
+          delete axios.defaults.headers.common['Authorization'];
+          setIsAuthenticated(false);
+          setUser(null);
+      }
   };
 
   const fetchTagsAndMessages = async (userId: string) => {
@@ -230,15 +249,17 @@ function App() {
           token: tokenResponse.access_token 
         });
         const loggedInUser = res.data.user; 
-        if (loggedInUser) {
-          const dummyToken = res.data.accessToken || 'mock-token';
-          localStorage.setItem('userToken', dummyToken);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${dummyToken}`;
+        if (loggedInUser && res.data.accessToken) {
+          const token = res.data.accessToken;
+          localStorage.setItem('userToken', token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   
           setUser(loggedInUser);
           setProfileData(loggedInUser);
           setIsAuthenticated(true);
           fetchTagsAndMessages(loggedInUser.id);
+        } else {
+            throw new Error("Invalid response from server");
         }
       } catch (err) {
         console.error(err);
@@ -254,7 +275,8 @@ function App() {
     try {
       if (authMode === 'register') {
         const res = await axios.post(`${API_BASE}/auth/register`, { email, password, name });
-        const token = res.data.accessToken || 'mock-token';
+        if (!res.data.accessToken) throw new Error("Registration succeeded but no token provided.");
+        const token = res.data.accessToken;
         localStorage.setItem('userToken', token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(res.data.user);
@@ -263,7 +285,8 @@ function App() {
         fetchTagsAndMessages(res.data.user.id);
       } else {
         const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
-        const token = res.data.accessToken || 'mock-token';
+        if (!res.data.accessToken) throw new Error("Login succeeded but no token provided.");
+        const token = res.data.accessToken;
         localStorage.setItem('userToken', token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(res.data.user);
@@ -329,6 +352,18 @@ function App() {
       alert('Failed to toggle tag status');
     }
   };
+
+  if (isCheckingSession) {
+      return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+              <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+                  <Shield size={64} color="#4f46e5" />
+              </div>
+              <p style={{ marginTop: '16px', color: '#64748b', fontWeight: 'bold' }}>Loading your secure session...</p>
+              <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }`}</style>
+          </div>
+      );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -425,7 +460,7 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <button onClick={() => { localStorage.removeItem('userToken'); setIsAuthenticated(false); }} className="logout-btn">
+          <button onClick={handleLogout} className="logout-btn">
             <LogOut size={18} /> Sign Out
           </button>
         </div>
@@ -456,7 +491,7 @@ function App() {
               <div className="header-actions">
                 <div><h1>My Privacy Tags</h1><p>Manage your secure QR codes seamlessly.</p></div>
                 {(() => {
-                  const limit = user?.subscription?.maxQrCodes || 1;
+                  const limit = user?.isPremium ? 10 : 1;
                   const isLimitReached = tags.length >= limit;
                   return (
                     <div className="header-actions-right">
@@ -486,7 +521,7 @@ function App() {
                             <span className="status-text">{tag.status}</span>
                         </div>
                         <div className="tag-header-actions" style={{ display: 'flex', gap: '8px' }}>
-<button onClick={() => handleEditTag(tag)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline' }}>Edit Name</button>
+                            <button onClick={() => handleEditTag(tag)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline' }}>Edit Name</button>
                             <button onClick={() => handleToggleTagStatus(tag)} style={{ background: tag.isActive ? '#fef2f2' : '#ecfdf5', color: tag.isActive ? '#ef4444' : '#10b981', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                                 {tag.isActive ? 'Pause' : 'Activate'}
                             </button>
@@ -497,8 +532,7 @@ function App() {
                     {!tag.isActive && <div style={{ textAlign: 'center', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', marginTop: '-10px', marginBottom: '10px' }}>QR Code Inactive</div>}
                     <div className="tag-footer"><span className="scans-count"><Eye size={16} /> 0 Scans</span>
                       <div className="tag-footer-buttons" style={{ display: 'flex', gap: '8px' }}>
-{tag.scanUrl && <a href={tag.scanUrl} target="_blank" rel="noreferrer" style={{ padding: '6px 12px', background: '#e0e7ff', color: '#4f46e5', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold' }}>Test Scan</a>}
-                        <button className="secondary-btn">Download QR</button>
+                        <button className="secondary-btn" onClick={() => setDownloadingTag(tag)}>Download QR</button>
                       </div>
                     </div>
                   </div>
@@ -688,6 +722,15 @@ function App() {
       
       <audio ref={callerAudio} />
 
+      {downloadingTag && (
+        <QRDownloadModal 
+          tag={downloadingTag} 
+          onClose={() => setDownloadingTag(null)} 
+        />
+      )}
+
+      {/* AI Assistant Chatbot */}
+      <FloatingAssistant onNavigate={setActiveTab} />
     </div>
   );
 }

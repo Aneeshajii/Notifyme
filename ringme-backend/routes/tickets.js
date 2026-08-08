@@ -51,6 +51,16 @@ router.post('/', verifyToken, async (req, res) => {
             io.emit('admin_notification', { type: 'new_ticket', ticket });
         }
         
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'TICKET_CREATED',
+                entityId: req.user.id,
+                details: JSON.stringify({ ticketId: ticket.id, subject }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
+
         res.status(201).json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -73,6 +83,16 @@ router.post('/:id/reply', verifyToken, requireRole('MASTER_ADMIN', 'ADMIN'), asy
         if (io) {
             io.emit(`user-${ticket.userId}-notification`, { type: 'ticket_reply', ticket });
         }
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'TICKET_REPLIED',
+                entityId: ticket.userId,
+                details: JSON.stringify({ ticketId: ticket.id, adminReply }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
 
         res.json(ticket);
     } catch (error) {
@@ -101,12 +121,19 @@ router.post('/:id/close', verifyToken, async (req, res) => {
         
         const io = req.app.get('io');
         if (io) {
-            if (req.user.role === 'MASTER_ADMIN' || req.user.role === 'ADMIN') {
-                io.emit(`user-${ticket.userId}-notification`, { type: 'ticket_closed', ticket: updated });
-            } else {
-                io.emit('admin_notification', { type: 'ticket_closed', ticket: updated });
-            }
+            io.emit(`user-${ticket.userId}-notification`, { type: 'ticket_closed', ticket: updated });
+            io.emit('admin_notification', { type: 'ticket_closed', ticket: updated });
         }
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'TICKET_CLOSED',
+                entityId: ticket.userId,
+                details: JSON.stringify({ ticketId: ticket.id }),
+                ipAddress: req.ip || req.connection.remoteAddress
+            }
+        });
 
         res.json(updated);
     } catch (error) {

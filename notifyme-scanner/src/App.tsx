@@ -11,9 +11,8 @@ const API_BASE = 'http://localhost:5000/api';
 const socket = io('http://localhost:5000');
 
 interface TagData {
-  tagId: string;
+  id: string;
   name: string;
-  plateNumber: string;
   status: string;
   ownerName: string;
   isPremium?: boolean;
@@ -26,9 +25,7 @@ const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
 );
 
 function ScannerProfile() {
-  const { tagId } = useParams<{ tagId: string }>();
-  const [searchParams] = useSearchParams();
-  const sig = searchParams.get('sig') || '';
+  const { uuid } = useParams<{ uuid: string }>();
   
   const [tagData, setTagData] = useState<TagData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -47,10 +44,10 @@ function ScannerProfile() {
 
   useEffect(() => {
       let interval: any;
-      if (tagId && showMsgInput) {
+      if (uuid && showMsgInput) {
           const fetchMsgs = async () => {
               try {
-                  const res = await axios.get("http://localhost:5000/api/messages/scanner/" + tagId + "/" + scannerId.current);
+                  const res = await axios.get("http://localhost:5000/api/messages/scanner/" + uuid + "/" + scannerId.current);
                   setChatMessages(res.data);
               } catch (e) {}
           };
@@ -58,7 +55,7 @@ function ScannerProfile() {
           interval = setInterval(fetchMsgs, 2000);
       }
       return () => clearInterval(interval);
-  }, [tagId, showMsgInput]);
+  }, [uuid, showMsgInput]);
   
   // WebRTC Call States
   const [isCalling, setIsCalling] = useState<boolean>(false);
@@ -70,20 +67,24 @@ function ScannerProfile() {
   useEffect(() => {
     const fetchTag = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/tags/" + tagId + "?sig=" + sig);
+        const res = await axios.get("http://localhost:5000/api/tags/" + uuid, {
+            headers: { 'x-scanner-id': scannerId.current }
+        });
         setTagData(res.data);
         setLoading(false);
       } catch (err: any) {
         if (err.response && err.response.status === 403) {
-            setErrorState({ message: err.response.data.error, placeholderMessage: undefined });
+            setErrorState({ message: err.response.data.message, placeholderMessage: err.response.data.placeholderMessage });
+        } else if (err.response && err.response.status === 429) {
+            setErrorState({ message: 'Too many requests. Please try again later.' });
         } else {
-            setErrorState({ message: 'Tag not found or invalid.' });
+            setErrorState({ message: 'This QR code is invalid or no longer exists.' });
         }
         setLoading(false);
       }
     };
-    if (tagId) fetchTag();
-  }, [tagId, sig]);
+    if (uuid) fetchTag();
+  }, [uuid]);
 
   useEffect(() => {
     socket.on('call-accepted', (signal: any) => {
@@ -117,7 +118,7 @@ function ScannerProfile() {
       peer.on('signal', (data: any) => {
         if (tagData) {
             socket.emit('call-owner', {
-              tagId: tagData.tagId,
+              tagId: tagData.id,
               signalData: data,
               callerId: socket.id
             });
@@ -150,13 +151,13 @@ function ScannerProfile() {
 
     try {
         await axios.post("http://localhost:5000/api/messages/send", {
-            tagId,
+            tagId: tagData?.id,
             content: type === 'image' ? '[Image Attached] ' + text : text,
             senderInfo: 'Anonymous Scanner',
             scannerId: scannerId.current
         });
         setMessage('');
-        const res = await axios.get("http://localhost:5000/api/messages/scanner/" + tagId + "/" + scannerId.current);
+        const res = await axios.get("http://localhost:5000/api/messages/scanner/" + uuid + "/" + scannerId.current);
         setChatMessages(res.data);
     } catch (e) {
         alert('Failed to send message.');
@@ -212,7 +213,7 @@ function ScannerProfile() {
       </div>
   );
 
-  if (!tagData) return <div style={{ padding: '40px', textAlign: 'center' }}>Tag not found or invalid.</div>;
+  if (!tagData) return <div style={{ padding: '40px', textAlign: 'center' }}>This QR code is invalid or no longer exists.</div>;
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', paddingBottom: '60px' }}>
@@ -363,11 +364,11 @@ function Home() {
             scanner.render((decodedText) => {
                 scanner.clear();
                 setIsScanning(false);
-                if (decodedText.includes('/tag/')) {
+                if (decodedText.includes('/scan/')) {
                     const url = new URL(decodedText);
                     window.location.href = url.pathname + url.search;
                 } else {
-                    alert('Invalid QR Code');
+                    alert('Invalid NotifyMe QR Code');
                 }
             }, (error) => {});
             
@@ -416,17 +417,17 @@ function Home() {
                                 type="text" 
                                 value={tagId}
                                 onChange={e => setTagId(e.target.value)}
-                                placeholder="Enter Tag ID" 
-                                style={{ padding: '18px', borderRadius: '16px', border: '2px solid #e2e8f0', fontSize: '18px', textAlign: 'center', letterSpacing: '2px', outline: 'none', transition: 'border-color 0.2s', background: '#f8fafc' }}
+                                placeholder="Enter Secure ID" 
+                                style={{ padding: '18px', borderRadius: '16px', border: '2px solid #e2e8f0', fontSize: '14px', textAlign: 'center', letterSpacing: '1px', outline: 'none', transition: 'border-color 0.2s', background: '#f8fafc' }}
                                 onFocus={e => e.currentTarget.style.borderColor = '#1d9bf0'}
                                 onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
                             />
                             <button 
-                                onClick={() => { if (tagId.trim()) window.location.href = /tag/; }}
+                                onClick={() => { if (tagId.trim()) window.location.href = '/scan/' + tagId.trim(); }}
                                 style={{ background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '16px', borderRadius: '16px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', transition: 'all 0.2s' }}
                                 onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'} onMouseOut={e => e.currentTarget.style.background = '#f8fafc'}
                             >
-                                Look Up Tag
+                                Look Up QR
                             </button>
                         </div>
                     </div>
@@ -441,7 +442,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/tag/:tagId" element={<ScannerProfile />} />
+      <Route path="/scan/:uuid" element={<ScannerProfile />} />
     </Routes>
   );
 }
