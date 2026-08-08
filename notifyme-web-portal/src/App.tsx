@@ -19,8 +19,8 @@ import QRDownloadModal from './components/QRDownloadModal';
 import FloatingAssistant from './components/FloatingAssistant';
 import { useGoogleLogin } from '@react-oauth/google';
 
-const API_BASE = 'http://localhost:5000/api';
-const socket: Socket = io('http://localhost:5000');
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
 
 interface UserType {
   id: string;

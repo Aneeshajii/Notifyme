@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { MessageSquare, X, Send, Bot, ShieldCheck, User, Loader2, Sparkles, AlertTriangle, Shield } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 interface FloatingAssistantProps {
     onNavigate: (tab: any) => void;
