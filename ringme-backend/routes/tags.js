@@ -17,7 +17,8 @@ const qrScanLimiter = rateLimit({
 });
 
 const getScanUrl = (uuid) => {
-    return `http://localhost:5174/scan/${uuid}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
+    return `${frontendUrl}/scan/${uuid}`;
 };
 
 // POST /api/tags/create
