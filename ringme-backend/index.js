@@ -35,6 +35,20 @@ app.get('/api/admin-setup', async (req, res) => {
    }
 });
 
+app.get('/api/seed-plans', async (req, res) => {
+    try {
+        await prisma.subscriptionPlan.create({
+            data: { name: 'Basic', price: 0, maxQrCodes: 1, benefits: JSON.stringify(['1 QR Code', 'Basic Analytics']), isActive: true }
+        });
+        await prisma.subscriptionPlan.create({
+            data: { name: 'Gold', price: 9, maxQrCodes: 5, benefits: JSON.stringify(['5 QR Codes', 'Advanced Analytics', 'Premium Support']), isActive: true }
+        });
+        res.send('Basic and Gold plans created successfully! You can go check your mobile app now.');
+    } catch(err) {
+        res.send('Error: ' + err.message);
+    }
+});
+
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
