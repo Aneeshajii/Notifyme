@@ -49,6 +49,21 @@ app.get('/api/seed-plans', async (req, res) => {
     }
 });
 
+app.get('/api/create-admin-account', async (req, res) => {
+    try {
+        const argon2 = require('argon2');
+        const hashedPassword = await argon2.hash('Admin1234!');
+        await prisma.user.upsert({
+            where: { email: 'admin@notifyme.com' },
+            update: { password: hashedPassword, role: 'MASTER_ADMIN' },
+            create: { email: 'admin@notifyme.com', name: 'Master Admin', password: hashedPassword, role: 'MASTER_ADMIN', isPremium: true }
+        });
+        res.send('Admin account successfully created! Email: admin@notifyme.com | Password: Admin1234!');
+    } catch(err) {
+        res.send('Error: ' + err.message);
+    }
+});
+
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
