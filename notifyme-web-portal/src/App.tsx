@@ -614,7 +614,7 @@ function App() {
           {activeTab === 'settings' && (
             <>
               <div className="header-actions"><div><h1>Settings</h1><p>Preferences & Integrations</p></div></div>
-              <div className="settings-container" style={{ display: 'grid', gap: '24px', gridTemplateColumns: '1fr 1fr' }}>
+              <div className="settings-container" style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
