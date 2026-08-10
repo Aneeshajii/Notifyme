@@ -340,11 +340,11 @@ function ScannerProfile() {
 
       </main>
       
-      <style>{\`
+      <style>{`
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15%); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      \`}</style>
+      `}</style>
     </div>
   );
 }
