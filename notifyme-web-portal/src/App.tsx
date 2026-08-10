@@ -433,7 +433,7 @@ function App() {
           <div style={{ marginBottom: '16px' }}>
             <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}><Activity size={20} /> Dashboard</button>
             <button className={`nav-item ${activeTab === 'tags' ? 'active' : ''}`} onClick={() => { setActiveTab('tags'); setMobileMenuOpen(false); }}><QrCode size={20} /> My Tags</button>
-            <button className={`nav-item ${activeTab === 'inbox' ? 'active' : ''}`} onClick={() => { setActiveTab('inbox'); setMobileMenuOpen(false); }}><Inbox size={20} /> Comm Center {messages.length > 0 && <span className="badge-count">{messages.length}</span>}</button>
+            <button className={`nav-item ${activeTab === 'inbox' ? 'active' : ''}`} onClick={() => { setActiveTab('inbox'); setMobileMenuOpen(false); }}><Inbox size={20} /> Call/Msg {messages.length > 0 && <span className="badge-count">{messages.length}</span>}</button>
             <button className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }}><Bell size={20} /> Notifications</button>
           </div>
 
@@ -556,7 +556,7 @@ function App() {
                     <div className="avatar" style={{ width: '80px', height: '80px', fontSize: '32px' }}>{user?.name?.charAt(0).toUpperCase()}</div>
                     <div>
                         <h2 style={{ margin: 0, color: '#0f172a' }}>{profileData.name} {profileData.lastName}</h2>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', background: '#fef3c7', color: '#d97706', padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold', marginTop: '8px' }}><Shield size={14} style={{ marginRight: '6px'}}/> Premium Member</span>
+
                     </div>
                 </div>
                 

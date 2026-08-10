@@ -35,9 +35,7 @@ export default function UserDashboard({ tags, messages, setActiveTab, user, prof
             <span style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', padding: '4px 12px', borderRadius: '100px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Star size={14} /> {planName.replace(' Plan', '')}
             </span>
-            <span style={{ color: '#64748b', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-               Expires: {expiryDate}
-            </span>
+
           </div>
         </div>
         <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '16px 24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(255,255,255,0.5)' }}>
