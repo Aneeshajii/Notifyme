@@ -662,7 +662,7 @@ function App() {
           {activeTab === 'subscriptions' && <Subscriptions profileData={profileData} />}
           {activeTab === 'privacy' && <PrivacySecurity mode="privacy" />}
           {activeTab === 'security' && <PrivacySecurity mode="security" />}
-          {activeTab === 'support' && <SupportCenter />} 
+          {activeTab === 'support' && <SupportCenter user={user} />} 
           {activeTab === 'about_us' && <AboutUs />}
 
           {/* Placeholders for remaining modules */}
