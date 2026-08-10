@@ -7,8 +7,8 @@ import { Shield, Phone, MessageSquare, MapPin, Send, CheckCircle, PhoneOff, Came
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import './index.css';
 
-const API_BASE = 'http://localhost:5000/api';
-const socket = io('http://localhost:5000');
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const socket = io(import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
 
 interface TagData {
   id: string;
@@ -47,7 +47,7 @@ function ScannerProfile() {
       if (uuid && showMsgInput) {
           const fetchMsgs = async () => {
               try {
-                  const res = await axios.get("http://localhost:5000/api/messages/scanner/" + uuid + "/" + scannerId.current);
+                  const res = await axios.get(`${API_BASE}/messages/scanner/${uuid}/${scannerId.current}`);
                   setChatMessages(res.data);
               } catch (e) {}
           };
@@ -67,7 +67,7 @@ function ScannerProfile() {
   useEffect(() => {
     const fetchTag = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/tags/" + uuid, {
+        const res = await axios.get(`${API_BASE}/tags/${uuid}`, {
             headers: { 'x-scanner-id': scannerId.current }
         });
         setTagData(res.data);
@@ -150,14 +150,14 @@ function ScannerProfile() {
     setIsSendingMsg(true);
 
     try {
-        await axios.post("http://localhost:5000/api/messages/send", {
+        await axios.post(`${API_BASE}/messages/send`, {
             tagId: tagData?.id,
             content: type === 'image' ? '[Image Attached] ' + text : text,
             senderInfo: 'Anonymous Scanner',
             scannerId: scannerId.current
         });
         setMessage('');
-        const res = await axios.get("http://localhost:5000/api/messages/scanner/" + uuid + "/" + scannerId.current);
+        const res = await axios.get(`${API_BASE}/messages/scanner/${uuid}/${scannerId.current}`);
         setChatMessages(res.data);
     } catch (e) {
         alert('Failed to send message.');
