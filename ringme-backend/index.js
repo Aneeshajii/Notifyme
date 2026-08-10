@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
   // Scanner initiates a call
   socket.on('call-owner', async (data) => {
     try {
-      const tag = await prisma.tag.findUnique({ where: { tagId: data.tagId } });
+      const tag = await prisma.tag.findUnique({ where: { id: data.tagId } });
       if (tag) {
         console.log(`Routing call for tag ${data.tagId} to owner ${tag.ownerId}`);
         const room = io.sockets.adapter.rooms.get(tag.ownerId.toString());
