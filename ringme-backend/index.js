@@ -25,6 +25,16 @@ app.use(helmet()); // Secure HTTP headers
 app.use(cors({ origin: true, credentials: true })); // Allow all origins dynamically for Vercel/Localhost
 app.use(express.json({ limit: '10kb' })); // Limit body size to prevent payload too large
 
+// TEMPORARY SEED ROUTE (Can be removed later)
+app.get('/api/admin-setup', async (req, res) => {
+   try {
+       await prisma.user.updateMany({ where: { email: 'aneesha6868@gmail.com' }, data: { role: 'MASTER_ADMIN' } });
+       res.send('Admin access granted to aneesha6868@gmail.com! You can now use the Admin Panel.');
+   } catch(err) {
+       res.send(err.message);
+   }
+});
+
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
