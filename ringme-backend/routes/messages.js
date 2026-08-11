@@ -3,11 +3,47 @@ const router = express.Router();
 const prisma = require('../prismaClient');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `chat-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for media
+});
 
 const messageRateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 10, // Max 10 messages per minute per IP
     message: { error: 'You are sending messages too quickly. Please wait a moment.' }
+});
+
+// POST /api/messages/upload
+router.post('/upload', upload.single('media'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        const fileUrl = `/uploads/${req.file.filename}`;
+        res.status(200).json({ url: fileUrl });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // POST /api/messages/send
@@ -51,16 +87,27 @@ router.post('/send', messageRateLimiter, async (req, res) => {
         }
 
         if (conv && conv.status === 'closed') {
-            return res.status(400).json({ error: 'This conversation has been closed and cannot accept new messages.' });
+            if (senderRole === 'owner') {
+                // Auto-open if owner/admin replies
+                await prisma.conversation.update({ where: { id: conv.id }, data: { status: 'open' } });
+                const io = req.app.get('io');
+                if (io) io.emit(`conversation-${conv.id}`, { action: 'status_changed', status: 'open' });
+            } else {
+                return res.status(400).json({ error: 'This conversation has been closed and cannot accept new messages.' });
+            }
         }
 
         const msg = await prisma.message.create({
             data: {
                 tagId: tag.id,
-                content,
+                content: req.body.content || "",
                 senderInfo: senderInfo || "Anonymous",
                 senderRole: senderRole || "scanner",
-                conversationId
+                conversationId,
+                mediaUrl: req.body.mediaUrl || null,
+                mediaType: req.body.mediaType || null,
+                latitude: req.body.latitude || null,
+                longitude: req.body.longitude || null
             }
         });
 

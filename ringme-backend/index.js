@@ -177,7 +177,51 @@ app.use('/api/admin', adminRoutes);
 
 // Serve uploaded profile pictures statically
 const path = require('path');
+const fs = require('fs');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Background Cleanup Job (Runs every hour)
+setInterval(async () => {
+    try {
+        console.log('Running auto-cleanup for old chat messages and media...');
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        // 1. Find and delete media files older than 24 hours
+        const oldMediaMessages = await prisma.message.findMany({
+            where: { createdAt: { lt: oneDayAgo }, mediaUrl: { not: null } }
+        });
+        
+        for (const msg of oldMediaMessages) {
+            if (msg.mediaUrl) {
+                const filePath = path.join(__dirname, msg.mediaUrl);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            }
+        }
+        
+        // Remove media links from db for >24hr messages
+        if (oldMediaMessages.length > 0) {
+            await prisma.message.updateMany({
+                where: { createdAt: { lt: oneDayAgo }, mediaUrl: { not: null } },
+                data: { mediaUrl: null, mediaType: null, content: '[Media Expired]' }
+            });
+            console.log(`Cleaned up media for ${oldMediaMessages.length} messages.`);
+        }
+
+        // 2. Delete all messages older than 7 days
+        const deletedMsgs = await prisma.message.deleteMany({
+            where: { createdAt: { lt: sevenDaysAgo } }
+        });
+        if (deletedMsgs.count > 0) {
+            console.log(`Deleted ${deletedMsgs.count} messages older than 7 days.`);
+        }
+    } catch (err) {
+        console.error('Error during auto-cleanup:', err);
+    }
+}, 1000 * 60 * 60); // 1 hour
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT} with WebRTC enabled`);
