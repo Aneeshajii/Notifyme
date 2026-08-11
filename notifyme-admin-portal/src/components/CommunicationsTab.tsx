@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, User, Tag, Clock, MessageSquare } from 'lucide-react';
+import { Send, User, Tag, Clock, MessageSquare, MapPin } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SOCKET_URL = 'http://localhost:5000';
 
 interface Conversation {
@@ -219,9 +219,27 @@ const CommunicationsTab: React.FC = () => {
                                             <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '4px', fontWeight: 'bold' }}>
                                                 {msg.senderInfo}
                                             </div>
-                                            <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                                                {msg.content}
-                                            </div>
+                                            {msg.mediaType === 'image' && msg.mediaUrl && (
+                                                <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
+                                                    <img src={`${API_BASE.replace('/api', '')}${msg.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                                                </div>
+                                            )}
+                                            {msg.mediaType === 'audio' && msg.mediaUrl && (
+                                                <div style={{ marginBottom: '8px' }}>
+                                                    <audio controls src={`${API_BASE.replace('/api', '')}${msg.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
+                                                </div>
+                                            )}
+                                            {msg.latitude && msg.longitude && (
+                                                <a href={`https://maps.google.com/?q=${msg.latitude},${msg.longitude}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'none', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px', marginBottom: '8px' }}>
+                                                    <MapPin size={20} />
+                                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>View Location</div>
+                                                </a>
+                                            )}
+                                            {msg.content && (
+                                                <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                                                    {msg.content}
+                                                </div>
+                                            )}
                                         </div>
                                         <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Clock size={10} /> {new Date(msg.createdAt).toLocaleTimeString()}

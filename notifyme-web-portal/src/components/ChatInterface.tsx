@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Send, Image, Mic, Check, CheckCheck, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft } from 'lucide-react';
+import { Send, Image, Mic, Check, CheckCheck, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft, MicOff, Paperclip, MapPin } from 'lucide-react';
 
 const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -15,6 +15,12 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
     const [replyText, setReplyText] = useState('');
     const [showBlocked, setShowBlocked] = useState(false);
     const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+    
+    const [isRecording, setIsRecording] = useState<boolean>(false);
+    const [recordingTime, setRecordingTime] = useState<number>(0);
+    const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
+    const audioChunksRef = React.useRef<Blob[]>([]);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const fetchBlockedUsers = async () => {
         try {
@@ -99,22 +105,99 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
         }
     };
 
-    const handleSendReply = async () => {
-        if (!replyText.trim() || !activeChat) return;
+    const handleSendReply = async (text: string = replyText, type: 'text'|'image'|'audio'|'location' = 'text', mediaUrl: string|null = null, lat: number|null = null, lng: number|null = null) => {
+        if (!text.trim() && !mediaUrl && !lat) return;
+        if (!activeChat) return;
         try {
             await axios.post(`${API_BASE}/messages/send`, {
-                content: replyText,
+                content: text,
                 senderInfo: user.name || 'Owner',
                 senderRole: 'owner',
                 tagId: activeChat.tag.id,
-                conversationId: activeChat.conversationId
+                conversationId: activeChat.conversationId,
+                mediaUrl,
+                mediaType: type !== 'text' && type !== 'location' ? type : null,
+                latitude: lat,
+                longitude: lng
             });
-            setReplyText('');
+            if (text === replyText) setReplyText('');
             fetchTagsAndMessages(user.id);
         } catch (error) {
             alert('Failed to send reply');
         }
     };
+
+    const uploadMedia = async (file: File | Blob, ext: string = 'jpg'): Promise<string|null> => {
+        const formData = new FormData();
+        formData.append('media', file, `upload.${ext}`);
+        try {
+            const res = await axios.post(`${API_BASE}/messages/upload`, formData);
+            return res.data.url;
+        } catch (err) {
+            alert('Failed to upload media.');
+            return null;
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const url = await uploadMedia(file, file.name.split('.').pop() || 'jpg');
+            if (url) {
+                await handleSendReply('', 'image', url);
+            }
+        }
+    };
+
+    const shareLocation = async () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                await handleSendReply("My Location", 'location', null, position.coords.latitude, position.coords.longitude);
+            }, () => {
+                alert('Location access denied.');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
+    };
+
+    const toggleRecording = async () => {
+        if (isRecording) {
+            if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            setRecordingTime(0);
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = mediaRecorder;
+                audioChunksRef.current = [];
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunksRef.current.push(e.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    stream.getTracks().forEach(t => t.stop());
+                    const url = await uploadMedia(audioBlob, 'webm');
+                    if (url) await handleSendReply('Voice Message', 'audio', url);
+                };
+                
+                mediaRecorder.start();
+                setIsRecording(true);
+                setRecordingTime(0);
+            } catch (err) {
+                alert('Microphone access denied.');
+            }
+        }
+    };
+
+    React.useEffect(() => {
+        let interval: any;
+        if (isRecording) interval = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
+        return () => clearInterval(interval);
+    }, [isRecording]);
 
     return (
         <div className="chat-layout">
@@ -241,9 +324,27 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                                 NotifyMe <BadgeCheck size={12} color="#1d9bf0" />
                                             </div>
                                         )}
-                                        <div style={{ fontSize: '14.2px', color: '#111b21', lineHeight: '19px', wordWrap: 'break-word', paddingRight: '40px' }}>
-                                            {m.content}
-                                        </div>
+                                        {m.mediaType === 'image' && m.mediaUrl && (
+                                            <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
+                                                <img src={`${API_BASE.replace('/api', '')}${m.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                                            </div>
+                                        )}
+                                        {m.mediaType === 'audio' && m.mediaUrl && (
+                                            <div style={{ marginBottom: '8px' }}>
+                                                <audio controls src={`${API_BASE.replace('/api', '')}${m.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
+                                            </div>
+                                        )}
+                                        {m.latitude && m.longitude && (
+                                            <a href={`https://maps.google.com/?q=${m.latitude},${m.longitude}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'none', background: 'rgba(0,0,0,0.05)', padding: '8px', borderRadius: '8px', marginBottom: '8px' }}>
+                                                <MapPin size={20} />
+                                                <div style={{ fontSize: '13px', fontWeight: 'bold' }}>View Location</div>
+                                            </a>
+                                        )}
+                                        {m.content && (
+                                            <div style={{ fontSize: '14.2px', color: '#111b21', lineHeight: '19px', wordWrap: 'break-word', paddingRight: '40px' }}>
+                                                {m.content}
+                                            </div>
+                                        )}
                                         <div style={{ 
                                             fontSize: '11px', 
                                             color: '#667781', 
@@ -266,21 +367,34 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
 
                         {/* Input Area */}
                         <div style={{ padding: '10px 16px', background: '#f0f2f5', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <button style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px' }}><Image size={24} /></button>
-                            <div style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '9px 12px', display: 'flex', alignItems: 'center' }}>
-                                <input 
-                                    type="text" 
-                                    placeholder="Type a message" 
-                                    value={replyText}
-                                    onChange={e => setReplyText(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleSendReply()}
-                                    style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent' }} 
-                                />
-                            </div>
-                            {replyText.trim() ? (
-                                <button onClick={handleSendReply} style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px' }}><Send size={24} /></button>
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*,audio/*" />
+                            <button onClick={() => fileInputRef.current?.click()} style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px' }}><Paperclip size={24} /></button>
+                            <button onClick={shareLocation} style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px', marginLeft: '-8px' }}><MapPin size={24} /></button>
+                            
+                            {isRecording ? (
+                                <div style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', fontWeight: 'bold' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }}></div>
+                                    Recording {recordingTime}s
+                                </div>
                             ) : (
-                                <button style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px' }}><Mic size={24} /></button>
+                                <div style={{ flex: 1, background: 'white', borderRadius: '8px', padding: '9px 12px', display: 'flex', alignItems: 'center' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Type a message" 
+                                        value={replyText}
+                                        onChange={e => setReplyText(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleSendReply()}
+                                        style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent' }} 
+                                    />
+                                </div>
+                            )}
+                            
+                            {replyText.trim() || isRecording ? (
+                                <button onClick={() => isRecording ? toggleRecording() : handleSendReply()} style={{ background: isRecording ? '#ef4444' : 'transparent', border: 'none', color: isRecording ? 'white' : '#54656f', cursor: 'pointer', padding: '8px', borderRadius: isRecording ? '50%' : '0' }}>
+                                    {isRecording ? <Send size={20} /> : <Send size={24} />}
+                                </button>
+                            ) : (
+                                <button onClick={toggleRecording} style={{ background: 'transparent', border: 'none', color: '#54656f', cursor: 'pointer', padding: '8px' }}><Mic size={24} /></button>
                             )}
                         </div>
                     </>
