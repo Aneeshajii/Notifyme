@@ -251,9 +251,15 @@ function ScannerProfile() {
               };
               
               mediaRecorder.onstop = async () => {
-                  const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
-                  const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
-                  const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+                  const mimeType = mediaRecorderRef.current?.mimeType || '';
+                  let ext = 'webm';
+                  if (mimeType.includes('mp4') || (typeof MediaRecorder.isTypeSupported === 'function' && !MediaRecorder.isTypeSupported('audio/webm'))) {
+                      ext = 'mp4';
+                  } else if (mimeType.includes('ogg')) {
+                      ext = 'ogg';
+                  }
+                  
+                  const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || (ext === 'mp4' ? 'audio/mp4' : 'audio/webm') });
                   stream.getTracks().forEach(t => t.stop());
                   setIsSendingMsg(true);
                   const url = await uploadMedia(audioBlob, ext);
