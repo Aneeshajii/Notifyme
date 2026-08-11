@@ -6,6 +6,9 @@ const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -39,8 +42,34 @@ router.post('/upload', upload.single('media'), (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        const fileUrl = `/uploads/${req.file.filename}`;
-        res.status(200).json({ url: fileUrl });
+        
+        // Transcode audio files to MP3 for universal cross-browser compatibility (iOS Safari + Chrome)
+        const isAudio = req.file.mimetype.startsWith('audio/') || req.file.originalname.match(/\.(webm|mp4|m4a|ogg|weba)$/i);
+        
+        if (isAudio && !req.file.originalname.match(/\.mp3$/i)) {
+            const inputPath = req.file.path;
+            const outputPath = inputPath + '.mp3';
+            
+            ffmpeg(inputPath)
+                .toFormat('mp3')
+                .audioBitrate('128k')
+                .on('end', () => {
+                    // Remove the original non-mp3 file
+                    fs.unlink(inputPath, () => {});
+                    const fileUrl = `/uploads/${path.basename(outputPath)}`;
+                    res.status(200).json({ url: fileUrl });
+                })
+                .on('error', (err) => {
+                    console.error('FFmpeg transcoding error:', err);
+                    // Fallback to original file if transcoding fails
+                    const fileUrl = `/uploads/${req.file.filename}`;
+                    res.status(200).json({ url: fileUrl });
+                })
+                .save(outputPath);
+        } else {
+            const fileUrl = `/uploads/${req.file.filename}`;
+            res.status(200).json({ url: fileUrl });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

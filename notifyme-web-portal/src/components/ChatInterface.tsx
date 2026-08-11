@@ -301,7 +301,7 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                         </div>
 
                         {/* Chat Messages */}
-                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: 'repeat', backgroundSize: 'contain', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', backgroundImage: 'radial-gradient(#cbd5e1 1.5px, transparent 0)', backgroundSize: '24px 24px', backgroundColor: '#f8fafc' }}>
                             <div style={{ alignSelf: 'center', background: '#ffeecd', color: '#54656f', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', marginBottom: '16px', boxShadow: '0 1px 0.5px rgba(11,20,26,.13)' }}>
                                 Messages are end-to-end encrypted for this session.
                             </div>
