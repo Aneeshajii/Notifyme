@@ -178,9 +178,11 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                 };
                 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+                    const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+                    const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
                     stream.getTracks().forEach(t => t.stop());
-                    const url = await uploadMedia(audioBlob, 'webm');
+                    const url = await uploadMedia(audioBlob, ext);
                     if (url) await handleSendReply('Voice Message', 'audio', url);
                 };
                 

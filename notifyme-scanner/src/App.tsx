@@ -251,10 +251,12 @@ function ScannerProfile() {
               };
               
               mediaRecorder.onstop = async () => {
-                  const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                  const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+                  const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+                  const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
                   stream.getTracks().forEach(t => t.stop());
                   setIsSendingMsg(true);
-                  const url = await uploadMedia(audioBlob, 'webm');
+                  const url = await uploadMedia(audioBlob, ext);
                   if (url) await handleSendMessage('Voice Message', 'audio', url);
                   setIsSendingMsg(false);
               };
@@ -450,8 +452,8 @@ function ScannerProfile() {
                                     />
                                 )}
                                 
-                                <button onClick={() => handleSendMessage(message)} disabled={isSendingMsg || (!message.trim() && !isRecording)} style={{ background: message.trim() || isRecording ? '#4f46e5' : '#e2e8f0', color: message.trim() || isRecording ? 'white' : '#94a3b8', border: 'none', padding: '12px', borderRadius: '50%', cursor: message.trim() || isRecording ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s', boxShadow: message.trim() ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none' }}>
-                                    <Send size={18} style={{ transform: 'translateX(2px)' }} />
+                                <button onClick={() => isRecording ? toggleRecording() : handleSendMessage(message)} disabled={isSendingMsg || (!message.trim() && !isRecording)} style={{ background: message.trim() || isRecording ? '#4f46e5' : '#e2e8f0', color: message.trim() || isRecording ? 'white' : '#94a3b8', border: 'none', padding: '12px', borderRadius: '50%', cursor: message.trim() || isRecording ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s', boxShadow: message.trim() ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none' }}>
+                                    {isRecording ? <Send size={20} style={{ transform: 'translateX(2px)' }} /> : <Send size={18} style={{ transform: 'translateX(2px)' }} />}
                                 </button>
                             </>
                         )}
