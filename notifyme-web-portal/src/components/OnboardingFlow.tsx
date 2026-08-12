@@ -60,7 +60,23 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
             setStep(3);
         } catch (err: any) {
             console.error(err);
-            setError(err.response?.data?.error || "Failed to create QR code. Please try again.");
+            if (err.response?.status === 403) {
+                // User already hit QR code limit. Skip QR generation, just mark onboarded.
+                try {
+                    const token = localStorage.getItem('userToken');
+                    const headers = { Authorization: `Bearer ${token}` };
+                    await axios.post(`${API_BASE}/auth/onboard`, {
+                        firstName, lastName, phone
+                    }, { headers });
+                    const meRes = await axios.get(`${API_BASE}/auth/me`, { headers });
+                    onComplete(meRes.data);
+                } catch (onboardErr) {
+                    console.error("Failed to skip onboarding:", onboardErr);
+                    setError("Failed to finalize setup. Please try again.");
+                }
+            } else {
+                setError(err.response?.data?.error || err.response?.data?.message || "Failed to create QR code. Please try again.");
+            }
         } finally {
             setIsLoading(false);
         }
