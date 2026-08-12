@@ -40,7 +40,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
             const headers = { Authorization: `Bearer ${token}` };
 
             // 1. Create the Tag
-            const tagRes = await axios.post(`${API_BASE}/tags`, {
+            const tagRes = await axios.post(`${API_BASE}/tags/create`, {
                 vehicleNo: "First QR",
                 ownerName: `${firstName} ${lastName}`
             }, { headers });
