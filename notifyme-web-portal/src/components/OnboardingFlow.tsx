@@ -22,6 +22,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
     const [error, setError] = useState('');
     const [createdTagId, setCreatedTagId] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [tagName, setTagName] = useState('');
 
     const handleNextStep = () => {
         if (!firstName.trim() || !lastName.trim()) {
@@ -33,6 +34,11 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
     };
 
     const handleCreateQR = async () => {
+        if (!tagName.trim()) {
+            setError("QR Code Name is required.");
+            return;
+        }
+
         setIsLoading(true);
         setError('');
         try {
@@ -42,13 +48,12 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
             // 1. Create the Tag
             const tagRes = await axios.post(`${API_BASE}/tags/create`, {
                 ownerId: user.id,
-                name: "My First Tag",
-                plateNumber: "First QR"
+                name: tagName
             }, { headers });
             
-            const newTagId = tagRes.data.id;
+            const newTagId = tagRes.data.tag.id;
             setCreatedTagId(newTagId);
-            setQrCodeUrl(tagRes.data.qrCodeUrl);
+            setQrCodeUrl(tagRes.data.tag.qrCodeDataUrl);
 
             // 2. Mark User as Onboarded and update details
             const onboardRes = await axios.post(`${API_BASE}/auth/onboard`, {
@@ -190,6 +195,17 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                             <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.6', marginBottom: '30px' }}>
                                 This is what people will see when they scan your code. They can message or call you securely without ever seeing your personal phone number.
                             </p>
+
+                            <div style={{ marginBottom: '24px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#475569' }}>QR Code Name *</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g., My Tesla, Home Keys"
+                                    value={tagName}
+                                    onChange={(e) => setTagName(e.target.value)}
+                                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none', transition: 'border-color 0.2s' }}
+                                />
+                            </div>
 
                             {error && (
                                 <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #fecaca' }}>
