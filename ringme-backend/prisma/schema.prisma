@@ -22,6 +22,7 @@ model User {
   pincode      String?
   city         String?
   state        String?
+  isOnboarded  Boolean   @default(false)
   isPremium    Boolean   @default(false)
   premiumGrantType String? // e.g., "Friend", "Family", "Influencer"
   premiumExpiresAt DateTime?

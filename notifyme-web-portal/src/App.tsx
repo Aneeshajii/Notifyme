@@ -18,6 +18,7 @@ const AboutUs = lazy(() => import('./components/AboutUs'));
 
 import QRDownloadModal from './components/QRDownloadModal';
 import FloatingAssistant from './components/FloatingAssistant';
+import OnboardingFlow from './components/OnboardingFlow';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -34,6 +35,7 @@ interface UserType {
   city?: string;
   state?: string;
   isPremium: boolean;
+  isOnboarded?: boolean;
 }
 
 interface TagType {
@@ -386,6 +388,10 @@ function App() {
               <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }`}</style>
           </div>
       );
+  }
+
+  if (isAuthenticated && user && !user.isOnboarded) {
+    return <OnboardingFlow user={user} onComplete={setUser} />;
   }
 
   if (!isAuthenticated) {

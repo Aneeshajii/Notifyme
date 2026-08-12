@@ -193,6 +193,32 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// POST /api/auth/onboard
+router.post('/onboard', verifyToken, async (req, res) => {
+    try {
+        const { firstName, lastName, phone } = req.body;
+        
+        if (!firstName || !lastName) {
+            return res.status(400).json({ error: 'First name and last name are required.' });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                name: firstName,
+                lastName: lastName,
+                phone: phone || null,
+                isOnboarded: true
+            }
+        });
+
+        res.json({ message: 'Onboarding completed successfully', user: updatedUser });
+    } catch (error) {
+        console.error("Onboarding Error:", error);
+        res.status(500).json({ error: 'Failed to save onboarding details.' });
+    }
+});
+
 // ==========================================
 // MFA (Multi-Factor Authentication) Routes
 // ==========================================
