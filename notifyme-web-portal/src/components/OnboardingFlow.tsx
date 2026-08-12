@@ -41,8 +41,9 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
 
             // 1. Create the Tag
             const tagRes = await axios.post(`${API_BASE}/tags/create`, {
-                vehicleNo: "First QR",
-                ownerName: `${firstName} ${lastName}`
+                ownerId: user.id,
+                name: "My First Tag",
+                plateNumber: "First QR"
             }, { headers });
             
             const newTagId = tagRes.data.id;
