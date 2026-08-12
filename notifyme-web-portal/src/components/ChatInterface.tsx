@@ -188,11 +188,17 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                     
                     const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || (ext === 'mp4' ? 'audio/mp4' : 'audio/webm') });
                     stream.getTracks().forEach(t => t.stop());
+                    
+                    if (audioBlob.size < 500) {
+                        alert("Audio recording was too short or failed. Please try again.");
+                        return;
+                    }
+                    
                     const url = await uploadMedia(audioBlob, ext);
                     if (url) await handleSendReply('Voice Message', 'audio', url);
                 };
                 
-                mediaRecorder.start();
+                mediaRecorder.start(500); // 500ms timeslice for cross-browser reliability
                 setIsRecording(true);
                 setRecordingTime(0);
             } catch (err) {

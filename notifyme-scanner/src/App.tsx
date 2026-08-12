@@ -268,13 +268,19 @@ function ScannerProfile() {
                   
                   const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || (ext === 'mp4' ? 'audio/mp4' : 'audio/webm') });
                   stream.getTracks().forEach(t => t.stop());
+                  
+                  if (audioBlob.size < 500) {
+                      alert("Audio recording was too short or failed. Please try again.");
+                      return;
+                  }
+
                   setIsSendingMsg(true);
                   const url = await uploadMedia(audioBlob, ext);
                   if (url) await handleSendMessage('Voice Message', 'audio', url);
                   setIsSendingMsg(false);
               };
               
-              mediaRecorder.start();
+              mediaRecorder.start(500);
               setIsRecording(true);
               setRecordingTime(0);
           } catch (err) {
