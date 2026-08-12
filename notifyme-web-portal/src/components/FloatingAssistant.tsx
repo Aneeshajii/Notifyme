@@ -92,16 +92,17 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
                 }, 1000);
             }
 
-        } catch (error: any) {
-            console.error('Chat error:', error);
-            const errorMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                text: "I'm having trouble connecting right now. Please try again later.",
+        } catch (err: any) {
+            console.error("Chat error:", err);
+            const errorMessage = err.response?.data?.error || "I'm having trouble connecting right now. Please try again later.";
+            const aiMsg: Message = {
+                id: Date.now().toString(),
+                text: errorMessage,
                 sender: 'ai',
                 timestamp: new Date(),
                 isError: true
             };
-            setMessages(prev => [...prev, errorMsg]);
+            setMessages(prev => [...prev, aiMsg]);
         } finally {
             setIsTyping(false);
         }

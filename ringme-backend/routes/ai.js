@@ -169,7 +169,7 @@ Schema:
 
     } catch (error) {
         console.error('AI Chat Error:', error);
-        res.status(500).json({ error: 'Failed to communicate with AI Assistant.' });
+        res.status(500).json({ error: error.message || 'Failed to communicate with AI Assistant.' });
     }
 });
 
