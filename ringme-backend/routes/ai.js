@@ -147,7 +147,7 @@ Schema:
             }
         });
 
-        const rawText = response.text();
+        const rawText = response.text;
         let aiResponseData;
         try {
             aiResponseData = JSON.parse(rawText);
