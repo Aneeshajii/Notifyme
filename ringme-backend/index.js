@@ -7,6 +7,11 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require('socket.io');
+const webpush = require('web-push');
+
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY || 'BJdPrqJCwjZM7qd4uX1olNSwUxfHbvzNxakqT_jQ-H-BwuUM4dDz3Rjsc8eZ-suPDEyDUFs9xfHQSpc1Y7nQDeg';
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'tRwgv6ZwHM-OwA2v39x7rtEX2UQbw_zUTydP_HJueIQ';
+webpush.setVapidDetails('mailto:support@notifyme.com', publicVapidKey, privateVapidKey);
 
 const app = express();
 const server = http.createServer(app);
@@ -94,28 +99,64 @@ io.on('connection', (socket) => {
       const tag = await prisma.tag.findUnique({ where: { id: data.tagId } });
       if (tag) {
         console.log(`Routing call for tag ${data.tagId} to owner ${tag.ownerId}`);
-        const room = io.sockets.adapter.rooms.get(tag.ownerId.toString());
-        if (room && room.size > 0) {
-            io.to(tag.ownerId.toString()).emit('incoming-call', {
-              signal: data.signalData,
-              callerId: data.callerId,
-              tagId: data.tagId
-            });
-        } else {
-            // Owner offline, log as missed
-            console.log(`Owner offline, logging missed call for tag ${tag.tagId}`);
-            await prisma.callLog.create({
-                data: {
-                    tagId: tag.id,
-                    status: 'missed',
-                    callerId: data.callerId
-                }
-            });
-            // Let the scanner know the user is offline
-            io.to(data.callerId).emit('owner-offline');
+          const room = io.sockets.adapter.rooms.get(tag.ownerId.toString());
+          if (room && room.size > 0) {
+              io.to(tag.ownerId.toString()).emit('incoming-call', {
+                signal: data.signalData,
+                callerId: data.callerId,
+                tagId: data.tagId
+              });
+          } else {
+              // Owner offline, try sending push notification
+              console.log(`Owner offline, sending Web Push notification for tag ${tag.tagId}`);
+              
+              const subscriptions = await prisma.pushSubscription.findMany({
+                  where: { userId: tag.ownerId }
+              });
+
+              if (subscriptions.length > 0) {
+                  const payload = JSON.stringify({
+                      title: 'Incoming Call',
+                      body: `You have an incoming call for tag: ${tag.name}`,
+                      data: {
+                          tagId: data.tagId,
+                          callerId: data.callerId,
+                          signal: data.signalData
+                      }
+                  });
+
+                  for (const sub of subscriptions) {
+                      try {
+                          await webpush.sendNotification({
+                              endpoint: sub.endpoint,
+                              keys: { p256dh: sub.p256dh, auth: sub.auth }
+                          }, payload);
+                      } catch (err) {
+                          console.error('Push error:', err);
+                          // Clean up expired subscriptions
+                          if (err.statusCode === 410 || err.statusCode === 404) {
+                              await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } });
+                          }
+                      }
+                  }
+                  
+                  // Let scanner know ringing via push
+                  io.to(data.callerId).emit('ringing-push');
+                  
+              } else {
+                  // No push subscription, log as missed immediately
+                  await prisma.callLog.create({
+                      data: {
+                          tagId: tag.id,
+                          status: 'missed',
+                          callerId: data.callerId
+                      }
+                  });
+                  io.to(data.callerId).emit('owner-offline');
+              }
+          }
         }
-      }
-    } catch (e) {
+      } catch (e) {
       console.error('Call routing error', e);
     }
   });

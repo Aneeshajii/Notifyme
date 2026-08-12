@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../prismaClient');
 const { verifyToken } = require('../middleware/auth');
+const webpush = require('web-push');
+
+// Use generated VAPID keys or environment variables
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY || 'BJdPrqJCwjZM7qd4uX1olNSwUxfHbvzNxakqT_jQ-H-BwuUM4dDz3Rjsc8eZ-suPDEyDUFs9xfHQSpc1Y7nQDeg';
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'tRwgv6ZwHM-OwA2v39x7rtEX2UQbw_zUTydP_HJueIQ';
+
+webpush.setVapidDetails('mailto:support@notifyme.com', publicVapidKey, privateVapidKey);
 
 // POST /api/notifications
 // Create a new notification (e.g. Security Event, New Login)
@@ -57,6 +64,32 @@ router.put('/:id/read', verifyToken, async (req, res) => {
         res.json(notification);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/notifications/subscribe
+router.post('/subscribe', verifyToken, async (req, res) => {
+    try {
+        const subscription = req.body;
+        
+        await prisma.pushSubscription.upsert({
+            where: { endpoint: subscription.endpoint },
+            update: {
+                p256dh: subscription.keys.p256dh,
+                auth: subscription.keys.auth
+            },
+            create: {
+                userId: req.user.id,
+                endpoint: subscription.endpoint,
+                p256dh: subscription.keys.p256dh,
+                auth: subscription.keys.auth
+            }
+        });
+        
+        res.status(201).json({});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to save subscription' });
     }
 });
 

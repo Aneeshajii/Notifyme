@@ -51,6 +51,7 @@ model User {
   sessions          Session[]
   blockedScanners   BlockedScanner[]
   securityAlerts    SecurityAlert[]
+  pushSubscriptions PushSubscription[]
 }
 
 model BlockedScanner {
@@ -272,5 +273,15 @@ model OtpVerification {
   phone     String
   otp       String
   expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 }

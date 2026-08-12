@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Send, Image, Mic, Check, CheckCheck, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft, MicOff, Paperclip, MapPin } from 'lucide-react';
+import { socket } from '../App';
+import { Send, Image, Mic, Check, CheckCheck, Clock, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft, MicOff, Paperclip, MapPin } from 'lucide-react';
 
 const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -10,7 +11,7 @@ const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function ChatInterface({ messages, user, fetchTagsAndMessages }: any) {
+export default function ChatInterface({ messages, setMessages, user, fetchTagsAndMessages }: any) {
     const [selectedChat, setSelectedChat] = useState<string | null>(null);
     const [replyText, setReplyText] = useState('');
     const [showBlocked, setShowBlocked] = useState(false);
@@ -18,9 +19,20 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
     
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recordingTime, setRecordingTime] = useState<number>(0);
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+    const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
     const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
     const audioChunksRef = React.useRef<Blob[]>([]);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const [touchStartX, setTouchStartX] = useState<number | null>(null);
+    const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX === null) return;
+        if (e.changedTouches[0].clientX - touchStartX > 100) setSelectedChat(null);
+        setTouchStartX(null);
+    };
 
     const fetchBlockedUsers = async () => {
         try {
@@ -108,6 +120,28 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
     const handleSendReply = async (text: string = replyText, type: 'text'|'image'|'audio'|'location' = 'text', mediaUrl: string|null = null, lat: number|null = null, lng: number|null = null) => {
         if (!text.trim() && !mediaUrl && !lat) return;
         if (!activeChat) return;
+        
+        // Optimistic UI Update
+        const tempId = 'temp-' + Date.now();
+        const optimisticMsg = {
+            id: tempId,
+            content: text,
+            senderInfo: user.name || 'Owner',
+            senderRole: 'owner',
+            tag: activeChat.tag,
+            conversationId: activeChat.conversationId,
+            conversation: { scannerId: activeChat.scanner },
+            mediaUrl,
+            mediaType: type !== 'text' && type !== 'location' ? type : null,
+            latitude: lat,
+            longitude: lng,
+            createdAt: new Date().toISOString(),
+            status: 'sending' // New sending state
+        };
+        
+        if (setMessages) setMessages((prev: any[]) => [...prev, optimisticMsg]);
+        if (text === replyText) setReplyText('');
+        
         try {
             await axios.post(`${API_BASE}/messages/send`, {
                 content: text,
@@ -120,10 +154,10 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                 latitude: lat,
                 longitude: lng
             });
-            if (text === replyText) setReplyText('');
             fetchTagsAndMessages(user.id);
         } catch (error) {
             alert('Failed to send reply');
+            if (setMessages) setMessages((prev: any[]) => prev.filter(m => m.id !== tempId));
         }
     };
 
@@ -207,11 +241,43 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
         }
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         let interval: any;
         if (isRecording) interval = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
         return () => clearInterval(interval);
     }, [isRecording]);
+
+    useEffect(() => {
+        const handleTyping = (data: any) => {
+            setTypingUsers(prev => new Set(prev).add(data.from));
+        };
+        const handleStopTyping = (data: any) => {
+            setTypingUsers(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(data.from);
+                return newSet;
+            });
+        };
+
+        socket.on('typing', handleTyping);
+        socket.on('stop-typing', handleStopTyping);
+
+        return () => {
+            socket.off('typing', handleTyping);
+            socket.off('stop-typing', handleStopTyping);
+        };
+    }, []);
+
+    const handleReplyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setReplyText(e.target.value);
+        if (activeChat) {
+            socket.emit('typing', { to: activeChat.scanner, from: user.id, tagId: activeChat.tag.id });
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                socket.emit('stop-typing', { to: activeChat.scanner, from: user.id, tagId: activeChat.tag.id });
+            }, 2000);
+        }
+    };
 
     return (
         <div className="chat-layout">
@@ -263,12 +329,18 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                     <span style={{ fontSize: '12px', color: '#667781' }}>{new Date(chat.lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    {chat.lastMsg.senderRole === 'owner' && (
-                                        <CheckCheck size={16} color={chat.lastMsg.status === 'read' ? '#53bdeb' : '#8696a0'} />
+                                    {typingUsers.has(chat.scanner) ? (
+                                        <span style={{ fontSize: '14px', color: '#25d366', fontWeight: 'bold' }}>typing...</span>
+                                    ) : (
+                                        <>
+                                            {chat.lastMsg.senderRole === 'owner' && (
+                                                <CheckCheck size={16} color={chat.lastMsg.status === 'read' ? '#53bdeb' : '#8696a0'} />
+                                            )}
+                                            <span style={{ fontSize: '14px', color: '#667781', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {chat.lastMsg.content}
+                                            </span>
+                                        </>
                                     )}
-                                    <span style={{ fontSize: '14px', color: '#667781', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {chat.lastMsg.content}
-                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -278,7 +350,11 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
             </div>
 
             {/* Chat Area */}
-            <div className={`chat-main ${!selectedChat ? 'mobile-hidden' : ''}`}>
+            <div 
+                className={`chat-main ${!selectedChat ? 'mobile-hidden' : ''}`}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 {activeChat ? (
                     <>
                         {/* Chat Header */}
@@ -297,7 +373,9 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                         {activeChat.scanner === 'ADMIN' ? 'NotifyMe' : activeChat.scanner}
                                         {activeChat.scanner === 'ADMIN' && <BadgeCheck size={16} color="#1d9bf0" />}
                                     </h3>
-                                    <div style={{ fontSize: '13px', color: '#667781' }}>{activeChat.scanner === 'ADMIN' ? 'Official Business Account' : `Tag: ${activeChat.tag.name}`}</div>
+                                    <div style={{ fontSize: '13px', color: typingUsers.has(activeChat.scanner) ? '#25d366' : '#667781', fontWeight: typingUsers.has(activeChat.scanner) ? 'bold' : 'normal' }}>
+                                        {typingUsers.has(activeChat.scanner) ? 'typing...' : (activeChat.scanner === 'ADMIN' ? 'Official Business Account' : `Tag: ${activeChat.tag.name}`)}
+                                    </div>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '16px' }}>
@@ -360,20 +438,24 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                             </div>
                                         )}
                                         <div style={{ 
-                                            fontSize: '11px', 
-                                            color: '#667781', 
-                                            position: 'absolute',
-                                            bottom: '4px',
-                                            right: '7px',
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '4px' 
-                                        }}>
-                                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            {isOwner && (
+                                        fontSize: '11px', 
+                                        color: '#667781', 
+                                        position: 'absolute',
+                                        bottom: '4px',
+                                        right: '7px',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '4px' 
+                                    }}>
+                                        {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {isOwner && (
+                                            m.status === 'sending' ? (
+                                                <Clock size={12} color="#8696a0" style={{ marginBottom: '-2px' }} />
+                                            ) : (
                                                 <CheckCheck size={15} color={m.status === 'read' ? '#53bdeb' : '#8696a0'} style={{ marginBottom: '-2px' }} />
-                                            )}
-                                        </div>
+                                            )
+                                        )}
+                                    </div>
                                     </div>
                                 )
                             })}
@@ -396,7 +478,7 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                         type="text" 
                                         placeholder="Type a message" 
                                         value={replyText}
-                                        onChange={e => setReplyText(e.target.value)}
+                                        onChange={handleReplyChange}
                                         onKeyDown={e => e.key === 'Enter' && handleSendReply()}
                                         style={{ flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent' }} 
                                     />

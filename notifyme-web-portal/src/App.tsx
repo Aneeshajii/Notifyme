@@ -22,7 +22,7 @@ import OnboardingFlow from './components/OnboardingFlow';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+export const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
 
 interface UserType {
   id: string;
@@ -126,10 +126,40 @@ function App() {
     }
   };
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
   useEffect(() => {
     if (user) {
       socket.emit('join-owner-room', user.id);
       
+      // Register Service Worker for Push Notifications
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+          navigator.serviceWorker.register('/sw.js').then(async (registration) => {
+              try {
+                  const subscription = await registration.pushManager.subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: urlBase64ToUint8Array('BJdPrqJCwjZM7qd4uX1olNSwUxfHbvzNxakqT_jQ-H-BwuUM4dDz3Rjsc8eZ-suPDEyDUFs9xfHQSpc1Y7nQDeg')
+                  });
+                  await axios.post(`${API_BASE}/notifications/subscribe`, subscription);
+              } catch (err) {
+                  console.error('Failed to subscribe to push notifications', err);
+              }
+          });
+      }
+
       const handleAccountUpdated = async () => {
           try {
               const res = await axios.get(`${API_BASE}/auth/me`);
@@ -166,10 +196,38 @@ function App() {
         tagId: data.tagId
       });
     });
+
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'incoming-call-action') {
+          const { action, data } = event.data;
+          setIncomingCall({ signal: data.signal, callerId: data.callerId, tagId: data.tagId });
+          // If action was 'decline', we can reject immediately
+          // If 'answer', we show the UI and let the user click accept (due to browser autoplay policies)
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handleSwMessage);
+
     return () => {
       socket.off('incoming-call');
+      navigator.serviceWorker?.removeEventListener('message', handleSwMessage);
     };
   }, []);
+
+  // Ringtone Effect
+  useEffect(() => {
+      let ringAudio: HTMLAudioElement;
+      if (incomingCall && !callAccepted) {
+          ringAudio = new Audio('https://www.soundjay.com/phone/sounds/phone-calling-1.mp3');
+          ringAudio.loop = true;
+          ringAudio.play().catch(e => console.log('Audio autoplay blocked by browser', e));
+      }
+      return () => {
+          if (ringAudio) {
+              ringAudio.pause();
+              ringAudio.currentTime = 0;
+          }
+      };
+  }, [incomingCall, callAccepted]);
 
   const acceptCall = () => {
     setCallAccepted(true);
@@ -574,7 +632,7 @@ function App() {
           {activeTab === 'inbox' && (
             <>
               <div className="header-actions"><div><h1>Secure Inbox</h1><p>Read anonymous and system messages.</p></div></div>
-              <ChatInterface messages={messages} user={user} fetchTagsAndMessages={fetchTagsAndMessages} />
+              <ChatInterface messages={messages} setMessages={setMessages} user={user} fetchTagsAndMessages={fetchTagsAndMessages} />
             </>
           )}
 
@@ -644,7 +702,7 @@ function App() {
           {activeTab === 'settings' && (
             <>
               <div className="header-actions"><div><h1>Settings</h1><p>Preferences & Integrations</p></div></div>
-              <div className="settings-container" style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+              <div className="settings-container" style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))' }}>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
