@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer/simplepeer.min.js';
@@ -7,14 +7,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import ChatInterface from './components/ChatInterface';
 import './index.css';
 
-import UserDashboard from './components/UserDashboard';
-import QRAnalytics from './components/QRAnalytics';
-import SpecializedModes from './components/SpecializedModes';
-import PrivacySecurity from './components/PrivacySecurity';
-import Subscriptions from './components/Subscriptions';
-import ScanHistory from './components/ScanHistory';
-import SupportCenter from './components/SupportCenter';
-import AboutUs from './components/AboutUs';
+const UserDashboard = lazy(() => import('./components/UserDashboard'));
+const QRAnalytics = lazy(() => import('./components/QRAnalytics'));
+const SpecializedModes = lazy(() => import('./components/SpecializedModes'));
+const PrivacySecurity = lazy(() => import('./components/PrivacySecurity'));
+const Subscriptions = lazy(() => import('./components/Subscriptions'));
+const ScanHistory = lazy(() => import('./components/ScanHistory'));
+const SupportCenter = lazy(() => import('./components/SupportCenter'));
+const AboutUs = lazy(() => import('./components/AboutUs'));
+
 import QRDownloadModal from './components/QRDownloadModal';
 import FloatingAssistant from './components/FloatingAssistant';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -60,7 +61,20 @@ function App() {
   const [user, setUser] = useState<UserType | null>(null);
   const [tags, setTags] = useState<TagType[]>([]);
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard'|'tags'|'analytics'|'inbox'|'notifications'|'scan_history'|'vehicle'|'home'|'emergency'|'business'|'subscriptions'|'privacy'|'security'|'family'|'about_us'|'support'|'profile'|'settings'>('dashboard');
+  const [activeTabState, setActiveTabState] = useState<'dashboard'|'tags'|'analytics'|'inbox'|'notifications'|'scan_history'|'vehicle'|'home'|'emergency'|'business'|'subscriptions'|'privacy'|'security'|'family'|'about_us'|'support'|'profile'|'settings'>('dashboard');
+  
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '') as any;
+    if (hash) {
+      setActiveTabState(hash);
+    }
+  }, []);
+
+  const activeTab = activeTabState;
+  const setActiveTab = (tab: any) => {
+    window.location.hash = tab;
+    setActiveTabState(tab);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [downloadingTag, setDownloadingTag] = useState<any>(null);
@@ -125,10 +139,19 @@ function App() {
           }
       };
 
+      const handleNewMessage = (msg: any) => {
+          setMessages(prev => {
+              if (prev.find(m => m.id === msg.id)) return prev;
+              return [...prev, msg];
+          });
+      };
+
       socket.on('account-updated', handleAccountUpdated);
+      socket.on(`user-${user.id}-new-message`, handleNewMessage);
 
       return () => {
           socket.off('account-updated', handleAccountUpdated);
+          socket.off(`user-${user.id}-new-message`, handleNewMessage);
       };
     }
   }, [user?.id]);
@@ -483,6 +506,7 @@ function App() {
         </header>
 
         <div className="content-area">
+          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
           {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
           {activeTab === 'analytics' && <QRAnalytics />}
 
@@ -662,8 +686,9 @@ function App() {
           {activeTab === 'subscriptions' && <Subscriptions profileData={profileData} />}
           {activeTab === 'privacy' && <PrivacySecurity mode="privacy" />}
           {activeTab === 'security' && <PrivacySecurity mode="security" />}
-          {activeTab === 'support' && <SupportCenter user={user} />} 
+          {activeTab === 'support' && <SupportCenter user={user} />}
           {activeTab === 'about_us' && <AboutUs />}
+          </Suspense>
 
           {/* Placeholders for remaining modules */}
           {['notifications', 'family'].includes(activeTab) && (

@@ -10,11 +10,17 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-}
+const os = require('os');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Use OS temp directory for serverless compatibility (Vercel)
+const uploadsDir = os.tmpdir();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -37,13 +43,30 @@ const messageRateLimiter = rateLimit({
 });
 
 // POST /api/messages/upload
-router.post('/upload', upload.single('media'), (req, res) => {
+router.post('/upload', upload.single('media'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
         
-        // Transcode audio files to MP3 for universal cross-browser compatibility (iOS Safari + Chrome)
+        // Helper to upload to Cloudinary and delete local file
+        const uploadToCloudinary = async (filePath, isAudioFile) => {
+            return new Promise((resolve, reject) => {
+                cloudinary.uploader.upload(filePath, { 
+                    resource_type: isAudioFile ? 'video' : 'image',
+                    folder: 'notifyme_chat'
+                }, (error, result) => {
+                    fs.unlink(filePath, () => {}); // Cleanup temp file
+                    if (error) {
+                        console.error('Cloudinary upload error:', error);
+                        reject(error);
+                    } else {
+                        resolve(result.secure_url);
+                    }
+                });
+            });
+        };
+        
         const isAudio = req.file.mimetype.startsWith('audio/') || req.file.originalname.match(/\.(webm|mp4|m4a|ogg|weba)$/i);
         
         if (isAudio && !req.file.originalname.match(/\.mp3$/i)) {
@@ -53,22 +76,34 @@ router.post('/upload', upload.single('media'), (req, res) => {
             ffmpeg(inputPath)
                 .toFormat('mp3')
                 .audioBitrate('128k')
-                .on('end', () => {
-                    // Remove the original non-mp3 file
-                    fs.unlink(inputPath, () => {});
-                    const fileUrl = `/uploads/${path.basename(outputPath)}`;
-                    res.status(200).json({ url: fileUrl });
+                .on('end', async () => {
+                    try {
+                        const cloudUrl = await uploadToCloudinary(outputPath, true);
+                        fs.unlink(inputPath, () => {}); // Cleanup original file
+                        res.status(200).json({ url: cloudUrl });
+                    } catch (cloudErr) {
+                        res.status(500).json({ error: 'Cloud upload failed. Please check Cloudinary credentials.' });
+                    }
                 })
-                .on('error', (err) => {
+                .on('error', async (err) => {
                     console.error('FFmpeg transcoding error:', err);
-                    // Fallback to original file if transcoding fails
-                    const fileUrl = `/uploads/${req.file.filename}`;
-                    res.status(200).json({ url: fileUrl });
+                    // Fallback to original file
+                    try {
+                        const cloudUrl = await uploadToCloudinary(inputPath, true);
+                        res.status(200).json({ url: cloudUrl });
+                    } catch (cloudErr) {
+                        res.status(500).json({ error: 'Cloud upload failed.' });
+                    }
                 })
                 .save(outputPath);
         } else {
-            const fileUrl = `/uploads/${req.file.filename}`;
-            res.status(200).json({ url: fileUrl });
+            // Direct upload (Image or already mp3)
+            try {
+                const cloudUrl = await uploadToCloudinary(req.file.path, isAudio);
+                res.status(200).json({ url: cloudUrl });
+            } catch (cloudErr) {
+                res.status(500).json({ error: 'Cloud upload failed. Please check Cloudinary credentials.' });
+            }
         }
     } catch (error) {
         res.status(500).json({ error: error.message });

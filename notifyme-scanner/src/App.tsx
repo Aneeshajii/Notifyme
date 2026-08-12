@@ -108,7 +108,14 @@ function ScannerProfile() {
     });
     if (chatMessages.length > 0 && chatMessages[0].conversationId) {
         socket.on(`conversation-${chatMessages[0].conversationId}`, (data: any) => {
-            if (data.action === 'status_changed') setChatStatus(data.status);
+            if (data.action === 'status_changed') {
+                setChatStatus(data.status);
+            } else if (data.id) {
+                setChatMessages(prev => {
+                    if (prev.find((m: any) => m.id === data.id)) return prev;
+                    return [...prev, data];
+                });
+            }
         });
     }
     socket.on('typing', (data: any) => {
@@ -397,12 +404,12 @@ function ScannerProfile() {
                                 <div key={msg.id} style={{ alignSelf: msg.senderRole === 'scanner' ? 'flex-end' : 'flex-start', background: msg.senderRole === 'scanner' ? '#4f46e5' : '#f1f5f9', color: msg.senderRole === 'scanner' ? 'white' : '#0f172a', padding: '14px 18px', borderRadius: '20px', borderBottomRightRadius: msg.senderRole === 'scanner' ? '4px' : '20px', borderBottomLeftRadius: msg.senderRole === 'scanner' ? '20px' : '4px', maxWidth: '85%', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                     {msg.mediaType === 'image' && msg.mediaUrl && (
                                         <div style={{ marginBottom: '8px', borderRadius: '12px', overflow: 'hidden' }}>
-                                            <img src={`${API_BASE.replace('/api', '')}${msg.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                                            <img src={msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `${API_BASE.replace('/api', '')}${msg.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
                                         </div>
                                     )}
                                     {msg.mediaType === 'audio' && msg.mediaUrl && (
                                         <div style={{ marginBottom: '8px' }}>
-                                            <audio controls src={`${API_BASE.replace('/api', '')}${msg.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
+                                            <audio controls src={msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `${API_BASE.replace('/api', '')}${msg.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
                                         </div>
                                     )}
                                     {msg.latitude && msg.longitude && (

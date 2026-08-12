@@ -133,6 +133,9 @@ model Conversation {
   status    String    @default("open") // open, closed
   startedAt DateTime  @default(now())
   messages  Message[]
+
+  @@index([tagId])
+  @@index([scannerId])
 }
 
 model Message {
@@ -150,6 +153,10 @@ model Message {
   latitude       Float?
   longitude      Float?
   createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([tagId])
+  @@index([createdAt])
 }
 
 model CallLog {

@@ -334,12 +334,12 @@ export default function ChatInterface({ messages, user, fetchTagsAndMessages }: 
                                         )}
                                         {m.mediaType === 'image' && m.mediaUrl && (
                                             <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
-                                                <img src={`${API_BASE.replace('/api', '')}${m.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                                                <img src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
                                             </div>
                                         )}
                                         {m.mediaType === 'audio' && m.mediaUrl && (
                                             <div style={{ marginBottom: '8px' }}>
-                                                <audio controls src={`${API_BASE.replace('/api', '')}${m.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
+                                                <audio controls src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
                                             </div>
                                         )}
                                         {m.latitude && m.longitude && (

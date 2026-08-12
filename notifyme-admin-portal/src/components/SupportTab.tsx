@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Search, Filter, MessageCircle, AlertCircle, CheckCircle, Send, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SOCKET_URL = 'http://localhost:5000';
 
 export default function SupportTab() {
