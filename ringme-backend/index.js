@@ -14,6 +14,10 @@ const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'tRwgv6ZwHM-OwA2v39x7rt
 webpush.setVapidDetails('mailto:support@notifyme.com', publicVapidKey, privateVapidKey);
 
 const app = express();
+
+// Trust the first proxy (Render/Heroku/Load Balancers) to allow rate-limiting by real IPs
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
