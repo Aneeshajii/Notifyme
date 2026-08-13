@@ -186,7 +186,21 @@ router.post('/login', async (req, res) => {
             }
         });
 
-        res.json({ message: 'Login successful', accessToken, refreshToken, user });
+        // Check for pending unverified payments
+        const pendingPayment = await prisma.payment.findFirst({
+            where: { userId: user.id, status: 'paid_unverified' }
+        });
+
+        const userResponse = { ...user, requiresPhoneVerification: !!pendingPayment };
+        delete userResponse.password;
+        delete userResponse.mfaSecret;
+
+        res.json({
+            message: 'Login successful',
+            user: userResponse,
+            accessToken,
+            refreshToken
+        });
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({ error: error.message });
@@ -274,7 +288,10 @@ router.post('/login/verify-mfa', async (req, res) => {
         const decoded = jwt.verify(mfaTempToken, JWT_SECRET);
         if (!decoded.mfaPending) return res.status(401).json({ message: 'Invalid temp token' });
 
-        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+        const user = await prisma.user.findUnique({ 
+            where: { id: decoded.id },
+            include: { subscription: true, tags: true }
+        });
         if (!user || !user.mfaSecret) return res.status(400).json({ message: 'User not found or MFA not setup' });
 
         const isValid = authenticator.verify({ token, secret: user.mfaSecret });
@@ -311,7 +328,21 @@ router.post('/login/verify-mfa', async (req, res) => {
             }
         });
 
-        res.json({ message: 'Login successful', ...tokens, user: { id: user.id, name: user.name, role: user.role } });
+        // Check for pending unverified payments
+        const pendingPayment = await prisma.payment.findFirst({
+            where: { userId: user.id, status: 'paid_unverified' }
+        });
+
+        const userResponse = { ...user, requiresPhoneVerification: !!pendingPayment };
+        delete userResponse.password;
+        delete userResponse.mfaSecret;
+
+        res.json({
+            message: 'MFA verified successfully',
+            user: userResponse,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -459,7 +490,16 @@ router.get('/me', verifyToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json(user);
+
+        // Check for pending unverified payments
+        const pendingPayment = await prisma.payment.findFirst({
+            where: { userId: user.id, status: 'paid_unverified' }
+        });
+
+        res.json({
+            ...user,
+            requiresPhoneVerification: !!pendingPayment
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

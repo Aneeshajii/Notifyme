@@ -103,8 +103,9 @@ function App() {
     }
   }, []);
 
-  const activeTab = activeTabState;
+  const activeTab = profileData?.requiresPhoneVerification ? 'subscriptions' : activeTabState;
   const setActiveTab = (tab: any) => {
+    if (profileData?.requiresPhoneVerification) return;
     window.location.hash = tab;
     setActiveTabState(tab);
   };
@@ -783,7 +784,15 @@ function urlBase64ToUint8Array(base64String: string) {
           )}
 
           {activeTab === 'scan_history' && <ScanHistory />}
-          {activeTab === 'subscriptions' && <Subscriptions profileData={profileData} />}
+          {activeTab === 'subscriptions' && (
+              <Subscriptions 
+                  profileData={profileData} 
+                  onSubscriptionUpdate={() => {
+                      setProfileData(prev => ({...prev, requiresPhoneVerification: false}));
+                      setUser(prev => prev ? ({...prev, requiresPhoneVerification: false} as any) : null);
+                  }}
+              />
+          )}
           {activeTab === 'privacy' && <PrivacySecurity mode="privacy" />}
           {activeTab === 'security' && <PrivacySecurity mode="security" />}
           {activeTab === 'support' && <SupportCenter user={user} />}

@@ -173,14 +173,18 @@ model CallLog {
 }
 
 model Payment {
-  id           String    @id @default(uuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id])
-  amount       Float
-  method       String    // Google Pay, PhonePe, Paytm
-  status       String    @default("pending") // pending, completed, failed
-  createdAt    DateTime  @default(now())
-}
+    id                 String   @id @default(uuid())
+    userId             String
+    user               User     @relation(fields: [userId], references: [id])
+    amount             Float
+    method             String   // e.g., "Razorpay"
+    status             String   @default("pending") // pending, paid_unverified, completed, failed
+    razorpayOrderId    String?  @unique
+    razorpayPaymentId  String?  @unique
+    razorpaySignature  String?
+    subscriptionPlanId String?
+    createdAt          DateTime @default(now())
+  }
 
 model AdminUser {
   id           String    @id @default(uuid())

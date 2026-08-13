@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../prismaClient');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_mock',
+});
 
 // GET /api/subscriptions
 // Public route to view active subscriptions
@@ -17,31 +24,104 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /api/subscriptions/purchase
-// User route to mock purchase a subscription
-router.post('/purchase', verifyToken, async (req, res) => {
+// POST /api/subscriptions/create-order
+router.post('/create-order', verifyToken, async (req, res) => {
     try {
         const { planId } = req.body;
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
         
         if (!plan) {
-            await prisma.auditLog.create({
-                data: {
-                    adminId: req.user.id,
-                    action: 'USER_SUBSCRIPTION_FAILED',
-                    entityId: req.user.id,
-                    details: JSON.stringify({ reason: 'Subscription plan not found', location: 'POST /api/subscriptions/purchase', inputPlanId: planId }),
-                    ipAddress: req.ip || req.connection.remoteAddress
-                }
-            });
             return res.status(404).json({ error: 'Subscription plan not found.' });
         }
 
+        const options = {
+            amount: Math.round(plan.price * 100), // amount in paisa
+            currency: "INR",
+            receipt: `rcpt_${req.user.id.substring(0, 8)}_${Date.now()}`
+        };
+        
+        const order = await razorpay.orders.create(options);
+        
+        await prisma.payment.create({
+            data: {
+                userId: req.user.id,
+                amount: plan.price,
+                method: "Razorpay",
+                status: "pending",
+                razorpayOrderId: order.id,
+                subscriptionPlanId: plan.id
+            }
+        });
+        
+        res.json({ orderId: order.id, amount: plan.price, key: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/subscriptions/verify-payment
+router.post('/verify-payment', verifyToken, async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        
+        const secret = process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_mock';
+        const generated_signature = crypto
+            .createHmac('sha256', secret)
+            .update(razorpay_order_id + "|" + razorpay_payment_id)
+            .digest('hex');
+
+        if (generated_signature !== razorpay_signature) {
+            return res.status(400).json({ error: 'Invalid payment signature.' });
+        }
+        
+        const payment = await prisma.payment.findUnique({ where: { razorpayOrderId: razorpay_order_id } });
+        if (!payment || payment.userId !== req.user.id) {
+            return res.status(404).json({ error: 'Payment record not found or unauthorized.' });
+        }
+        
+        await prisma.payment.update({
+            where: { razorpayOrderId: razorpay_order_id },
+            data: {
+                razorpayPaymentId: razorpay_payment_id,
+                razorpaySignature: razorpay_signature,
+                status: 'paid_unverified'
+            }
+        });
+        
+        res.json({ message: 'Payment verified successfully. Awaiting phone verification.' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/subscriptions/activate
+router.post('/activate', verifyToken, async (req, res) => {
+    try {
+        const payment = await prisma.payment.findFirst({
+            where: { userId: req.user.id, status: 'paid_unverified' },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        if (!payment) {
+            return res.status(404).json({ error: 'No verified pending payment found.' });
+        }
+        
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // Standard 30 day cycle
+        
         const updatedUser = await prisma.user.update({
             where: { id: req.user.id },
             data: {
-                pendingSubscriptionId: plan.id
+                isPremium: true,
+                premiumExpiresAt: expiresAt,
+                subscriptionId: payment.subscriptionPlanId,
+                pendingSubscriptionId: null
             }
+        });
+        
+        await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: 'completed' }
         });
 
         await prisma.auditLog.create({
@@ -49,22 +129,13 @@ router.post('/purchase', verifyToken, async (req, res) => {
                 adminId: req.user.id,
                 action: 'USER_SUBSCRIBED',
                 entityId: req.user.id,
-                details: JSON.stringify({ planId: plan.id, planName: plan.name }),
+                details: JSON.stringify({ planId: payment.subscriptionPlanId }),
                 ipAddress: req.ip || req.connection.remoteAddress
             }
         });
-
-        res.json({ message: 'Payment successful! Please verify your phone number to activate.', user: updatedUser });
+        
+        res.json({ message: 'Subscription activated successfully.', user: updatedUser });
     } catch (error) {
-        await prisma.auditLog.create({
-            data: {
-                adminId: req.user.id,
-                action: 'USER_SUBSCRIPTION_FAILED',
-                entityId: req.user.id,
-                details: JSON.stringify({ reason: error.message, location: 'POST /api/subscriptions/purchase' }),
-                ipAddress: req.ip || req.connection.remoteAddress
-            }
-        });
         res.status(500).json({ error: error.message });
     }
 });

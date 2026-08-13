@@ -33,6 +33,7 @@
     "otplib": "^13.4.1",
     "qrcode": "^1.5.4",
     "rate-limit-redis": "^6.0.0",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.8.3",
     "web-push": "^3.6.7"
   },

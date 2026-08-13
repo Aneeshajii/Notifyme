@@ -4,9 +4,8 @@ import { CreditCard, CheckCircle, ShieldCheck, Check } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function Subscriptions({ profileData }: { profileData: any }) {
+export default function Subscriptions({ profileData, onSubscriptionUpdate }: { profileData: any, onSubscriptionUpdate?: () => void }) {
   const [plans, setPlans] = useState<any[]>([]);
-  const [showRazorpay, setShowRazorpay] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [verifyPhone, setVerifyPhone] = useState(profileData?.phone || '');
   const [otp, setOtp] = useState('');
@@ -26,27 +25,83 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
           }
       };
       fetchPlans();
-  }, []);
 
-  const handleUpgradeClick = (plan: any) => {
+      // Load Razorpay script
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+
+      // Check if user needs phone verification from previous drop-off
+      if (profileData?.requiresPhoneVerification) {
+          setShowPhoneVerification(true);
+      }
+  }, [profileData]);
+
+  const handleUpgradeClick = async (plan: any) => {
       setSelectedPlan(plan);
-      setShowRazorpay(true);
-  };
-
-  const handlePayment = async () => {
-      if (!selectedPlan) return;
       setIsProcessing(true);
       try {
           const token = localStorage.getItem('userToken');
-          await axios.post(`${API_BASE}/subscriptions/purchase`, { planId: selectedPlan.id }, {
+          
+          // 1. Create order on backend
+          const orderRes = await axios.post(`${API_BASE}/subscriptions/create-order`, { planId: plan.id }, {
               headers: { Authorization: `Bearer ${token}` }
           });
-          setIsProcessing(false);
-          setShowRazorpay(false);
-          setShowPhoneVerification(true);
+          
+          const { orderId, amount, key } = orderRes.data;
+
+          // 2. Open Razorpay Checkout
+          const options = {
+              key: key,
+              amount: amount * 100,
+              currency: "INR",
+              name: "NotifyMe",
+              description: `Upgrade to ${plan.name}`,
+              image: "/logo.png",
+              order_id: orderId,
+              handler: async function (response: any) {
+                  // 3. Verify Payment Signature
+                  try {
+                      await axios.post(`${API_BASE}/subscriptions/verify-payment`, {
+                          razorpay_order_id: response.razorpay_order_id,
+                          razorpay_payment_id: response.razorpay_payment_id,
+                          razorpay_signature: response.razorpay_signature
+                      }, {
+                          headers: { Authorization: `Bearer ${token}` }
+                      });
+                      
+                      // Payment verified! Show phone verification modal
+                      setShowPhoneVerification(true);
+                  } catch (err) {
+                      alert("Payment verification failed. Please contact support.");
+                  }
+              },
+              prefill: {
+                  name: profileData?.name || "",
+                  email: profileData?.email || "",
+                  contact: profileData?.phone || ""
+              },
+              theme: {
+                  color: "#0f172a"
+              },
+              modal: {
+                  ondismiss: function() {
+                      setIsProcessing(false);
+                  }
+              }
+          };
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (response: any){
+              setIsProcessing(false);
+              alert(response.error.description || "Payment failed. Please try again.");
+          });
+          rzp.open();
+
       } catch (err) {
           setIsProcessing(false);
-          alert("Payment failed.");
+          alert("Failed to initialize payment. Please try again.");
           console.error(err);
       }
   };
@@ -68,14 +123,26 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
       e.preventDefault();
       try {
           const token = localStorage.getItem('userToken');
+          
+          // Verify OTP first
           await axios.post(`${API_BASE}/auth/verify-otp`, { phone: verifyPhone, otp }, {
               headers: { Authorization: `Bearer ${token}` }
           });
+          
+          // Activate Subscription securely
+          await axios.post(`${API_BASE}/subscriptions/activate`, {}, {
+              headers: { Authorization: `Bearer ${token}` }
+          });
+          
           setShowPhoneVerification(false);
           setOtpSent(false);
-          alert(`Verification Successful! You are now subscribed to ${selectedPlan.name}.`);
+          alert(`Verification Successful! Your subscription is now active.`);
+          
+          if (onSubscriptionUpdate) {
+              onSubscriptionUpdate();
+          }
       } catch (err) {
-          alert("Invalid OTP.");
+          alert("Invalid OTP or Failed to activate subscription.");
       }
   };
 
@@ -122,6 +189,7 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
 
                       <button 
                           onClick={() => !isCurrent && handleUpgradeClick(plan)}
+                          disabled={isProcessing}
                           style={{ 
                               padding: '16px', 
                               background: isCurrent ? '#f1f5f9' : '#0f172a', 
@@ -131,15 +199,16 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
                               fontWeight: '600', 
                               fontSize: '15px',
                               width: '100%', 
-                              cursor: isCurrent ? 'default' : 'pointer',
+                              cursor: (isCurrent || isProcessing) ? 'not-allowed' : 'pointer',
                               marginBottom: '32px',
                               transition: 'all 0.2s ease',
-                              boxShadow: isCurrent ? 'none' : '0 4px 12px rgba(15, 23, 42, 0.15)'
+                              boxShadow: isCurrent ? 'none' : '0 4px 12px rgba(15, 23, 42, 0.15)',
+                              opacity: isProcessing ? 0.7 : 1
                           }}
-                          onMouseOver={(e) => { if (!isCurrent) e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                          onMouseOut={(e) => { if (!isCurrent) e.currentTarget.style.transform = 'translateY(0)'; }}
+                          onMouseOver={(e) => { if (!isCurrent && !isProcessing) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                          onMouseOut={(e) => { if (!isCurrent && !isProcessing) e.currentTarget.style.transform = 'translateY(0)'; }}
                       >
-                          {isCurrent ? 'Current Plan' : (profileData?.isPremium ? 'Downgrade' : `Upgrade to ${plan.name}`)}
+                          {isProcessing && selectedPlan?.id === plan.id ? 'Processing...' : (isCurrent ? 'Current Plan' : (profileData?.isPremium ? 'Downgrade' : `Upgrade to ${plan.name}`))}
                       </button>
 
                       <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>What's included</div>
@@ -159,48 +228,21 @@ export default function Subscriptions({ profileData }: { profileData: any }) {
           })}
       </div>
 
-      {showRazorpay && selectedPlan && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-              <div style={{ background: 'white', padding: '40px', borderRadius: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a', padding: '6px 12px', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}>Checkout</div>
-                      </div>
-                      <button onClick={() => setShowRazorpay(false)} style={{ background: '#f1f5f9', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>&times;</button>
-                  </div>
-                  
-                  <div style={{ textAlign: 'center', marginBottom: '40px', padding: '32px 0', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                      <div style={{ color: '#64748b', marginBottom: '12px', fontSize: '15px', fontWeight: '500' }}>NotifyMe {selectedPlan.name}</div>
-                      <div style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', letterSpacing: '-2px' }}>₹{selectedPlan.price}</div>
-                  </div>
-
-                  <button 
-                      onClick={handlePayment} 
-                      disabled={isProcessing}
-                      style={{ background: '#0f172a', color: 'white', padding: '18px', border: 'none', borderRadius: '12px', width: '100%', fontWeight: '600', fontSize: '16px', cursor: isProcessing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}
-                  >
-                      {isProcessing ? 'Processing...' : `Pay ₹${selectedPlan.price}`}
-                  </button>
-                  <div style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '16px', fontSize: '13px' }}>
-                      <ShieldCheck size={14} /> Secured Test Environment
-                  </div>
-              </div>
-          </div>
-      )}
-
       {showPhoneVerification && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
               <div style={{ background: 'white', padding: '40px', borderRadius: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                   <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                      <h3 style={{ margin: '0 0 12px', fontSize: '24px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.5px' }}>Verify Your Phone</h3>
-                      <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>We need to verify your phone number to activate your new plan.</p>
+                      <div style={{ background: '#ecfdf5', display: 'inline-flex', padding: '12px', borderRadius: '50%', marginBottom: '16px' }}>
+                          <CheckCircle color="#10b981" size={32} />
+                      </div>
+                      <h3 style={{ margin: '0 0 12px', fontSize: '24px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.5px' }}>Payment Successful!</h3>
+                      <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>Please verify your phone number to activate your new subscription plan.</p>
                   </div>
                   
                   {!otpSent ? (
                       <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <input type="tel" placeholder="Enter Phone Number" value={verifyPhone} onChange={e => setVerifyPhone(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '16px', outline: 'none', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderColor = '#0f172a'} onBlur={(e) => e.target.style.borderColor = '#e2e8f0'} />
                           <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>Send Code</button>
-                          <button type="button" onClick={() => setShowPhoneVerification(false)} style={{ padding: '16px', background: 'transparent', border: 'none', color: '#64748b', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
                       </form>
                   ) : (
                       <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
