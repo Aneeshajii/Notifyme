@@ -795,14 +795,25 @@ router.post('/users/:id/block', verifyToken, requireRole('MASTER_ADMIN', 'MODERA
 router.delete('/users/:id/terminate', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
   try {
     const userId = req.params.id;
-    // SQLite requires manual cascading if foreign keys aren't set to cascade.
-    // 1. Delete all OTP codes for user
+    // SQLite/PostgreSQL manual cascading
+    
+    // 1. Delete all non-tag user dependencies
     await prisma.otpVerification.deleteMany({ where: { userId } });
-    // 2. Delete all tags (and their messages/scans)
+    await prisma.blockedScanner.deleteMany({ where: { ownerId: userId } });
+    await prisma.session.deleteMany({ where: { userId } });
+    await prisma.payment.deleteMany({ where: { userId } });
+    await prisma.pushSubscription.deleteMany({ where: { userId } });
+    await prisma.securityAlert.deleteMany({ where: { userId } });
+    await prisma.notification.deleteMany({ where: { userId } });
+    await prisma.familyShare.deleteMany({ where: { ownerId: userId } });
+    
+    // 2. Delete all tags (and their messages/scans/calls/conversations)
     const userTags = await prisma.tag.findMany({ where: { ownerId: userId } });
     for (const tag of userTags) {
         await prisma.message.deleteMany({ where: { tagId: tag.id } });
         await prisma.scanHistory.deleteMany({ where: { tagId: tag.id } });
+        await prisma.callLog.deleteMany({ where: { tagId: tag.id } });
+        await prisma.conversation.deleteMany({ where: { tagId: tag.id } });
         await prisma.tag.delete({ where: { id: tag.id } });
     }
     
