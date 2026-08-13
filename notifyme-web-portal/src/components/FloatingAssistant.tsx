@@ -131,20 +131,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
         }}>
             {/* Chat Window */}
             {isOpen && (
-                <div style={{
-                    width: '380px',
-                    height: '600px',
-                    maxHeight: 'calc(100vh - 100px)',
-                    maxWidth: 'calc(100vw - 32px)',
-                    background: 'white',
-                    borderRadius: '24px',
-                    boxShadow: '0 20px 40px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
-                    marginBottom: '16px',
-                    animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-                }}>
+                <div className="floating-assistant-container">
                     {/* Header */}
                     <div style={{
                         background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
@@ -240,11 +227,12 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
                         <input
                             ref={inputRef}
                             type="text"
+                            className="input-field"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Ask me anything..."
-                            style={{ flex: 1, padding: '12px 16px', borderRadius: '100px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', background: '#f8fafc' }}
+                            style={{ flex: 1, padding: '12px 16px', borderRadius: '100px', border: '1px solid #cbd5e1', outline: 'none', background: '#f8fafc' }}
                         />
                         <button
                             onClick={handleSend}

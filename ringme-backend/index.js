@@ -98,6 +98,18 @@ io.on('connection', (socket) => {
     try {
       const tag = await prisma.tag.findUnique({ where: { id: data.tagId } });
       if (tag) {
+        // Check if scanner is blocked
+        const isBlocked = await prisma.blockedScanner.findUnique({
+            where: { ownerId_scannerId: { ownerId: tag.ownerId, scannerId: data.callerId || "anonymous" } }
+        });
+
+        if (isBlocked) {
+            console.log(`Call blocked from ${data.callerId} to owner ${tag.ownerId}`);
+            // Emit offline to pretend the user isn't available, or a specific blocked message if desired.
+            // For privacy, we just say owner is offline so they don't know they're blocked explicitly.
+            return io.to(data.callerId).emit('owner-offline');
+        }
+
         console.log(`Routing call for tag ${data.tagId} to owner ${tag.ownerId}`);
           const room = io.sockets.adapter.rooms.get(tag.ownerId.toString());
           if (room && room.size > 0) {
