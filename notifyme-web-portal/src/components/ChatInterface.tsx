@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { socket } from '../App';
+import { socket } from '../socket';
 import { Send, Image, Mic, Check, CheckCheck, Clock, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft, MicOff, Paperclip, MapPin } from 'lucide-react';
 
 const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (

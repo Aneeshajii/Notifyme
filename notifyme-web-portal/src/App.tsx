@@ -22,7 +22,7 @@ import OnboardingFlow from './components/OnboardingFlow';
 import { useGoogleLogin } from '@react-oauth/google';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const socket: Socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+import { socket } from './socket';
 
 interface UserType {
   id: string;
