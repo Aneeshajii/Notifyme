@@ -292,16 +292,22 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                             <img src={qrCodeUrl} alt="Your QR Code" style={{ width: '200px', height: '200px' }} />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+                        <div style={{ display: 'flex', gap: '16px', width: '100%', flexWrap: 'wrap' }}>
+                            <button 
+                                onClick={() => window.open(qrCodeUrl, '_blank')}
+                                style={{ flex: 1, minWidth: '140px', padding: '16px', background: 'white', color: '#4f46e5', border: '2px solid #4f46e5', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            >
+                                <Eye size={20} /> View QR
+                            </button>
                             <button 
                                 onClick={handleDownloadQR}
-                                style={{ flex: 1, padding: '16px', background: 'white', color: '#4f46e5', border: '2px solid #4f46e5', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                style={{ flex: 1, minWidth: '140px', padding: '16px', background: 'white', color: '#4f46e5', border: '2px solid #4f46e5', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
                                 <Download size={20} /> Download QR
                             </button>
                             <button 
                                 onClick={finishOnboarding}
-                                style={{ flex: 1, padding: '16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                style={{ flex: 1, minWidth: '140px', padding: '16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
                                 Go to Dashboard <ArrowRight size={20} />
                             </button>

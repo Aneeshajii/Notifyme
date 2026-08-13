@@ -54,7 +54,7 @@ router.post('/register', async (req, res) => {
     // Check if user exists
     let user = await prisma.user.findUnique({ 
         where: { email },
-        include: { subscription: true }
+        include: { subscription: true, tags: true }
     });
     if (user) {
       const tokens = generateTokens(user);
@@ -90,7 +90,7 @@ router.post('/register', async (req, res) => {
           subscriptionId: basicPlan ? basicPlan.id : null,
           premiumGrantType: basicPlan ? basicPlan.name : null
       },
-      include: { subscription: true }
+      include: { subscription: true, tags: true }
     });
     
     const tokens = generateTokens(user);
@@ -118,7 +118,7 @@ router.post('/login', async (req, res) => {
         
         const user = await prisma.user.findUnique({ 
             where: { email },
-            include: { subscription: true }
+            include: { subscription: true, tags: true }
         });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -341,7 +341,7 @@ router.post('/google/verify', async (req, res) => {
         // Check if user exists
         let user = await prisma.user.findUnique({
             where: { email },
-            include: { subscription: true }
+            include: { subscription: true, tags: true }
         });
 
         if (!user) {
@@ -366,14 +366,14 @@ router.post('/google/verify', async (req, res) => {
                     subscriptionId: basicPlan ? basicPlan.id : null,
                     premiumGrantType: basicPlan ? basicPlan.name : null
                 },
-                include: { subscription: true }
+                include: { subscription: true, tags: true }
             });
         } else if (!user.googleId) {
             // Link google account to existing user
             user = await prisma.user.update({
                 where: { email },
                 data: { googleId },
-                include: { subscription: true }
+                include: { subscription: true, tags: true }
             });
         }
 
@@ -454,7 +454,7 @@ router.get('/me', verifyToken, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            include: { subscription: true }
+            include: { subscription: true, tags: true }
         });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -664,7 +664,7 @@ router.post('/verify-otp', verifyToken, async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: updateData,
-      include: { subscription: true }
+      include: { subscription: true, tags: true }
     });
 
     // Notify user room of update

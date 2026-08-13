@@ -57,6 +57,37 @@ interface MessageType {
   };
 }
 
+// Setup Axios Interceptor for seamless token refresh
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const res = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+          if (res.data.accessToken) {
+            localStorage.setItem('userToken', res.data.accessToken);
+            localStorage.setItem('refreshToken', res.data.refreshToken);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
+            originalRequest.headers['Authorization'] = `Bearer ${res.data.accessToken}`;
+            return axios(originalRequest);
+          }
+        }
+      } catch (refreshError) {
+        // Refresh failed, forcefully logout
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('refreshToken');
+        delete axios.defaults.headers.common['Authorization'];
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingSession, setIsCheckingSession] = useState<boolean>(true);
@@ -280,17 +311,18 @@ function urlBase64ToUint8Array(base64String: string) {
 
   // Session persistence on load
   useEffect(() => {
-      const storedToken = localStorage.getItem('userToken');
-      if (storedToken) {
+        const storedToken = localStorage.getItem('userToken');
+        if (storedToken) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           axios.get(`${API_BASE}/auth/me`).then(res => {
               setUser(res.data);
               setProfileData(res.data);
               setIsAuthenticated(true);
               fetchTagsAndMessages(res.data.id);
-          }).catch(() => {
-              localStorage.removeItem('userToken');
-              delete axios.defaults.headers.common['Authorization'];
+            }).catch(() => {
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('refreshToken');
+                delete axios.defaults.headers.common['Authorization'];
           }).finally(() => {
               setIsCheckingSession(false);
           });
@@ -304,9 +336,10 @@ function urlBase64ToUint8Array(base64String: string) {
           await axios.post(`${API_BASE}/auth/logout`);
       } catch (err) {
           console.error("Logout API failed", err);
-      } finally {
-          localStorage.removeItem('userToken');
-          delete axios.defaults.headers.common['Authorization'];
+        } finally {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('refreshToken');
+            delete axios.defaults.headers.common['Authorization'];
           setIsAuthenticated(false);
           setUser(null);
       }
@@ -335,6 +368,7 @@ function urlBase64ToUint8Array(base64String: string) {
         if (loggedInUser && res.data.accessToken) {
           const token = res.data.accessToken;
           localStorage.setItem('userToken', token);
+          if (res.data.refreshToken) localStorage.setItem('refreshToken', res.data.refreshToken);
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   
           setUser(loggedInUser);
@@ -361,6 +395,7 @@ function urlBase64ToUint8Array(base64String: string) {
         if (!res.data.accessToken) throw new Error("Registration succeeded but no token provided.");
         const token = res.data.accessToken;
         localStorage.setItem('userToken', token);
+        if (res.data.refreshToken) localStorage.setItem('refreshToken', res.data.refreshToken);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(res.data.user);
         setProfileData(res.data.user);
@@ -371,6 +406,7 @@ function urlBase64ToUint8Array(base64String: string) {
         if (!res.data.accessToken) throw new Error("Login succeeded but no token provided.");
         const token = res.data.accessToken;
         localStorage.setItem('userToken', token);
+        if (res.data.refreshToken) localStorage.setItem('refreshToken', res.data.refreshToken);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(res.data.user);
         setProfileData(res.data.user);
@@ -448,7 +484,7 @@ function urlBase64ToUint8Array(base64String: string) {
       );
   }
 
-  if (isAuthenticated && user && !user.isOnboarded) {
+  if (isAuthenticated && user && (!user.tags || user.tags.length === 0)) {
     return <OnboardingFlow user={user} onComplete={setUser} />;
   }
 
