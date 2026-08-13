@@ -26,8 +26,10 @@ interface UserType {
   city?: string;
   state?: string;
   createdAt: string;
+  _count?: any;
   isBlocked?: boolean;
   isPremium?: boolean;
+  subscription?: any;
   premiumGrantType?: string;
   premiumExpiresAt?: string;
   role?: string;

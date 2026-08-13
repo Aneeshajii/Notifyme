@@ -12,11 +12,7 @@ interface Conversation {
     scannerId: string;
     status: string;
     startedAt: string;
-    tag: {
-        id: string;
-        tagId: string;
-        name: string;
-    };
+    tag: { id: string; tagId: string; name: string; ownerId?: string; };
     messages: Message[];
     ownerName?: string;
 }
@@ -27,6 +23,11 @@ interface Message {
     senderInfo: string;
     senderRole: string;
     createdAt: string;
+
+  mediaType?: string;
+  mediaUrl?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 const CommunicationsTab: React.FC = () => {
