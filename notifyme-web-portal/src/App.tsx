@@ -102,6 +102,10 @@ function App() {
     }
   }, []);
 
+  // Profile Form State
+  const [profileData, setProfileData] = useState<Partial<UserType>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
   const activeTab = profileData?.requiresPhoneVerification ? 'subscriptions' : activeTabState;
   const setActiveTab = (tab: any) => {
     if (profileData?.requiresPhoneVerification) return;
@@ -128,9 +132,7 @@ function App() {
   const [name, setName] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
-  // Profile Form State
-  const [profileData, setProfileData] = useState<Partial<UserType>>({});
-  const [isSaving, setIsSaving] = useState(false);
+
 
   // WebRTC States
   const [incomingCall, setIncomingCall] = useState<any>(null);
