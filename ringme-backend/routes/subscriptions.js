@@ -97,6 +97,11 @@ router.post('/verify-payment', verifyToken, async (req, res) => {
 // POST /api/subscriptions/activate
 router.post('/activate', verifyToken, async (req, res) => {
     try {
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+        if (!user.phoneVerified) {
+            return res.status(403).json({ error: 'Mobile number must be verified before activating a subscription.' });
+        }
+
         const payment = await prisma.payment.findFirst({
             where: { userId: req.user.id, status: 'paid_unverified' },
             orderBy: { createdAt: 'desc' }

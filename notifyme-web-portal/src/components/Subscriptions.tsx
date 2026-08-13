@@ -13,6 +13,20 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // OTP Verification States
+  const [countdown, setCountdown] = useState(0);
+  const [resendAttempts, setResendAttempts] = useState(0);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
+
+  useEffect(() => {
+    let timer: any;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+  
   const currentPlanId = profileData?.subscriptionId;
 
   useEffect(() => {
@@ -107,44 +121,75 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-          const token = localStorage.getItem('userToken');
-          await axios.post(`${API_BASE}/auth/send-otp`, { phone: verifyPhone }, {
-              headers: { Authorization: `Bearer ${token}` }
-          });
-          setOtpSent(true);
-      } catch (err) {
-          alert("Failed to send OTP.");
-      }
-  };
+        e.preventDefault();
+        setOtpError('');
+        setOtpSuccess('');
+        
+        if (resendAttempts >= 3) {
+            setOtpError('Maximum OTP requests reached. Please try again later.');
+            return;
+        }
+
+        try {
+            setIsProcessing(true);
+            const token = localStorage.getItem('userToken');
+            
+            // Format phone visually before sending
+            let phoneToSend = verifyPhone.trim();
+            if (phoneToSend.length === 10) phoneToSend = `+91${phoneToSend}`;
+            
+            await axios.post(`${API_BASE}/auth/send-otp`, { phone: phoneToSend }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            setOtpSent(true);
+            setCountdown(60);
+            setResendAttempts(prev => prev + 1);
+            setOtpSuccess('OTP sent successfully!');
+        } catch (err: any) {
+            setOtpError(err.response?.data?.error || "Failed to send OTP. Please check your number.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-          const token = localStorage.getItem('userToken');
-          
-          // Verify OTP first
-          await axios.post(`${API_BASE}/auth/verify-otp`, { phone: verifyPhone, otp }, {
-              headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          // Activate Subscription securely
-          await axios.post(`${API_BASE}/subscriptions/activate`, {}, {
-              headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          setShowPhoneVerification(false);
-          setOtpSent(false);
-          alert(`Verification Successful! Your subscription is now active.`);
-          
-          if (onSubscriptionUpdate) {
-              onSubscriptionUpdate();
-          }
-      } catch (err) {
-          alert("Invalid OTP or Failed to activate subscription.");
-      }
-  };
+        e.preventDefault();
+        setOtpError('');
+        setOtpSuccess('');
+        
+        try {
+            setIsProcessing(true);
+            const token = localStorage.getItem('userToken');
+            
+            let phoneToSend = verifyPhone.trim();
+            if (phoneToSend.length === 10) phoneToSend = `+91${phoneToSend}`;
+            
+            // Verify OTP
+            await axios.post(`${API_BASE}/auth/verify-otp`, { phone: phoneToSend, otp }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            // Activate Subscription securely after verifying OTP
+            await axios.post(`${API_BASE}/subscriptions/activate`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            setShowPhoneVerification(false);
+            setOtpSent(false);
+            setOtpError('');
+            setCountdown(0);
+            alert(`Verification Successful! Your subscription is now active.`);
+            
+            if (onSubscriptionUpdate) {
+                onSubscriptionUpdate();
+            }
+        } catch (err: any) {
+            setOtpError(err.response?.data?.error || "Invalid OTP or failed to activate.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
   return (
     <>
@@ -239,16 +284,30 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
                       <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>Please verify your phone number to activate your new subscription plan.</p>
                   </div>
                   
+                  {otpError && <div style={{ background: '#fee2e2', color: '#ef4444', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '16px' }}>{otpError}</div>}
+                  {otpSuccess && <div style={{ background: '#dcfce7', color: '#22c55e', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '16px' }}>{otpSuccess}</div>}
+
                   {!otpSent ? (
                       <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                          <input type="tel" placeholder="Enter Phone Number" value={verifyPhone} onChange={e => setVerifyPhone(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '16px', outline: 'none', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderColor = '#0f172a'} onBlur={(e) => e.target.style.borderColor = '#e2e8f0'} />
-                          <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>Send Code</button>
+                          <input type="tel" placeholder="Enter Phone Number (e.g., 9876543210)" value={verifyPhone} onChange={e => setVerifyPhone(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '16px', outline: 'none', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderColor = '#0f172a'} onBlur={(e) => e.target.style.borderColor = '#e2e8f0'} />
+                          <button type="submit" disabled={isProcessing || resendAttempts >= 3} style={{ padding: '16px', background: isProcessing || resendAttempts >= 3 ? '#94a3b8' : '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '16px', cursor: isProcessing || resendAttempts >= 3 ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>{isProcessing ? 'Sending...' : resendAttempts >= 3 ? 'Max Attempts Reached' : 'Send Code'}</button>
                       </form>
                   ) : (
                       <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <input type="text" placeholder="0000" value={otp} onChange={e => setOtp(e.target.value)} maxLength={4} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center', letterSpacing: '8px', fontSize: '24px', fontWeight: '600', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#0f172a'} onBlur={(e) => e.target.style.borderColor = '#e2e8f0'} />
-                          <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>Verify & Activate</button>
-                          <button type="button" onClick={() => setOtpSent(false)} style={{ padding: '16px', background: 'transparent', border: 'none', color: '#64748b', fontWeight: '600', cursor: 'pointer' }}>Back</button>
+                          <button type="submit" disabled={isProcessing} style={{ padding: '16px', background: isProcessing ? '#94a3b8' : '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '16px', cursor: isProcessing ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)' }}>{isProcessing ? 'Verifying...' : 'Verify & Activate'}</button>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                              <button type="button" onClick={() => { setOtpSent(false); setOtpError(''); setOtpSuccess(''); }} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>Change Number</button>
+                              
+                              {countdown > 0 ? (
+                                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: '500' }}>Resend in {countdown}s</span>
+                              ) : (
+                                  <button type="button" onClick={handleSendOtp} disabled={resendAttempts >= 3 || isProcessing} style={{ background: 'transparent', border: 'none', color: resendAttempts >= 3 ? '#94a3b8' : '#3b82f6', fontWeight: '600', cursor: resendAttempts >= 3 ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
+                                      Resend Code
+                                  </button>
+                              )}
+                          </div>
                       </form>
                   )}
               </div>

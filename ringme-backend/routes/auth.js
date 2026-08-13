@@ -642,26 +642,63 @@ router.post('/send-otp', verifyToken, async (req, res) => {
     const { phone } = req.body;
     const userId = req.user.id;
     
+    if (!phone) return res.status(400).json({ error: 'Phone number is required' });
+    
+    // Formatting phone: ensure +91 if 10 digits
+    let formattedPhone = phone.trim();
+    if (formattedPhone.length === 10) formattedPhone = `91${formattedPhone}`; // MSG91 prefers 91XXXXXXXXXX
+    else if (formattedPhone.startsWith('+')) formattedPhone = formattedPhone.replace('+', '');
+    
+    // MSG91 Rate Limiting: Check if requested in last 60 seconds
+    const recentOtp = await prisma.otpVerification.findFirst({
+        where: { userId, createdAt: { gt: new Date(Date.now() - 60000) } }
+    });
+    
+    if (recentOtp) {
+        return res.status(429).json({ error: 'Please wait 60 seconds before requesting another OTP.' });
+    }
+    
     // Generate 4 digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60000); // 5 mins
     
-    // Upsert to invalidate old OTPs for this phone
-    // Actually, create many or findFirst is better for simplicity. Let's just create.
     await prisma.otpVerification.create({
       data: {
         userId,
-        phone,
+        phone: formattedPhone,
         otp,
         expiresAt
       }
     });
 
-    console.log(`[MOCK SMS] Sent OTP ${otp} to ${phone}`);
-    res.json({ message: 'OTP sent successfully (check backend console)' });
+    const msg91AuthKey = process.env.MSG91_AUTH_KEY;
+    const templateId = process.env.MSG91_TEMPLATE_ID || "default_otp_template";
+    
+    // Fallback to Mock if no keys provided, but clearly log it so user knows.
+    if (!msg91AuthKey || msg91AuthKey === 'your_msg91_key_here') {
+        console.warn(`[MOCK SMS - NO MSG91 KEY] Sent OTP ${otp} to ${formattedPhone}`);
+        // Return 200 so they can test without keys, but they must add keys for real SMS.
+        return res.json({ message: 'OTP sent successfully (Mock Mode - Check Server Logs)' });
+    }
+
+    // Actual MSG91 API call
+    const response = await axios.post('https://control.msg91.com/api/v5/otp', null, {
+        params: {
+            authkey: msg91AuthKey,
+            template_id: templateId,
+            mobile: formattedPhone,
+            otp: otp
+        }
+    });
+    
+    if (response.data.type === 'error') {
+        throw new Error(response.data.message || 'SMS delivery failed at provider.');
+    }
+
+    res.json({ message: 'OTP sent successfully via MSG91' });
   } catch (error) {
-    console.error("Send OTP Error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Send OTP Error:", error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || error.message || 'Failed to send OTP' });
   }
 });
 
@@ -670,10 +707,16 @@ router.post('/verify-otp', verifyToken, async (req, res) => {
   try {
     const { phone, otp } = req.body;
     
+    if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP are required' });
+    
+    let formattedPhone = phone.trim();
+    if (formattedPhone.length === 10) formattedPhone = `91${formattedPhone}`;
+    else if (formattedPhone.startsWith('+')) formattedPhone = formattedPhone.replace('+', '');
+    
     const verification = await prisma.otpVerification.findFirst({
       where: {
         userId: req.user.id,
-        phone,
+        phone: formattedPhone,
         otp,
         expiresAt: { gt: new Date() } // Not expired
       },
