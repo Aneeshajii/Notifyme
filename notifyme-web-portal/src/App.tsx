@@ -5,6 +5,11 @@ import Peer from 'simple-peer/simplepeer.min.js';
 import { Shield, Plus, Settings, Info, LogOut, QrCode, Search, User, Eye, Inbox, Phone, PhoneOff, CreditCard, Bell, Smartphone, Activity, Car, Home, Briefcase, FileText, Lock, Users, Download, HelpCircle, MapPin, TriangleAlert, ShieldAlert, FileSpreadsheet, List, Menu, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import ChatInterface from './components/ChatInterface';
+import QRDownloadModal from './components/QRDownloadModal';
+import FloatingAssistant from './components/FloatingAssistant';
+import OnboardingFlow from './components/OnboardingFlow';
+import { useGoogleLogin } from '@react-oauth/google';
+import { socket } from './socket';
 import './index.css';
 
 const UserDashboard = lazy(() => import('./components/UserDashboard'));
@@ -16,13 +21,7 @@ const ScanHistory = lazy(() => import('./components/ScanHistory'));
 const SupportCenter = lazy(() => import('./components/SupportCenter'));
 const AboutUs = lazy(() => import('./components/AboutUs'));
 
-import QRDownloadModal from './components/QRDownloadModal';
-import FloatingAssistant from './components/FloatingAssistant';
-import OnboardingFlow from './components/OnboardingFlow';
-import { useGoogleLogin } from '@react-oauth/google';
-
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-import { socket } from './socket';
 
 interface UserType {
   id: string;
