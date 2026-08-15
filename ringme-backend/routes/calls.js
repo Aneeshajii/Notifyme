@@ -23,7 +23,34 @@ router.post('/log', async (req, res) => {
                 callerId: callerId || 'anonymous'
             }
         });
-        res.json(log);
+
+        // Inject Call Event into Chat
+        let conv = await prisma.conversation.findFirst({
+            where: { tagId: tag.id, scannerId: callerId || "anonymous" }
+        });
+        if (!conv) {
+            conv = await prisma.conversation.create({
+                data: { tagId: tag.id, scannerId: callerId || "anonymous" }
+            });
+        }
+        const msg = await prisma.message.create({
+            data: {
+                tagId: tag.id,
+                content: JSON.stringify({ type: status, duration: duration || 0 }),
+                senderInfo: 'System',
+                senderRole: 'scanner',
+                mediaType: 'call_event',
+                conversationId: conv.id
+            }
+        });
+        
+        const io = req.app.get('io');
+        if (io) {
+            io.emit(`conversation-${conv.id}`, msg);
+            io.emit(`user-${tag.ownerId}-new-message`, msg);
+        }
+
+        res.status(201).json({ message: 'Call logged successfully', log });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

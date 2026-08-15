@@ -135,7 +135,7 @@ router.post('/activate', verifyToken, async (req, res) => {
                 action: 'USER_SUBSCRIBED',
                 entityId: req.user.id,
                 details: JSON.stringify({ planId: payment.subscriptionPlanId }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
         

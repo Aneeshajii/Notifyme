@@ -75,7 +75,7 @@ router.post('/create', async (req, res) => {
             action: 'QR_CREATED',
             entityId: ownerId,
             details: JSON.stringify({ tagId: newTag.tagId, name: newTag.name }),
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
     
@@ -184,7 +184,7 @@ router.post('/admin/:tagId/status', async (req, res) => {
             action: status === 'active' ? 'QR_ACTIVATED' : (status === 'paused' ? 'QR_PAUSED' : 'QR_STATUS_CHANGED'),
             entityId: tag.ownerId,
             details: JSON.stringify({ tagId: tag.tagId, status }),
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -209,7 +209,7 @@ router.post('/admin/:tagId/placeholder', async (req, res) => {
             action: 'QR_RENAMED',
             entityId: tag.ownerId,
             details: JSON.stringify({ tagId: tag.tagId, placeholderMessage }),
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -241,7 +241,7 @@ router.delete('/admin/:tagId', async (req, res) => {
             action: 'QR_DELETED',
             entityId: tag.ownerId,
             details: JSON.stringify({ tagId: tag.tagId, name: tag.name }),
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -277,7 +277,7 @@ router.put('/:id', verifyToken, async (req, res) => {
                 action: 'QR_RENAMED',
                 entityId: req.user.id,
                 details: JSON.stringify({ tagId: updatedTag.tagId, name: updatedTag.name, status: updatedTag.status }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 

@@ -181,6 +181,53 @@ router.post('/send', messageRateLimiter, async (req, res) => {
             io.emit(`user-${tag.ownerId}-new-message`, msg);
         }
 
+        // Web Push Notification
+        try {
+            const webpush = require('web-push');
+            
+            // Determine recipient based on senderRole
+            let recipientId = null;
+            if (senderRole === 'scanner') {
+                recipientId = tag.ownerId; // Message sent to owner
+            } else if (senderRole === 'owner') {
+                // Future: Push to scanner if they have registered
+                // For now, only owners have guaranteed accounts
+            }
+            
+            if (recipientId) {
+                const subscriptions = await prisma.pushSubscription.findMany({
+                    where: { userId: recipientId }
+                });
+
+                if (subscriptions.length > 0) {
+                    const payload = JSON.stringify({
+                        type: 'MESSAGE',
+                        title: `New message from ${msg.senderInfo}`,
+                        body: msg.mediaType ? `Sent an attachment` : msg.content.substring(0, 50),
+                        data: {
+                            conversationId: msg.conversationId,
+                            tagId: msg.tagId
+                        }
+                    });
+
+                    for (const sub of subscriptions) {
+                        try {
+                            await webpush.sendNotification({
+                                endpoint: sub.endpoint,
+                                keys: { p256dh: sub.p256dh, auth: sub.auth }
+                            }, payload);
+                        } catch (err) {
+                            if (err.statusCode === 410 || err.statusCode === 404) {
+                                await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } });
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (pushErr) {
+            console.error("Failed to send push notification for message:", pushErr);
+        }
+
         res.status(201).json({ message: 'Message sent successfully!', messageData: msg, conversationId });
     } catch (error) {
         res.status(500).json({ error: error.message });

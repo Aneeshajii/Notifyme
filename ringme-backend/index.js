@@ -114,62 +114,87 @@ io.on('connection', (socket) => {
             return io.to(data.callerId).emit('owner-offline');
         }
 
-        console.log(`Routing call for tag ${data.tagId} to owner ${tag.ownerId}`);
+          console.log(`Routing call for tag ${data.tagId} to owner ${tag.ownerId}`);
           const room = io.sockets.adapter.rooms.get(tag.ownerId.toString());
-          if (room && room.size > 0) {
+          const isOwnerConnected = room && room.size > 0;
+          
+          if (isOwnerConnected) {
               io.to(tag.ownerId.toString()).emit('incoming-call', {
                 signal: data.signalData,
                 callerId: data.callerId,
                 tagId: data.tagId
               });
-          } else {
-              // Owner offline, try sending push notification
-              console.log(`Owner offline, sending Web Push notification for tag ${tag.tagId}`);
-              
-              const subscriptions = await prisma.pushSubscription.findMany({
-                  where: { userId: tag.ownerId }
+          }
+          
+          // ALWAYS send Web Push notification for calls to wake up backgrounded PWAs
+          const subscriptions = await prisma.pushSubscription.findMany({
+              where: { userId: tag.ownerId }
+          });
+
+          if (subscriptions.length > 0) {
+              const payload = JSON.stringify({
+                  type: 'CALL',
+                  title: 'Incoming NotifyMe call',
+                  body: `Call from ${data.callerId || 'someone'} for tag: ${tag.name}`,
+                  data: {
+                      tagId: data.tagId,
+                      callerId: data.callerId,
+                      signal: data.signalData
+                  }
               });
 
-              if (subscriptions.length > 0) {
-                  const payload = JSON.stringify({
-                      title: 'Incoming Call',
-                      body: `You have an incoming call for tag: ${tag.name}`,
-                      data: {
-                          tagId: data.tagId,
-                          callerId: data.callerId,
-                          signal: data.signalData
-                      }
-                  });
-
-                  for (const sub of subscriptions) {
-                      try {
-                          await webpush.sendNotification({
-                              endpoint: sub.endpoint,
-                              keys: { p256dh: sub.p256dh, auth: sub.auth }
-                          }, payload);
-                      } catch (err) {
-                          console.error('Push error:', err);
-                          // Clean up expired subscriptions
-                          if (err.statusCode === 410 || err.statusCode === 404) {
-                              await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } });
-                          }
+              for (const sub of subscriptions) {
+                  try {
+                      await webpush.sendNotification({
+                          endpoint: sub.endpoint,
+                          keys: { p256dh: sub.p256dh, auth: sub.auth }
+                      }, payload);
+                  } catch (err) {
+                      console.error('Push error:', err);
+                      if (err.statusCode === 410 || err.statusCode === 404) {
+                          await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } });
                       }
                   }
-                  
-                  // Let scanner know ringing via push
-                  io.to(data.callerId).emit('ringing-push');
-                  
-              } else {
-                  // No push subscription, log as missed immediately
-                  await prisma.callLog.create({
-                      data: {
-                          tagId: tag.id,
-                          status: 'missed',
-                          callerId: data.callerId
-                      }
-                  });
-                  io.to(data.callerId).emit('owner-offline');
               }
+              
+              // Let scanner know ringing via push
+              if (!isOwnerConnected) {
+                 io.to(data.callerId).emit('ringing-push');
+              }
+              
+          } else if (!isOwnerConnected) {
+              // No push subscription AND offline, log as missed immediately
+              await prisma.callLog.create({
+                  data: {
+                      tagId: tag.id,
+                      status: 'missed',
+                      callerId: data.callerId
+                  }
+              });
+              
+              // Create Missed Call Event Message in Chat
+              let conv = await prisma.conversation.findFirst({
+                  where: { tagId: tag.id, scannerId: data.callerId || "anonymous" }
+              });
+              if (!conv) {
+                  conv = await prisma.conversation.create({
+                      data: { tagId: tag.id, scannerId: data.callerId || "anonymous" }
+                  });
+              }
+              const msg = await prisma.message.create({
+                  data: {
+                      tagId: tag.id,
+                      content: JSON.stringify({ type: 'missed', duration: 0 }),
+                      senderInfo: 'System',
+                      senderRole: 'scanner',
+                      mediaType: 'call_event',
+                      conversationId: conv.id
+                  }
+              });
+              io.emit(`conversation-${conv.id}`, msg);
+              io.emit(`user-${tag.ownerId}-new-message`, msg);
+
+              io.to(data.callerId).emit('owner-offline');
           }
         }
       } catch (e) {
@@ -219,6 +244,7 @@ const notificationsRoutes = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const callsRoutes = require('./routes/calls');
 const aiRoutes = require('./routes/ai');
+const pushRoutes = require('./routes/push');
 const adminRoutes = require('./routes/admin'); // we will create this for admin security alerts
 
 app.use('/api/auth', authRoutes);
@@ -230,6 +256,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/calls', callsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Serve uploaded profile pictures statically

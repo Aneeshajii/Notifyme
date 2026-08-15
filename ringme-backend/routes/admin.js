@@ -38,7 +38,7 @@ router.put('/security-alerts/:id/status', verifyMasterAdmin, async (req, res) =>
                 action: 'SECURITY_ALERT_STATUS_UPDATED',
                 entityId: id,
                 details: JSON.stringify({ newStatus: status }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
         

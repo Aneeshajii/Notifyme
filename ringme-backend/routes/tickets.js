@@ -57,7 +57,7 @@ router.post('/', verifyToken, async (req, res) => {
                 action: 'TICKET_CREATED',
                 entityId: req.user.id,
                 details: JSON.stringify({ ticketId: ticket.id, subject }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -90,7 +90,7 @@ router.post('/:id/reply', verifyToken, requireRole('MASTER_ADMIN', 'ADMIN'), asy
                 action: 'TICKET_REPLIED',
                 entityId: ticket.userId,
                 details: JSON.stringify({ ticketId: ticket.id, adminReply }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -131,7 +131,7 @@ router.post('/:id/close', verifyToken, async (req, res) => {
                 action: 'TICKET_CLOSED',
                 entityId: ticket.userId,
                 details: JSON.stringify({ ticketId: ticket.id }),
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 

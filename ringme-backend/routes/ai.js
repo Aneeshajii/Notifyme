@@ -55,7 +55,7 @@ router.post('/chat', verifyToken, async (req, res) => {
                     action: 'SECURITY_ALERT_GENERATED',
                     entityId: req.user.id,
                     details: JSON.stringify({ alertId: alert.id, reason: securityCheck.reason, userPrompt: message }),
-                    ipAddress: req.ip || req.connection.remoteAddress
+                    ipAddress: req.ip || req.socket.remoteAddress
                 }
             });
 

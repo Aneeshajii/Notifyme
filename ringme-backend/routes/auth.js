@@ -49,7 +49,7 @@ const generateTokens = (user) => {
 // Registers a new user
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, googleId, phone } = req.body;
+    const { email, password, name, lastName, googleId, phone } = req.body;
     
     // Check if user exists
     let user = await prisma.user.findUnique({ 
@@ -83,6 +83,7 @@ router.post('/register', async (req, res) => {
       data: { 
           email, 
           name, 
+          lastName,
           password: hashedPassword, 
           googleId, 
           phone,
@@ -100,7 +101,7 @@ router.post('/register', async (req, res) => {
           adminId: user.id,
           action: 'ACCOUNT_CREATED',
           entityId: user.id,
-          ipAddress: req.ip || req.connection.remoteAddress
+          ipAddress: req.ip || req.socket.remoteAddress
       }
     });
 
@@ -163,7 +164,7 @@ router.post('/login', async (req, res) => {
                 userId: user.id,
                 token: refreshToken,
                 deviceInfo: deviceInfo || req.headers['user-agent'] || 'Unknown Device',
-                ipAddress: req.ip || req.connection.remoteAddress,
+                ipAddress: req.ip || req.socket.remoteAddress,
                 expiresAt
             }
         });
@@ -172,7 +173,7 @@ router.post('/login', async (req, res) => {
             data: {
                 userId: user.id,
                 title: 'New Login Alert',
-                message: `Your account was accessed from a new device (${deviceInfo || req.headers['user-agent']}) on IP ${req.ip || req.connection.remoteAddress}.`,
+                message: `Your account was accessed from a new device (${deviceInfo || req.headers['user-agent']}) on IP ${req.ip || req.socket.remoteAddress}.`,
                 type: 'security'
             }
         });
@@ -182,7 +183,7 @@ router.post('/login', async (req, res) => {
                 adminId: user.id,
                 action: 'USER_LOGIN',
                 entityId: user.id,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -230,6 +231,95 @@ router.post('/onboard', verifyToken, async (req, res) => {
     } catch (error) {
         console.error("Onboarding Error:", error);
         res.status(500).json({ error: 'Failed to save onboarding details.' });
+    }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            // Return success even if user not found for security reasons
+            return res.json({ message: 'If that email is registered, a reset code has been sent.' });
+        }
+
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        // Invalidate old OTPs for this user
+        await prisma.otpVerification.deleteMany({
+            where: { userId: user.id, phone: email }
+        });
+
+        await prisma.otpVerification.create({
+            data: {
+                userId: user.id,
+                phone: email, // Reusing phone field for email reset flow
+                otp: otp,
+                expiresAt
+            }
+        });
+
+        // Mock email sending
+        console.log(`\n========================================`);
+        console.log(`MOCK EMAIL SENT TO: ${email}`);
+        console.log(`SUBJECT: Password Reset Code`);
+        console.log(`BODY: Your password reset code is: ${otp}`);
+        console.log(`========================================\n`);
+
+        res.json({ message: 'If that email is registered, a reset code has been sent.' });
+    } catch (error) {
+        console.error("Forgot Password Error:", error);
+        res.status(500).json({ error: 'Failed to process request.' });
+    }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ error: 'Email, OTP, and new password are required' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(400).json({ error: 'Invalid request' });
+
+        const otpRecord = await prisma.otpVerification.findFirst({
+            where: {
+                userId: user.id,
+                phone: email,
+                otp: otp,
+                expiresAt: { gt: new Date() }
+            }
+        });
+
+        if (!otpRecord) {
+            return res.status(400).json({ error: 'Invalid or expired reset code' });
+        }
+
+        // Hash new password
+        const hashedPassword = await argon2.hash(newPassword);
+
+        // Update user
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { password: hashedPassword }
+        });
+
+        // Delete used OTP
+        await prisma.otpVerification.deleteMany({
+            where: { userId: user.id, phone: email }
+        });
+
+        res.json({ message: 'Password has been successfully reset' });
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ error: 'Failed to reset password.' });
     }
 });
 
@@ -304,7 +394,7 @@ router.post('/login/verify-mfa', async (req, res) => {
             data: { 
                 userId: user.id, 
                 token: tokens.refreshToken, 
-                ipAddress: req.ip || req.connection.remoteAddress, 
+                ipAddress: req.ip || req.socket.remoteAddress, 
                 deviceInfo: req.headers['user-agent'],
                 expiresAt
             }
@@ -314,7 +404,7 @@ router.post('/login/verify-mfa', async (req, res) => {
             data: {
                 userId: user.id,
                 title: 'MFA Login Alert',
-                message: `Your account was accessed via MFA from a new device (${req.headers['user-agent']}) on IP ${req.ip || req.connection.remoteAddress}.`,
+                message: `Your account was accessed via MFA from a new device (${req.headers['user-agent']}) on IP ${req.ip || req.socket.remoteAddress}.`,
                 type: 'security'
             }
         });
@@ -324,7 +414,7 @@ router.post('/login/verify-mfa', async (req, res) => {
                 adminId: user.id,
                 action: 'USER_LOGIN_MFA',
                 entityId: user.id,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -420,7 +510,7 @@ router.post('/google/verify', async (req, res) => {
                 userId: user.id,
                 token: tokens.refreshToken,
                 deviceInfo: req.headers['user-agent'] || 'Unknown Device via Google Auth',
-                ipAddress: req.ip || req.connection.remoteAddress,
+                ipAddress: req.ip || req.socket.remoteAddress,
                 expiresAt
             }
         });
@@ -430,7 +520,7 @@ router.post('/google/verify', async (req, res) => {
                 adminId: user.id,
                 action: 'USER_LOGIN_GOOGLE',
                 entityId: user.id,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -469,7 +559,7 @@ router.post('/logout', verifyToken, async (req, res) => {
                 adminId: req.user.id,
                 action: 'USER_LOGOUT',
                 entityId: req.user.id,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
         res.json({ message: 'Logged out successfully' });
@@ -530,7 +620,7 @@ router.post('/refresh', async (req, res) => {
                 userId: session.user.id,
                 token: tokens.refreshToken,
                 deviceInfo: req.headers['user-agent'],
-                ipAddress: req.ip || req.connection.remoteAddress,
+                ipAddress: req.ip || req.socket.remoteAddress,
                 expiresAt
             }
         });
@@ -626,7 +716,7 @@ router.put('/profile/:id', async (req, res) => {
             adminId: req.params.id,
             action: 'PROFILE_UPDATED',
             entityId: req.params.id,
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -798,7 +888,7 @@ router.put('/users/:id/profile-pic', verifyToken, requireRole('MASTER_ADMIN', 'A
                 action: 'UPDATE_PROFILE_PIC',
                 entityId: req.params.id,
                 details: profilePicUrl,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -821,7 +911,7 @@ router.delete('/users/:id/profile-pic', verifyToken, requireRole('MASTER_ADMIN',
                 adminId: req.user.id,
                 action: 'REMOVE_PROFILE_PIC',
                 entityId: req.params.id,
-                ipAddress: req.ip || req.connection.remoteAddress
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
 
@@ -861,7 +951,7 @@ router.post('/users/:id/block', verifyToken, requireRole('MASTER_ADMIN', 'MODERA
             action: isBlocked ? 'BLOCK_USER' : 'UNBLOCK_USER',
             entityId: req.params.id,
             details: JSON.stringify({ reason }),
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -913,7 +1003,7 @@ router.delete('/users/:id/terminate', verifyToken, requireRole('MASTER_ADMIN'), 
             adminId: req.user.id,
             action: 'TERMINATE_USER',
             entityId: userId,
-            ipAddress: req.ip || req.connection.remoteAddress
+            ipAddress: req.ip || req.socket.remoteAddress
         }
     });
 
@@ -961,7 +1051,7 @@ router.post('/users/:id/grant-premium', verifyToken, requireRole('MASTER_ADMIN')
               action: 'GRANT_PREMIUM',
               entityId: req.params.id,
               details: JSON.stringify({ subscriptionId, premiumExpiresAt: expiresDate }),
-              ipAddress: req.ip || req.connection.remoteAddress
+              ipAddress: req.ip || req.socket.remoteAddress
           }
       });
       
@@ -988,7 +1078,7 @@ router.post('/users/:id/revoke-premium', verifyToken, requireRole('MASTER_ADMIN'
               adminId: req.user.id,
               action: 'REVOKE_PREMIUM',
               entityId: req.params.id,
-              ipAddress: req.ip || req.connection.remoteAddress
+              ipAddress: req.ip || req.socket.remoteAddress
           }
       });
   
