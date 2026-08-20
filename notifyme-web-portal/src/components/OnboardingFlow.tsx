@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { User, Phone, QrCode, ArrowRight, CheckCircle, Shield, MessageSquare, PhoneCall, MapPin, Download } from 'lucide-react';
+import { User, Phone, QrCode, ArrowRight, CheckCircle, Shield, MessageSquare, PhoneCall, MapPin, Download, Eye } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -110,6 +110,32 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: "'Inter', sans-serif" }}>
+            <style>
+                {`
+                .responsive-container {
+                    flex-direction: column;
+                }
+                .form-panel {
+                    padding: 50px;
+                }
+                .preview-panel {
+                    padding: 40px;
+                }
+                @media (min-width: 768px) {
+                    .responsive-container.step-2 {
+                        flex-direction: row;
+                    }
+                }
+                @media (max-width: 768px) {
+                    .form-panel {
+                        padding: 30px 20px !important;
+                    }
+                    .preview-panel {
+                        display: none !important; /* Hide massive phone preview on tiny mobile screens to keep it clean */
+                    }
+                }
+                `}
+            </style>
             
             {/* Header */}
             <div style={{ position: 'absolute', top: '30px', left: '30px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -117,7 +143,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                 <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>NotifyMe</span>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '900px', background: 'white', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', flexDirection: step === 2 ? 'row' : 'column' }}>
+            <div className={`responsive-container ${step === 2 ? 'step-2' : ''}`} style={{ width: '100%', maxWidth: '900px', background: 'white', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex' }}>
                 
                 {/* Step 1: User Details */}
                 {step === 1 && (
@@ -190,7 +216,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                 {/* Step 2: Create QR & Live Preview */}
                 {step === 2 && (
                     <>
-                        <div style={{ flex: 1, padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div className="form-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '16px' }}>Create Your QR Code</h2>
                             <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.6', marginBottom: '30px' }}>
                                 This is what people will see when they scan your code. They can message or call you securely without ever seeing your personal phone number.
@@ -230,7 +256,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                         </div>
                         
                         {/* Live Preview Screen (Mobile Phone Mockup) */}
-                        <div style={{ flex: 1, background: '#f1f5f9', padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="preview-panel" style={{ flex: 1, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <div style={{ width: '320px', height: '620px', background: 'white', borderRadius: '40px', border: '12px solid #0f172a', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
                                 {/* Notch */}
                                 <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120px', height: '24px', background: '#0f172a', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', zIndex: 10 }}></div>

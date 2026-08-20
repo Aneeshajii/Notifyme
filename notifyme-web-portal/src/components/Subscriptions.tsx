@@ -84,12 +84,12 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
                       }, {
                           headers: { Authorization: `Bearer ${token}` }
                       });
-                      
-                      // Payment verified! Show phone verification modal
-                      setShowPhoneVerification(true);
-                  } catch (err) {
-                      alert("Payment verification failed. Please contact support.");
-                  }
+                          // Payment verified and subscription activated! 
+                        alert("Subscription activated successfully!");
+                        window.location.reload();
+                    } catch (err) {
+                        alert("Payment verification failed. Please contact support.");
+                    }
               },
               prefill: {
                   name: profileData?.name || "",

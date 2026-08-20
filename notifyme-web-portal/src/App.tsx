@@ -179,16 +179,29 @@ function urlBase64ToUint8Array(base64String: string) {
       socket.emit('join-owner-room', user.id);
       
       // Register Service Worker for Push Notifications
-      if ('serviceWorker' in navigator && 'PushManager' in window) {
+      if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) {
           navigator.serviceWorker.register('/sw.js').then(async (registration) => {
               try {
-                  const subscription = await registration.pushManager.subscribe({
-                      userVisibleOnly: true,
-                      applicationServerKey: urlBase64ToUint8Array('BJdPrqJCwjZM7qd4uX1olNSwUxfHbvzNxakqT_jQ-H-BwuUM4dDz3Rjsc8eZ-suPDEyDUFs9xfHQSpc1Y7nQDeg')
-                  });
-                  await axios.post(`${API_BASE}/notifications/subscribe`, subscription);
+                  // Only attempt to subscribe if permission is granted or default (not denied)
+                  let permission = Notification.permission;
+                  if (permission === 'default') {
+                      permission = await Notification.requestPermission();
+                  }
+
+                  if (permission === 'granted') {
+                      const vapidRes = await axios.get(`${API_BASE}/push/vapid-public-key`);
+                      const publicKey = vapidRes.data.publicKey;
+                      
+                      const subscription = await registration.pushManager.subscribe({
+                          userVisibleOnly: true,
+                          applicationServerKey: urlBase64ToUint8Array(publicKey)
+                      });
+                      await axios.post(`${API_BASE}/push/subscribe`, { subscription });
+                  } else {
+                      console.warn('Push notification permission was denied or ignored by the user.');
+                  }
               } catch (err) {
-                  console.error('Failed to subscribe to push notifications', err);
+                  console.error('Failed to subscribe to push notifications:', err);
               }
           });
       }
@@ -476,12 +489,30 @@ function urlBase64ToUint8Array(base64String: string) {
 
   if (isCheckingSession) {
       return (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
-              <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+          <div className="fade-out-transition" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+              <div style={{ animation: 'gentleBreath 3s ease-in-out infinite' }}>
                   <Shield size={64} color="#4f46e5" />
               </div>
-              <p style={{ marginTop: '16px', color: '#64748b', fontWeight: 'bold' }}>Loading your secure session...</p>
-              <style>{`@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }`}</style>
+              <p style={{ marginTop: '24px', color: '#64748b', fontSize: '16px', fontWeight: '500', animation: 'gentleFade 2s ease-in-out infinite alternate' }}>
+                  Please wait, NotifyMe is getting things ready for you…
+              </p>
+              <style>{`
+                  @keyframes gentleBreath { 
+                      0%, 100% { transform: scale(1); opacity: 1; } 
+                      50% { transform: scale(1.02); opacity: 0.85; } 
+                  }
+                  @keyframes gentleFade {
+                      0% { opacity: 0.6; }
+                      100% { opacity: 1; }
+                  }
+                  .fade-in {
+                      animation: appFadeIn 0.4s ease-out forwards;
+                  }
+                  @keyframes appFadeIn {
+                      from { opacity: 0; transform: scale(0.99); }
+                      to { opacity: 1; transform: scale(1); }
+                  }
+              `}</style>
           </div>
       );
   }
@@ -492,7 +523,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
   if (!isAuthenticated) {
     return (
-      <div className="login-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+      <div className="login-container fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
         <div className="login-card" style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
           <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '32px' }}>
             <Shield size={48} color="#4f46e5" />
@@ -544,7 +575,7 @@ function urlBase64ToUint8Array(base64String: string) {
   }
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container fade-in">
       <audio ref={callerAudio} />
 
       {/* Sidebar */}

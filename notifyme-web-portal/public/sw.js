@@ -1,22 +1,32 @@
 self.addEventListener('push', function(event) {
-    if (event.data) {
+    if (!event.data) return;
+    
+    try {
         const data = event.data.json();
-        const options = {
+        let options = {
             body: data.body,
             icon: '/favicon.svg',
             badge: '/favicon.svg',
-            vibrate: [200, 100, 200, 100, 200, 100, 200],
-            data: data.data,
-            actions: [
+            data: data.data
+        };
+
+        if (data.type === 'CALL') {
+            options.vibrate = [200, 100, 200, 100, 200, 100, 200];
+            options.actions = [
                 { action: 'answer', title: 'Accept Call' },
                 { action: 'decline', title: 'Decline' }
-            ],
-            requireInteraction: true
-        };
+            ];
+            options.requireInteraction = true;
+            options.tag = 'incoming-call';
+        } else if (data.type === 'MESSAGE') {
+            options.tag = `msg-${data.data?.conversationId}`;
+        }
 
         event.waitUntil(
             self.registration.showNotification(data.title, options)
         );
+    } catch(e) {
+        console.error("Error parsing push notification data", e);
     }
 });
 

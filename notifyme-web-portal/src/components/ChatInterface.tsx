@@ -416,33 +416,73 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                                                 NotifyMe <BadgeCheck size={12} color="#1d9bf0" />
                                             </div>
                                         )}
-                                        {m.mediaType === 'image' && m.mediaUrl && (
-                                            <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
-                                                <img src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
-                                            </div>
+                                        {m.mediaType === 'call_event' ? (
+                                            (() => {
+                                                let callData = { type: 'completed', duration: 0 };
+                                                try { callData = JSON.parse(m.content); } catch (e) {}
+                                                
+                                                const isMissed = callData.type === 'missed' || callData.type === 'rejected';
+                                                
+                                                const formatDuration = (seconds: number) => {
+                                                    if (!seconds) return '';
+                                                    const m = Math.floor(seconds / 60);
+                                                    const s = seconds % 60;
+                                                    if (m > 0) return `${m} min ${s} sec`;
+                                                    return `${s} sec`;
+                                                };
+                                                
+                                                return (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px', opacity: 0.9 }}>
+                                                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isMissed ? '#fee2e2' : '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {isMissed ? <PhoneOff size={20} color="#ef4444" /> : <Phone size={20} color="#22c55e" />}
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: 'bold', color: isMissed ? '#ef4444' : '#111b21', fontSize: '15px' }}>
+                                                                {isOwner ? (isMissed ? 'Missed outgoing call' : 'Outgoing voice call') : (isMissed ? 'Missed voice call' : 'Voice call')}
+                                                            </div>
+                                                            {callData.duration > 0 && (
+                                                                <div style={{ fontSize: '13px', color: '#667781', marginTop: '2px' }}>
+                                                                    {formatDuration(callData.duration)}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : (
+                                            <>
+                                                {m.mediaType === 'image' && m.mediaUrl && (
+                                                    <div style={{ marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
+                                                        <img src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} alt="Attached" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                                                    </div>
+                                                )}
+                                                {m.mediaType === 'audio' && m.mediaUrl && (
+                                                    <div style={{ marginBottom: '8px' }}>
+                                                        <audio controls src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
+                                                    </div>
+                                                )}
+                                                {m.latitude && m.longitude && (
+                                                    <a href={`https://maps.google.com/?q=${m.latitude},${m.longitude}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'none', background: 'rgba(0,0,0,0.05)', padding: '8px', borderRadius: '8px', marginBottom: '8px' }}>
+                                                        <MapPin size={20} />
+                                                        <div style={{ fontSize: '13px', fontWeight: 'bold' }}>View Location</div>
+                                                    </a>
+                                                )}
+                                                {m.content && (
+                                                    <div style={{ fontSize: '14.2px', color: '#111b21', lineHeight: '19px', wordWrap: 'break-word', paddingRight: '40px' }}>
+                                                        {m.content}
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
-                                        {m.mediaType === 'audio' && m.mediaUrl && (
-                                            <div style={{ marginBottom: '8px' }}>
-                                                <audio controls src={m.mediaUrl.startsWith('http') ? m.mediaUrl : `${API_BASE.replace('/api', '')}${m.mediaUrl}`} style={{ width: '200px', height: '36px' }} />
-                                            </div>
-                                        )}
-                                        {m.latitude && m.longitude && (
-                                            <a href={`https://maps.google.com/?q=${m.latitude},${m.longitude}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'none', background: 'rgba(0,0,0,0.05)', padding: '8px', borderRadius: '8px', marginBottom: '8px' }}>
-                                                <MapPin size={20} />
-                                                <div style={{ fontSize: '13px', fontWeight: 'bold' }}>View Location</div>
-                                            </a>
-                                        )}
-                                        {m.content && (
-                                            <div style={{ fontSize: '14.2px', color: '#111b21', lineHeight: '19px', wordWrap: 'break-word', paddingRight: '40px' }}>
-                                                {m.content}
-                                            </div>
-                                        )}
+                                        
                                         <div style={{ 
                                         fontSize: '11px', 
                                         color: '#667781', 
-                                        position: 'absolute',
-                                        bottom: '4px',
-                                        right: '7px',
+                                        position: m.mediaType === 'call_event' ? 'relative' : 'absolute',
+                                        bottom: m.mediaType === 'call_event' ? 'auto' : '4px',
+                                        right: m.mediaType === 'call_event' ? 'auto' : '7px',
+                                        alignSelf: m.mediaType === 'call_event' ? 'flex-end' : 'auto',
+                                        marginTop: m.mediaType === 'call_event' ? '4px' : '0',
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         gap: '4px' 
