@@ -61,6 +61,14 @@ axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    // Prevent infinite loop if the refresh token endpoint itself fails with 401
+    if (originalRequest.url.includes('/auth/refresh')) {
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/';
+      return Promise.reject(error);
+    }
+    
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
