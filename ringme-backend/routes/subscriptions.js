@@ -59,6 +59,57 @@ router.post('/create-order', verifyToken, async (req, res) => {
     }
 });
 
+// POST /api/subscriptions/create-payment-link
+router.post('/create-payment-link', verifyToken, async (req, res) => {
+    try {
+        const { planId } = req.body;
+        const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
+        
+        if (!plan) {
+            return res.status(404).json({ error: 'Subscription plan not found.' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
+        const options = {
+            amount: Math.round(plan.price * 100),
+            currency: "INR",
+            description: `Subscription to ${plan.name}`,
+            customer: {
+                name: user.name || "Customer",
+                email: user.email || "customer@example.com"
+            },
+            notify: {
+                sms: false,
+                email: false
+            },
+            reminder_enable: false,
+            // You can optionally redirect them back to a deep link or the web portal
+            callback_url: "http://localhost:5173/account/subscriptions",
+            callback_method: "get"
+        };
+        
+        const paymentLink = await razorpay.paymentLink.create(options);
+        
+        // We still create a payment record but associate it with the payment link id
+        await prisma.payment.create({
+            data: {
+                userId: req.user.id,
+                amount: plan.price,
+                method: "Razorpay_Link",
+                status: "pending",
+                razorpayOrderId: paymentLink.id, // storing link id here for now
+                subscriptionPlanId: plan.id
+            }
+        });
+        
+        res.json({ url: paymentLink.short_url });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // POST /api/subscriptions/verify-payment
 router.post('/verify-payment', verifyToken, async (req, res) => {
     try {
@@ -79,16 +130,40 @@ router.post('/verify-payment', verifyToken, async (req, res) => {
             return res.status(404).json({ error: 'Payment record not found or unauthorized.' });
         }
         
+        // TEMPORARY BYPASS: Activate immediately without phone verification
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // Standard 30 day cycle
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                isPremium: true,
+                premiumExpiresAt: expiresAt,
+                subscriptionId: payment.subscriptionPlanId,
+                pendingSubscriptionId: null
+            }
+        });
+
         await prisma.payment.update({
             where: { razorpayOrderId: razorpay_order_id },
             data: {
                 razorpayPaymentId: razorpay_payment_id,
                 razorpaySignature: razorpay_signature,
-                status: 'paid_unverified'
+                status: 'completed' // Jump straight to completed instead of paid_unverified
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'USER_SUBSCRIBED',
+                entityId: req.user.id,
+                details: JSON.stringify({ planId: payment.subscriptionPlanId }),
+                ipAddress: req.ip || req.socket.remoteAddress
             }
         });
         
-        res.json({ message: 'Payment verified successfully. Awaiting phone verification.' });
+        res.json({ message: 'Payment verified and subscription activated successfully.', user: updatedUser });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

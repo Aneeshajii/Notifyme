@@ -52,6 +52,14 @@ model User {
   blockedScanners   BlockedScanner[]
   securityAlerts    SecurityAlert[]
   pushSubscriptions PushSubscription[]
+  
+  // Privacy Settings
+  hideEmail         Boolean   @default(true)
+  hidePhone         Boolean   @default(true)
+  allowMessages     Boolean   @default(true)
+  allowAudioCalls   Boolean   @default(true)
+  allowVideoCalls   Boolean   @default(false)
+  allowImageSharing Boolean   @default(true)
 }
 
 model BlockedScanner {

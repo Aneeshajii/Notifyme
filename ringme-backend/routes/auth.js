@@ -646,7 +646,7 @@ router.delete('/sessions/:sessionId', verifyToken, async (req, res) => {
     try {
         const { sessionId } = req.params;
         const session = await prisma.session.findUnique({ where: { id: sessionId } });
-        if (!session || session.userId !== req.user.id) {
+        if (!session || (session.userId !== req.user.id && req.user.role !== 'MASTER_ADMIN')) {
             return res.status(404).json({ message: 'Session not found' });
         }
         await prisma.session.delete({ where: { id: sessionId } });
@@ -1092,10 +1092,28 @@ router.post('/users/:id/revoke-premium', verifyToken, requireRole('MASTER_ADMIN'
 router.get('/users/:id/audit-logs', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
     try {
         const logs = await prisma.auditLog.findMany({
-            where: { entityId: req.params.id },
+            where: {
+                OR: [
+                    { entityId: req.params.id },
+                    { adminId: req.params.id }
+                ]
+            },
             orderBy: { createdAt: 'desc' }
         });
         res.json(logs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/auth/users/:id/sessions
+router.get('/users/:id/sessions', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
+    try {
+        const sessions = await prisma.session.findMany({
+            where: { userId: req.params.id },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(sessions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -1114,5 +1132,92 @@ router.get('/audit-logs', verifyToken, requireRole('MASTER_ADMIN'), async (req, 
     }
 });
 
-module.exports = router;
+// ==========================================
+// Privacy & Blocking Routes
+// ==========================================
 
+// GET /api/auth/privacy
+router.get('/privacy', verifyToken, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: {
+                hideEmail: true,
+                hidePhone: true,
+                allowMessages: true,
+                allowAudioCalls: true,
+                allowVideoCalls: true,
+                allowImageSharing: true
+            }
+        });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PUT /api/auth/privacy
+router.put('/privacy', verifyToken, async (req, res) => {
+    try {
+        const { hideEmail, hidePhone, allowMessages, allowAudioCalls, allowVideoCalls, allowImageSharing } = req.body;
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                hideEmail: hideEmail !== undefined ? hideEmail : undefined,
+                hidePhone: hidePhone !== undefined ? hidePhone : undefined,
+                allowMessages: allowMessages !== undefined ? allowMessages : undefined,
+                allowAudioCalls: allowAudioCalls !== undefined ? allowAudioCalls : undefined,
+                allowVideoCalls: allowVideoCalls !== undefined ? allowVideoCalls : undefined,
+                allowImageSharing: allowImageSharing !== undefined ? allowImageSharing : undefined
+            },
+            select: {
+                hideEmail: true,
+                hidePhone: true,
+                allowMessages: true,
+                allowAudioCalls: true,
+                allowVideoCalls: true,
+                allowImageSharing: true
+            }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'PRIVACY_UPDATED',
+                entityId: req.user.id,
+                details: JSON.stringify(req.body),
+                ipAddress: req.ip || req.socket.remoteAddress
+            }
+        });
+
+        res.json({ message: 'Privacy settings updated', settings: updatedUser });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/auth/blocked
+router.get('/blocked', verifyToken, async (req, res) => {
+    try {
+        const blocked = await prisma.blockedScanner.findMany({
+            where: { ownerId: req.user.id }
+        });
+        res.json(blocked);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/auth/blocked/:scannerId
+router.delete('/blocked/:scannerId', verifyToken, async (req, res) => {
+    try {
+        await prisma.blockedScanner.deleteMany({
+            where: { ownerId: req.user.id, scannerId: req.params.scannerId }
+        });
+        res.json({ message: 'User unblocked' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = router;

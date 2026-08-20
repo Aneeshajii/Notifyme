@@ -114,14 +114,28 @@ router.post('/upload', upload.single('media'), async (req, res) => {
 router.post('/send', messageRateLimiter, async (req, res) => {
     try {
         const { tagId, content, senderInfo, scannerId, senderRole } = req.body;
-        let tag = await prisma.tag.findUnique({ where: { tagId: tagId } });
+        let tag = await prisma.tag.findUnique({ 
+            where: { tagId: tagId },
+            include: { owner: true }
+        });
         if (!tag) {
-            tag = await prisma.tag.findUnique({ where: { id: tagId } });
+            tag = await prisma.tag.findUnique({ 
+                where: { id: tagId },
+                include: { owner: true }
+            });
         }
         if (!tag) return res.status(404).json({ message: 'Tag not found' });
 
         if (tag.status === 'dnd' || tag.status === 'paused' || !tag.isActive) {
             return res.status(403).json({ error: 'This QR code is currently paused and cannot receive messages.' });
+        }
+        
+        if (senderRole !== 'owner' && !tag.owner.allowMessages) {
+            return res.status(403).json({ error: 'The owner has disabled messaging.' });
+        }
+        
+        if (req.body.mediaUrl && !tag.owner.allowImageSharing) {
+             return res.status(403).json({ error: 'The owner has disabled image/media sharing.' });
         }
         
         let conversationId = req.body.conversationId;

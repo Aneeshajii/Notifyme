@@ -99,7 +99,19 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
       where: { id: uuid },
       include: {
         owner: {
-          select: { id: true, name: true, phone: true, isBlocked: true, isPremium: true }
+          select: { 
+            id: true, 
+            name: true, 
+            phone: true, 
+            email: true,
+            isBlocked: true, 
+            isPremium: true,
+            hidePhone: true,
+            hideEmail: true,
+            allowMessages: true,
+            allowAudioCalls: true,
+            allowVideoCalls: true
+          }
         }
       }
     });
@@ -125,13 +137,28 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
         }
     }
 
+    await prisma.auditLog.create({
+        data: {
+            adminId: tag.owner.id,
+            action: 'QR_SCANNED',
+            entityId: tag.id,
+            details: JSON.stringify({ scannerId, userAgent: req.headers['user-agent'] }),
+            ipAddress: req.ip || req.socket.remoteAddress
+        }
+    });
+
     res.json({
         id: tag.id,
         name: tag.name,
         status: tag.status,
         ownerName: tag.owner.name,
         isPremium: tag.owner.isPremium,
-        placeholderMessage: tag.placeholderMessage
+        placeholderMessage: tag.placeholderMessage,
+        allowMessages: tag.owner.allowMessages,
+        allowAudioCalls: tag.owner.allowAudioCalls,
+        allowVideoCalls: tag.owner.allowVideoCalls,
+        phone: tag.owner.hidePhone ? null : tag.owner.phone,
+        email: tag.owner.hideEmail ? null : tag.owner.email
     });
   } catch (error) {
     res.status(500).json({ message: 'An unexpected error occurred. Please try again.' });
@@ -271,10 +298,17 @@ router.put('/:id', verifyToken, async (req, res) => {
             }
         });
         
+        let action = 'QR_RENAMED';
+        if (status !== undefined && status !== tag.status) {
+            action = status === 'active' ? 'QR_ACTIVATED' : (status === 'paused' ? 'QR_PAUSED' : 'QR_STATUS_CHANGED');
+        } else if (isActive !== undefined && isActive !== tag.isActive) {
+            action = isActive ? 'QR_ACTIVATED' : 'QR_PAUSED';
+        }
+
         await prisma.auditLog.create({
             data: {
                 adminId: req.user.id,
-                action: 'QR_RENAMED',
+                action: action,
                 entityId: req.user.id,
                 details: JSON.stringify({ tagId: updatedTag.tagId, name: updatedTag.name, status: updatedTag.status }),
                 ipAddress: req.ip || req.socket.remoteAddress
@@ -282,6 +316,39 @@ router.put('/:id', verifyToken, async (req, res) => {
         });
 
         res.json(updatedTag);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/tags/:id
+// Owner deletes their own tag
+router.delete('/:id', verifyToken, async (req, res) => {
+    try {
+        const tag = await prisma.tag.findUnique({ where: { id: req.params.id } });
+        if (!tag || tag.ownerId !== req.user.id) {
+            return res.status(403).json({ error: 'Unauthorized to delete this tag.' });
+        }
+
+        // Delete associated messages and logs first if any exist (SQLite constraint)
+        await prisma.message.deleteMany({ where: { tagId: tag.id } });
+        await prisma.scanHistory.deleteMany({ where: { tagId: tag.id } });
+        
+        await prisma.tag.delete({
+            where: { id: tag.id }
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                adminId: req.user.id,
+                action: 'QR_DELETED',
+                entityId: tag.ownerId,
+                details: JSON.stringify({ tagId: tag.tagId, name: tag.name }),
+                ipAddress: req.ip || req.socket.remoteAddress
+            }
+        });
+
+        res.json({ message: 'Tag deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
