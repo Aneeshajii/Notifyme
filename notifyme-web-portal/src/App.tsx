@@ -793,7 +793,11 @@ function urlBase64ToUint8Array(base64String: string) {
                 @media (max-width: 768px) {
                     .contact-grid {
                         grid-template-columns: 1fr;
-                        gap: 24px;
+                        gap: 16px;
+                        padding: 0;
+                    }
+                    .contact-card {
+                        padding: 24px 16px;
                     }
                 }
                 .contact-card {
