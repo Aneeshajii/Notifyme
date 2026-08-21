@@ -619,7 +619,7 @@ function urlBase64ToUint8Array(base64String: string) {
           <div style={{ marginBottom: '16px' }}>
             <button className={`nav-item ${activeTab === 'about_us' ? 'active' : ''}`} onClick={() => { setActiveTab('about_us'); setMobileMenuOpen(false); }}><Info size={20} /> About Us</button>
             <button className={`nav-item ${activeTab === 'support' ? 'active' : ''}`} onClick={() => { setActiveTab('support'); setMobileMenuOpen(false); }}><HelpCircle size={20} /> Support Center</button>
-            <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}><Settings size={20} /> App Settings</button>
+            <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false); }}><Phone size={20} /> Contact Us</button>
           </div>
         </nav>
 
@@ -778,47 +778,140 @@ function urlBase64ToUint8Array(base64String: string) {
 
           {activeTab === 'settings' && (
             <>
-              <div className="header-actions"><div><h1>Settings</h1><p>Preferences & Integrations</p></div></div>
-              <div className="settings-container" style={{ display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))' }}>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                        <h3 style={{ marginBottom: '20px', color: '#0f172a' }}>App Preferences</h3>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ background: '#e0e7ff', padding: '8px', borderRadius: '8px' }}><Bell color="#4f46e5" size={20} /></div>
-                                <strong>Push Notifications</strong>
-                            </div>
-                            <input type="checkbox" defaultChecked />
-                        </div>
-                    </div>
-
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                        <h3 style={{ marginBottom: '20px', color: '#0f172a' }}>Subscription Plans</h3>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>
-                            Your active subscription plan determines your tag limits and available features.
-                            Subscriptions are managed exclusively by NotifyMe Support. 
-                            Please go to the <strong>Subscriptions</strong> tab to view your current benefits.
-                        </p>
-                    </div>
+              <style>
+                {`
+                .contact-page-wrapper {
+                    padding: 0 0 40px 0;
+                }
+                .contact-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 32px;
+                    max-width: 1000px;
+                    margin: 0 auto;
+                }
+                @media (max-width: 768px) {
+                    .contact-grid {
+                        grid-template-columns: 1fr;
+                        gap: 24px;
+                    }
+                }
+                .contact-card {
+                    background: white;
+                    padding: 40px 32px;
+                    border-radius: 20px;
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    height: 100%;
+                }
+                .photo-placeholder {
+                    width: 140px;
+                    height: 140px;
+                    border-radius: 50%;
+                    background: #f8fafc;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                    border: 3px solid #e2e8f0;
+                    color: #94a3b8;
+                    font-size: 14px;
+                    font-weight: 500;
+                    overflow: hidden;
+                }
+                .contact-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 18px 24px;
+                    background: #f8fafc;
+                    border-radius: 16px;
+                    color: #0f172a;
+                    text-decoration: none;
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: all 0.2s;
+                    width: 100%;
+                    justify-content: center;
+                    border: 1px solid #e2e8f0;
+                    margin-bottom: 16px;
+                }
+                .contact-link:hover {
+                    background: #e0e7ff;
+                    border-color: #c7d2fe;
+                    color: #4f46e5;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+                }
+                .contact-link.whatsapp:hover {
+                    background: #dcfce7;
+                    border-color: #86efac;
+                    color: #166534;
+                    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.1);
+                }
+                .partner-area {
+                    margin-top: auto;
+                    padding-top: 32px;
+                    border-top: 1px dashed #e2e8f0;
+                    width: 100%;
+                }
+                .partner-placeholder {
+                    background: #f8fafc;
+                    border: 2px dashed #cbd5e1;
+                    border-radius: 12px;
+                    padding: 32px;
+                    color: #94a3b8;
+                    font-size: 14px;
+                    margin-top: 16px;
+                }
+                `}
+              </style>
+              <div className="header-actions" style={{ marginBottom: '32px' }}>
+                <div>
+                  <h1>Contact Us</h1>
+                  <p>Get in touch with the NotifyMe team</p>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                        <h3 style={{ marginBottom: '20px', color: '#0f172a' }}>Contact Us</h3>
-                        <div style={{ marginBottom: '16px', color: '#475569', fontSize: '14px', lineHeight: '1.5' }}>
-                            For support or inquiries, please use the secure in-app messaging system below to prevent misuse.
-                            <br /><br />
-                            <strong>Direct Support Email:</strong> support@notifyme.com<br />
-                            <strong>Direct Support Phone:</strong> +1 (555) 000-0000
-                        </div>
-                        <textarea placeholder="Type your message to NotifyMe Support here..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '100px', marginBottom: '12px', resize: 'vertical' }}></textarea>
-                        <button className="primary-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => alert('Message sent securely to the official NotifyMe account!')}>Send Message</button>
+              </div>
+              
+              <div className="contact-page-wrapper">
+                <div className="contact-grid">
+                  
+                  {/* Left Side: Owner Profile */}
+                  <div className="contact-card">
+                    <h2 style={{ color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px', fontWeight: 'bold' }}>Owner</h2>
+                    <div className="photo-placeholder">
+                      Photo Area
                     </div>
+                    <h3 style={{ fontSize: '24px', color: '#0f172a', margin: '0 0 24px 0', fontWeight: 'bold' }}>Aneesh . A</h3>
+                    
+                    <div className="partner-area">
+                      <h4 style={{ color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>Partners</h4>
+                      <div className="partner-placeholder">
+                        Partner Photos / Logos Area
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* Right Side: Contact Methods */}
+                  <div className="contact-card" style={{ justifyContent: 'center' }}>
+                    <h2 style={{ color: '#0f172a', fontSize: '24px', marginBottom: '40px', fontWeight: 'bold' }}>Contact Us</h2>
+                    
+                    <a href="https://wa.me/916238774181" target="_blank" rel="noopener noreferrer" className="contact-link whatsapp">
+                      <Phone size={22} />
+                      +91 6238774181
+                    </a>
+                    
+                    <a href="mailto:notifymeowner@gmail.com" className="contact-link">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      notifymeowner@gmail.com
+                    </a>
+                  </div>
 
                 </div>
-
               </div>
             </>
           )}
