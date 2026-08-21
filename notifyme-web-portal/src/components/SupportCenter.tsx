@@ -36,7 +36,7 @@ export default function SupportCenter({ user }: any) {
       if (user) {
           fetchTickets();
           
-          const socket = io(SOCKET_URL);
+          const socket = io(SOCKET_URL, { transports: ['websocket'] });
           socket.on(`user-${user.id}-notification`, (data: any) => {
               if (data.type === 'ticket_reply' || data.type === 'ticket_closed') {
                   fetchTickets();
