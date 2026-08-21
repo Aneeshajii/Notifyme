@@ -81,6 +81,7 @@ function App() {
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [selectedUserMessages, setSelectedUserMessages] = useState<any[]>([]);
   const [selectedUserAuditLogs, setSelectedUserAuditLogs] = useState<any[]>([]);
+  const [selectedUserSessions, setSelectedUserSessions] = useState<any[]>([]);
   const [auditLogCategoryFilter, setAuditLogCategoryFilter] = useState<string>('All Activity');
   const [auditLogSearchQuery, setAuditLogSearchQuery] = useState<string>('');
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -123,12 +124,14 @@ function App() {
     }
 
     try {
-      const [msgRes, auditRes] = await Promise.all([
+      const [msgRes, auditRes, sessionsRes] = await Promise.all([
           axios.get(`${API_BASE}/messages/user/${user.id}`),
-          axios.get(`${API_BASE}/auth/users/${user.id}/audit-logs`)
+          axios.get(`${API_BASE}/auth/users/${user.id}/audit-logs`),
+          axios.get(`${API_BASE}/auth/users/${user.id}/sessions`)
       ]);
       setSelectedUserMessages(msgRes.data);
       setSelectedUserAuditLogs(auditRes.data);
+      setSelectedUserSessions(sessionsRes.data);
     } catch (err) {
       console.error("Error fetching user details", err);
     } finally {
@@ -855,6 +858,27 @@ function App() {
                                     )}
                                 </div>
 
+                                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '24px', marginTop: '24px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <h3 style={{ margin: 0, color: '#0f172a' }}>Active Device Sessions</h3>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {selectedUserSessions.map(s => (
+                                            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc' }}>
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>{s.deviceInfo}</h4>
+                                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>IP: {s.ipAddress} • Expires: {new Date(s.expiresAt).toLocaleDateString()}</p>
+                                                </div>
+                                                <button onClick={() => {
+                                                    handleRevokeSession(s.id);
+                                                    setSelectedUserSessions(prev => prev.filter(session => session.id !== s.id));
+                                                }} style={{ padding: '8px 16px', background: 'white', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Revoke</button>
+                                            </div>
+                                        ))}
+                                        {selectedUserSessions.length === 0 && <div style={{ color: '#94a3b8' }}>No active sessions found.</div>}
+                                    </div>
+                                </div>
+
                                 <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                                       <h3 style={{ margin: '0 0 20px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}><ShieldAlert size={20} color="#4f46e5"/> Audit Logs</h3>
                                       
@@ -1036,26 +1060,6 @@ function App() {
                     </div>
                 )}
             </div>
-            
-            <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, color: '#1e293b' }}>Active Device Sessions</h3>
-                    <button onClick={handleRevokeAllSessions} style={{ padding: '8px 16px', background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Revoke All Sessions</button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {sessions.map(s => (
-                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc' }}>
-                            <div>
-                                <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>{s.deviceInfo}</h4>
-                                <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>IP: {s.ipAddress} • Expires: {new Date(s.expiresAt).toLocaleDateString()}</p>
-                            </div>
-                            <button onClick={() => handleRevokeSession(s.id)} style={{ padding: '8px 16px', background: 'white', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Revoke</button>
-                        </div>
-                    ))}
-                    {sessions.length === 0 && <div style={{ color: '#94a3b8' }}>No active sessions found.</div>}
-                </div>
-            </div>
-            
             <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Audit Logs</h3>
               <div style={{ overflowX: 'auto' }}>
