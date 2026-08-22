@@ -999,8 +999,8 @@ function urlBase64ToUint8Array(base64String: string) {
 
       {/* LOGIN MODAL */}
       {showLoginModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
-          <div className="login-card fade-in" style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px', overflowY: 'auto' }}>
+          <div className="login-card fade-in" style={{ background: 'white', padding: '32px 24px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative', margin: 'auto' }}>
             <button onClick={() => { 
                 setShowLoginModal(false); 
                 setPendingAction(null); 
@@ -1009,53 +1009,53 @@ function urlBase64ToUint8Array(base64String: string) {
                     setActiveTabState('home');
                     window.location.hash = '';
                 }
-            }} style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(0,0,0,0.05)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
+            }} style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.05)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
             
-            <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '24px' }}>
-              <Shield size={40} color="#4f46e5" />
+            <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '16px' }}>
+              <Shield size={32} color="#4f46e5" />
             </div>
             <h2 style={{ fontSize: '24px', color: '#0f172a', marginBottom: '8px' }}>Login to continue</h2>
-            <p style={{ color: '#64748b', marginBottom: '32px', fontSize: '14px' }}>Please log in to use this feature and manage your NotifyMe account.</p>
+            <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Please log in to use this feature and manage your NotifyMe account.</p>
             
             {authMode === 'login' ? (
               <>
-                  <button type="button" onClick={() => handleGoogleLogin()} style={{ width: '100%', padding: '16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <button type="button" onClick={() => handleGoogleLogin()} style={{ width: '100%', padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                       <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '24px', height: '24px' }} />
                       Continue with Google
                   </button>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '24px 0', color: '#cbd5e1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '16px 0', color: '#cbd5e1' }}>
                       <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                       <span style={{ fontSize: '14px' }}>OR</span>
                       <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                   </div>
   
-                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
+                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <button type="submit" style={{ padding: '12px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
                   </form>
-                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                  <div style={{ textAlign: 'center', marginTop: '12px' }}>
                       <span style={{ color: '#64748b' }}>Don't have an account? </span>
                       <button onClick={() => setAuthMode('register')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign Up</button>
                   </div>
               </>
             ) : (
               <>
-                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="password" placeholder="Password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <button type="submit" style={{ padding: '16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Create Account</button>
+                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="password" placeholder="Password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <button type="submit" style={{ padding: '12px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Create Account</button>
                   </form>
-                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                  <div style={{ textAlign: 'center', marginTop: '12px' }}>
                       <span style={{ color: '#64748b' }}>Already have an account? </span>
                       <button onClick={() => setAuthMode('login')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
                   </div>
               </>
             )}
 
-            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
               <button onClick={() => { 
                   setShowLoginModal(false); 
                   setPendingAction(null); 
