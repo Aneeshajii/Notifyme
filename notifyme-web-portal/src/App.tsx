@@ -629,18 +629,6 @@ function urlBase64ToUint8Array(base64String: string) {
             <Search size={18} color="#64748b" />
             <input type="text" placeholder="Search..." />
           </div>
-          <div className="user-profile">
-            {isAuthenticated ? (
-              <>
-                <span>{user?.name || 'User'}</span>
-                <div className="avatar">{user?.name?.charAt(0).toUpperCase() || 'U'}</div>
-              </>
-            ) : (
-              <button onClick={() => setShowLoginModal(true)} style={{ background: '#0f172a', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '100px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}>
-                Sign In
-              </button>
-            )}
-          </div>
         </header>
 
         <div className="content-area">
