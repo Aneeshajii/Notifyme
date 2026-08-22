@@ -6,6 +6,7 @@ import { Shield, Plus, Settings, Info, LogOut, QrCode, Search, User, Eye, Inbox,
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import ChatInterface from './components/ChatInterface';
 import QRDownloadModal from './components/QRDownloadModal';
+import LoadingScreen from './components/LoadingScreen';
 import FloatingAssistant from './components/FloatingAssistant';
 import OnboardingFlow from './components/OnboardingFlow';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -532,33 +533,7 @@ function urlBase64ToUint8Array(base64String: string) {
   };
 
   if (isCheckingSession) {
-      return (
-          <div className="fade-out-transition" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
-              <div style={{ animation: 'gentleBreath 3s ease-in-out infinite' }}>
-                  <Shield size={64} color="#4f46e5" />
-              </div>
-              <p style={{ marginTop: '24px', color: '#64748b', fontSize: '16px', fontWeight: '500', animation: 'gentleFade 2s ease-in-out infinite alternate' }}>
-                  Please wait, NotifyMe is getting things ready for you…
-              </p>
-              <style>{`
-                  @keyframes gentleBreath { 
-                      0%, 100% { transform: scale(1); opacity: 1; } 
-                      50% { transform: scale(1.02); opacity: 0.85; } 
-                  }
-                  @keyframes gentleFade {
-                      0% { opacity: 0.6; }
-                      100% { opacity: 1; }
-                  }
-                  .fade-in {
-                      animation: appFadeIn 0.4s ease-out forwards;
-                  }
-                  @keyframes appFadeIn {
-                      from { opacity: 0; transform: scale(0.99); }
-                      to { opacity: 1; transform: scale(1); }
-                  }
-              `}</style>
-          </div>
-      );
+      return <LoadingScreen />;
   }
 
   if (isAuthenticated && user && (!user.tags || user.tags.length === 0)) {

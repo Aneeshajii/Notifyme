@@ -1,44 +1,14 @@
 import { Stack } from "expo-router";
 import { useAuth, AuthProvider } from "../context/AuthContext";
 import { View, Text, StyleSheet, Animated } from "react-native";
-import { ShieldCheck } from "lucide-react-native";
 import { useEffect, useRef } from "react";
+import MobileLoadingScreen from "../components/MobileLoadingScreen";
 
 function MainLayout() {
   const { isLoading } = useAuth();
   
-  // Animation values
-  const scaleValue = useRef(new Animated.Value(1)).current;
-  const opacityValue = useRef(new Animated.Value(1)).current;
-  const fadeOutValue = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Gentle breathing animation (scale and opacity)
-    Animated.loop(
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(scaleValue, { toValue: 1.05, duration: 1500, useNativeDriver: true }),
-          Animated.timing(opacityValue, { toValue: 0.7, duration: 1500, useNativeDriver: true })
-        ]),
-        Animated.parallel([
-          Animated.timing(scaleValue, { toValue: 1, duration: 1500, useNativeDriver: true }),
-          Animated.timing(opacityValue, { toValue: 1, duration: 1500, useNativeDriver: true })
-        ])
-      ])
-    ).start();
-  }, []);
-
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Animated.View style={{ transform: [{ scale: scaleValue }], opacity: opacityValue }}>
-          <ShieldCheck size={80} color="#4f46e5" />
-        </Animated.View>
-        <Animated.Text style={[styles.loadingText, { opacity: opacityValue }]}>
-          Please wait, NotifyMe is getting things ready for you…
-        </Animated.Text>
-      </View>
-    );
+    return <MobileLoadingScreen />;
   }
 
   return (
