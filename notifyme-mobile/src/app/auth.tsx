@@ -28,13 +28,15 @@ export default function AuthScreen() {
   const { login } = useAuth();
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
-      androidClientId: '908105327441-5cuskrcaf814tu5l0ude260j3al73qtt.apps.googleusercontent.com',
-      iosClientId: '908105327441-e00gugth6nr7sv7ni4a29hni4gfmrtbr.apps.googleusercontent.com',
-      offlineAccess: true,
-      forceCodeForRefreshToken: true,
-    });
+    if (Platform.OS !== 'web') {
+      GoogleSignin.configure({
+        webClientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
+        androidClientId: '908105327441-5cuskrcaf814tu5l0ude260j3al73qtt.apps.googleusercontent.com',
+        iosClientId: '908105327441-e00gugth6nr7sv7ni4a29hni4gfmrtbr.apps.googleusercontent.com',
+        offlineAccess: true,
+        forceCodeForRefreshToken: true,
+      });
+    }
   }, []);
 
   const clearMessages = () => {
@@ -43,6 +45,11 @@ export default function AuthScreen() {
   };
 
   const handleGoogleLogin = async () => {
+    if (Platform.OS === 'web') {
+      setErrorMsg("Google Sign-In is only supported on mobile devices.");
+      return;
+    }
+
     setGoogleLoading(true);
     clearMessages();
     try {
