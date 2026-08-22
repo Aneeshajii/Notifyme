@@ -61,6 +61,24 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
         try {
             const token = localStorage.getItem('userToken');
             
+            if (!token) {
+                setTimeout(() => {
+                    const aiMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        text: "You need to be logged in to chat with me! Please sign in to access your account and features.",
+                        sender: 'ai',
+                        timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, aiMsg]);
+                    setCurrentQuickActions([
+                        { label: 'Sign In / Register', action: 'OPEN_QR' },
+                        { label: 'Support', action: 'OPEN_SUPPORT' }
+                    ]);
+                    setIsTyping(false);
+                }, 800);
+                return;
+            }
+            
             // Format history for backend
             const history = messages.map(m => ({ text: m.text, sender: m.sender }));
 
@@ -94,10 +112,10 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
 
         } catch (err: any) {
             console.error("Chat error:", err);
-            const errorMessage = err.response?.data?.error || "I'm having trouble connecting right now. Please try again later.";
+            const errorMessage = err.response?.data?.error || err.response?.data?.message || "I'm having trouble connecting right now. Please try again later.";
             const aiMsg: Message = {
                 id: Date.now().toString(),
-                text: errorMessage,
+                text: errorMessage === 'Invalid Token' ? 'Your session has expired. Please sign in again.' : errorMessage,
                 sender: 'ai',
                 timestamp: new Date(),
                 isError: true
