@@ -29,18 +29,8 @@ export default function UserDashboard({ tags, messages, setActiveTab, user, prof
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '32px', color: '#0f172a', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            {getGreeting()}, {profileData?.name?.split(' ')[0] || 'User'} ??
+            {getGreeting()}, {profileData?.name?.split(' ')[0] || 'User'}
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', padding: '4px 12px', borderRadius: '100px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Star size={14} /> {planName.replace(' Plan', '')}
-            </span>
-
-          </div>
-        </div>
-        <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '16px 24px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(255,255,255,0.5)' }}>
-            <div style={{ color: '#64748b', fontSize: '13px', fontWeight: '500', marginBottom: '4px' }}>QR Usage</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a' }}>{qrUsed} / {qrLimit} <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 'normal' }}>used</span></div>
         </div>
       </div>
 
@@ -90,47 +80,9 @@ export default function UserDashboard({ tags, messages, setActiveTab, user, prof
                       <ChevronRight color="#cbd5e1" />
                   </div>
               </div>
-
-              {/* Live Activity */}
-              <div style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                      <h3 style={{ margin: 0, fontSize: '18px', color: '#0f172a' }}>Live Activity</h3>
-                      <button onClick={() => setActiveTab('scan_history')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>View All <ChevronRight size={16} /></button>
-                  </div>
-                  
-                  <div style={{ marginBottom: '8px', color: '#94a3b8', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Today</div>
-                  <div onClick={() => setActiveTab('scan_history')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: '#f8fafc', borderRadius: '16px', cursor: 'pointer', marginBottom: '16px', transition: 'background 0.2s' }} onMouseOver={e=>e.currentTarget.style.background='#f1f5f9'} onMouseOut={e=>e.currentTarget.style.background='#f8fafc'}>
-                      <div style={{ background: '#dcfce7', color: '#16a34a', padding: '10px', borderRadius: '50%' }}><Activity size={20} /></div>
-                      <div style={{ flex: 1 }}>
-                          <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>Car QR scanned</h4>
-                          <div style={{ color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} /> Bangalore</div>
-                      </div>
-                  </div>
-
-                  <div style={{ marginBottom: '8px', color: '#94a3b8', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Yesterday</div>
-                  <div onClick={() => setActiveTab('scan_history')} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: '#f8fafc', borderRadius: '16px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e=>e.currentTarget.style.background='#f1f5f9'} onMouseOut={e=>e.currentTarget.style.background='#f8fafc'}>
-                      <div style={{ background: '#dcfce7', color: '#16a34a', padding: '10px', borderRadius: '50%' }}><Activity size={20} /></div>
-                      <div style={{ flex: 1 }}>
-                          <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>Wallet QR scanned</h4>
-                          <div style={{ color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} /> Kochi</div>
-                      </div>
-                  </div>
-              </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Security Center */}
-              <div onClick={() => setActiveTab('security')} style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', cursor: 'pointer', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                      <div style={{ background: '#dcfce7', color: '#16a34a', padding: '8px', borderRadius: '50%' }}><Lock size={20} /></div>
-                      <h3 style={{ margin: 0, fontSize: '18px', color: '#0f172a' }}>Security Center</h3>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '14px', fontWeight: '500' }}><CheckCircle2 size={16} /> Email Verified</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '14px', fontWeight: '500' }}><CheckCircle2 size={16} /> Phone Verified</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '14px', fontWeight: '500' }}><ShieldAlert size={16} /> 2FA Disabled</div>
-                  </div>
-              </div>
 
               {/* Support Preview */}
               <div onClick={() => setActiveTab('support')} style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', cursor: 'pointer', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>

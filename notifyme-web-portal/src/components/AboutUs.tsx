@@ -15,7 +15,7 @@ const AboutUs = () => {
     { title: 'Audio Calling', desc: 'High quality anonymous calls.', icon: <Phone size={24} color="#3b82f6" /> },
     { title: 'Video Calling', desc: 'Face to face, completely secure.', icon: <Smartphone size={24} color="#8b5cf6" /> },
     { title: 'Privacy Controls', desc: 'You decide what is visible.', icon: <Eye size={24} color="#f59e0b" /> },
-    { title: 'Security Center', desc: 'Advanced account protection.', icon: <ShieldAlert size={24} color="#ef4444" /> },
+
     { title: 'Scan History', desc: 'Detailed logs of every scan.', icon: <Activity size={24} color="#6366f1" /> },
     { title: 'Notifications', desc: 'Instant alerts on all devices.', icon: <Bell size={24} color="#ec4899" /> },
     { title: 'Support Center', desc: '24/7 dedicated assistance.', icon: <HelpCircle size={24} color="#14b8a6" /> },

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer/simplepeer.min.js';
-import { Shield, Plus, Settings, Info, LogOut, QrCode, Search, User, Eye, Inbox, Phone, PhoneOff, CreditCard, Bell, Smartphone, Activity, Car, Home, Briefcase, FileText, Lock, Users, Download, HelpCircle, MapPin, TriangleAlert, ShieldAlert, FileSpreadsheet, List, Menu, X } from 'lucide-react';
+import { Shield, Plus, Settings, Info, LogOut, QrCode, Search, User, Eye, Inbox, Phone, PhoneOff, CreditCard, Bell, Smartphone, Activity, Car, Home, Briefcase, FileText, Lock, Users, Download, HelpCircle, MapPin, TriangleAlert, ShieldAlert, FileSpreadsheet, List, Menu, X, Zap, Globe, Smile, Key, MessageCircle, Mail } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import ChatInterface from './components/ChatInterface';
 import QRDownloadModal from './components/QRDownloadModal';
@@ -20,6 +20,7 @@ const Subscriptions = lazy(() => import('./components/Subscriptions'));
 const ScanHistory = lazy(() => import('./components/ScanHistory'));
 const SupportCenter = lazy(() => import('./components/SupportCenter'));
 const AboutUs = lazy(() => import('./components/AboutUs'));
+import PublicHomepage from './components/PublicHomepage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -113,10 +114,44 @@ function App() {
   // Profile Form State
   const [profileData, setProfileData] = useState<Partial<UserType>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isCheckingSession && !isAuthenticated) {
+      const hash = window.location.hash.replace('#', '');
+      if (['dashboard', 'tags', 'inbox', 'profile', 'subscriptions', 'analytics', 'notifications', 'scan_history', 'family', 'settings'].includes(hash)) {
+        setPendingAction(hash);
+        setShowLoginModal(true);
+      }
+    }
+  }, [isCheckingSession, isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && pendingAction) {
+      setActiveTabState(pendingAction as any);
+      window.location.hash = pendingAction;
+      setPendingAction(null);
+      setShowLoginModal(false);
+    }
+  }, [isAuthenticated, pendingAction]);
 
   const activeTab = profileData?.requiresPhoneVerification ? 'subscriptions' : activeTabState;
+  
+  const handleProtectedAction = (action: string) => {
+    setPendingAction(action);
+    setShowLoginModal(true);
+  };
+
   const setActiveTab = (tab: any) => {
     if (profileData?.requiresPhoneVerification) return;
+    
+    const protectedTabs = ['dashboard', 'tags', 'inbox', 'profile', 'subscriptions', 'analytics', 'notifications', 'scan_history', 'family'];
+    if (!isAuthenticated && protectedTabs.includes(tab)) {
+       handleProtectedAction(tab);
+       return;
+    }
+
     window.location.hash = tab;
     setActiveTabState(tab);
   };
@@ -529,59 +564,6 @@ function urlBase64ToUint8Array(base64String: string) {
     return <OnboardingFlow user={user} onComplete={setUser} />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="login-container fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
-        <div className="login-card" style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-          <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '32px' }}>
-            <Shield size={48} color="#4f46e5" />
-          </div>
-          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '8px' }}>Welcome to NotifyMe</h2>
-          <p style={{ color: '#64748b', marginBottom: '32px' }}>Secure, anonymous connections.</p>
-          
-            {authMode === 'login' ? (
-              <>
-                  <button onClick={handleGoogleLogin} style={{ width: '100%', padding: '16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '24px', height: '24px' }} />
-                      Continue with Google
-                  </button>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '24px 0', color: '#cbd5e1' }}>
-                      <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                      <span style={{ fontSize: '14px' }}>OR</span>
-                      <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                  </div>
-  
-                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
-                  </form>
-                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                      <span style={{ color: '#64748b' }}>Don't have an account? </span>
-                      <button onClick={() => setAuthMode('register')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign Up</button>
-                  </div>
-              </>
-            ) : (
-              <>
-                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <input type="password" placeholder="Password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
-                      <button type="submit" style={{ padding: '16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Create Account</button>
-                  </form>
-                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                      <span style={{ color: '#64748b' }}>Already have an account? </span>
-                      <button onClick={() => setAuthMode('login')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
-                  </div>
-              </>
-            )}
-
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container fade-in">
       <audio ref={callerAudio} />
@@ -595,6 +577,7 @@ function urlBase64ToUint8Array(base64String: string) {
         <nav className="nav-menu" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 140px)', paddingRight: '8px' }}>
           
           <div style={{ marginBottom: '16px' }}>
+            <button className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); window.location.hash = ''; }}><Home size={20} /> Home</button>
             <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}><Activity size={20} /> Dashboard</button>
             <button className={`nav-item ${activeTab === 'tags' ? 'active' : ''}`} onClick={() => { setActiveTab('tags'); setMobileMenuOpen(false); }}><QrCode size={20} /> My Tags</button>
             <button className={`nav-item ${activeTab === 'inbox' ? 'active' : ''}`} onClick={() => { setActiveTab('inbox'); setMobileMenuOpen(false); }}><Inbox size={20} /> Call/Msg {messages.length > 0 && <span className="badge-count">{messages.length}</span>}</button>
@@ -610,7 +593,6 @@ function urlBase64ToUint8Array(base64String: string) {
                 <button className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }}><User size={20} /> Profile</button>
                 <button className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`} onClick={() => { setActiveTab('subscriptions'); setMobileMenuOpen(false); }}><CreditCard size={20} /> Subscriptions</button>
                 <button className={`nav-item ${activeTab === 'privacy' ? 'active' : ''}`} onClick={() => { setActiveTab('privacy'); setMobileMenuOpen(false); }}><Eye size={20} /> Privacy Center</button>
-                <button className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => { setActiveTab('security'); setMobileMenuOpen(false); }}><ShieldAlert size={20} /> Security Center</button>
                 <button className={`nav-item ${activeTab === 'family' ? 'active' : ''}`} onClick={() => { setActiveTab('family'); setMobileMenuOpen(false); }}><Users size={20} /> Family Sharing</button>
               </>
             )}
@@ -624,9 +606,15 @@ function urlBase64ToUint8Array(base64String: string) {
         </nav>
 
         <div className="sidebar-bottom">
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={18} /> Sign Out
-          </button>
+          {isAuthenticated ? (
+            <button onClick={handleLogout} className="logout-btn">
+              <LogOut size={18} /> Sign Out
+            </button>
+          ) : (
+            <button onClick={() => setShowLoginModal(true)} className="logout-btn" style={{ color: '#4f46e5' }}>
+              <LogOut size={18} style={{ transform: 'rotate(180deg)' }} /> Sign In
+            </button>
+          )}
         </div>
       </aside>
 
@@ -641,13 +629,22 @@ function urlBase64ToUint8Array(base64String: string) {
             <input type="text" placeholder="Search..." />
           </div>
           <div className="user-profile">
-            <span>{user?.name || 'User'}</span>
-            <div className="avatar">{user?.name?.charAt(0).toUpperCase() || 'U'}</div>
+            {isAuthenticated ? (
+              <>
+                <span>{user?.name || 'User'}</span>
+                <div className="avatar">{user?.name?.charAt(0).toUpperCase() || 'U'}</div>
+              </>
+            ) : (
+              <button onClick={() => setShowLoginModal(true)} style={{ background: '#0f172a', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '100px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}>
+                Sign In
+              </button>
+            )}
           </div>
         </header>
 
         <div className="content-area">
           <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
+          {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} />}
           {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
           {activeTab === 'analytics' && <QRAnalytics />}
 
@@ -998,6 +995,81 @@ function urlBase64ToUint8Array(base64String: string) {
           tag={downloadingTag} 
           onClose={() => setDownloadingTag(null)} 
         />
+      )}
+
+      {/* LOGIN MODAL */}
+      {showLoginModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div className="login-card fade-in" style={{ background: 'white', padding: '48px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => { 
+                setShowLoginModal(false); 
+                setPendingAction(null); 
+                const protectedTabs = ['dashboard', 'tags', 'inbox', 'profile', 'subscriptions', 'analytics', 'notifications', 'scan_history', 'family'];
+                if (!isAuthenticated && protectedTabs.includes(activeTabState)) {
+                    setActiveTabState('home');
+                    window.location.hash = '';
+                }
+            }} style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(0,0,0,0.05)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
+            
+            <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '24px' }}>
+              <Shield size={40} color="#4f46e5" />
+            </div>
+            <h2 style={{ fontSize: '24px', color: '#0f172a', marginBottom: '8px' }}>Login to continue</h2>
+            <p style={{ color: '#64748b', marginBottom: '32px', fontSize: '14px' }}>Please log in to use this feature and manage your NotifyMe account.</p>
+            
+            {authMode === 'login' ? (
+              <>
+                  <button type="button" onClick={() => handleGoogleLogin()} style={{ width: '100%', padding: '16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '24px', height: '24px' }} />
+                      Continue with Google
+                  </button>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '24px 0', color: '#cbd5e1' }}>
+                      <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                      <span style={{ fontSize: '14px' }}>OR</span>
+                      <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                  </div>
+  
+                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <button type="submit" style={{ padding: '16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
+                  </form>
+                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                      <span style={{ color: '#64748b' }}>Don't have an account? </span>
+                      <button onClick={() => setAuthMode('register')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign Up</button>
+                  </div>
+              </>
+            ) : (
+              <>
+                  <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="email" placeholder="Email Address" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <input type="password" placeholder="Password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '16px', outline: 'none' }} />
+                      <button type="submit" style={{ padding: '16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Create Account</button>
+                  </form>
+                  <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                      <span style={{ color: '#64748b' }}>Already have an account? </span>
+                      <button onClick={() => setAuthMode('login')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 'bold', cursor: 'pointer' }}>Sign In</button>
+                  </div>
+              </>
+            )}
+
+            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e2e8f0' }}>
+              <button onClick={() => { 
+                  setShowLoginModal(false); 
+                  setPendingAction(null); 
+                  const protectedTabs = ['dashboard', 'tags', 'inbox', 'profile', 'subscriptions', 'analytics', 'notifications', 'scan_history', 'family'];
+                  if (!isAuthenticated && protectedTabs.includes(activeTabState)) {
+                      setActiveTabState('home');
+                      window.location.hash = '';
+                  }
+              }} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '15px', fontWeight: '500', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e=>e.currentTarget.style.color='#0f172a'} onMouseOut={e=>e.currentTarget.style.color='#64748b'}>
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* AI Assistant Chatbot */}

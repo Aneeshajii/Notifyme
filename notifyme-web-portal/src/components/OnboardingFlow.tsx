@@ -149,7 +149,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                 {step === 1 && (
                     <div style={{ padding: '60px', width: '100%', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-                            <h1 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '12px' }}>Welcome to NotifyMe! 👋</h1>
+                            <h1 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '12px' }}>Welcome to NotifyMe!</h1>
                             <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.5' }}>Let's set up your profile so people know who they are contacting securely.</p>
                         </div>
 
