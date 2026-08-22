@@ -158,6 +158,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [downloadingTag, setDownloadingTag] = useState<any>(null);
+  const [isChatActive, setIsChatActive] = useState(false);
   
   // Expanded sidebar category toggle state
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({
@@ -706,7 +707,7 @@ function urlBase64ToUint8Array(base64String: string) {
           {activeTab === 'inbox' && (
             <>
               <div className="header-actions"><div><h1>Secure Inbox</h1><p>Read anonymous and system messages.</p></div></div>
-              <ChatInterface messages={messages} setMessages={setMessages} user={user} fetchTagsAndMessages={fetchTagsAndMessages} />
+              <ChatInterface messages={messages} setMessages={setMessages} user={user} fetchTagsAndMessages={fetchTagsAndMessages} onChatStateChange={setIsChatActive} />
             </>
           )}
 
@@ -1073,7 +1074,11 @@ function urlBase64ToUint8Array(base64String: string) {
       )}
 
       {/* AI Assistant Chatbot */}
-      <FloatingAssistant onNavigate={setActiveTab} />
+      {isAuthenticated && (
+        <div style={{ display: (activeTab === 'inbox' && isChatActive) ? 'none' : 'block' }}>
+            <FloatingAssistant onNavigate={setActiveTab} />
+        </div>
+      )}
     </div>
   );
 }

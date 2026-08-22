@@ -11,12 +11,18 @@ const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function ChatInterface({ messages, setMessages, user, fetchTagsAndMessages }: any) {
+export default function ChatInterface({ messages, setMessages, user, fetchTagsAndMessages, onChatStateChange }: any) {
     const [selectedChat, setSelectedChat] = useState<string | null>(null);
     const [replyText, setReplyText] = useState('');
     const [showBlocked, setShowBlocked] = useState(false);
     const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
     
+    useEffect(() => {
+        if (onChatStateChange) {
+            onChatStateChange(!!selectedChat);
+        }
+    }, [selectedChat, onChatStateChange]);
+
     const [isRecording, setIsRecording] = useState<boolean>(false);
     const [recordingTime, setRecordingTime] = useState<number>(0);
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
