@@ -243,7 +243,7 @@ function urlBase64ToUint8Array(base64String: string) {
                       });
                       await axios.post(`${API_BASE}/push/subscribe`, { subscription });
                   } else {
-                      console.warn('Push notification permission was denied or ignored by the user.');
+                      // console.warn('Push notification permission was denied or ignored by the user.');
                   }
               } catch (err) {
                   console.error('Failed to subscribe to push notifications:', err);
