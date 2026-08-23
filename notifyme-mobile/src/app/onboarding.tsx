@@ -122,7 +122,7 @@ export default function OnboardingScreen() {
                   <UserIcon size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="John"
+                    placeholder="First Name"
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholderTextColor="#94a3b8"
@@ -136,7 +136,7 @@ export default function OnboardingScreen() {
                   <UserIcon size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     value={lastName}
                     onChangeText={setLastName}
                     placeholderTextColor="#94a3b8"

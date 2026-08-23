@@ -168,7 +168,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                                         type="text" 
                                         value={firstName} 
                                         onChange={e => setFirstName(e.target.value)}
-                                        placeholder="John"
+                                        placeholder="First Name"
                                         style={{ width: '100%', padding: '12px 16px 12px 40px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none' }}
                                     />
                                 </div>
@@ -182,7 +182,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                                         type="text" 
                                         value={lastName} 
                                         onChange={e => setLastName(e.target.value)}
-                                        placeholder="Doe"
+                                        placeholder="Last Name"
                                         style={{ width: '100%', padding: '12px 16px 12px 40px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none' }}
                                     />
                                 </div>

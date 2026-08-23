@@ -902,7 +902,7 @@ function urlBase64ToUint8Array(base64String: string) {
               <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginTop: '24px' }}>
                   <Lock size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
                   <h2 style={{ color: '#0f172a', marginBottom: '8px', textTransform: 'capitalize' }}>{activeTab.replace('_', ' ')} Module</h2>
-                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>This premium enterprise feature is currently being provisioned for your account. Please check back later.</p>
+                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. We’re working on this feature.</p>
               </div>
           )}
 

@@ -85,7 +85,7 @@ export default function ProfileEditScreen() {
                   style={styles.input}
                   value={formData.name}
                   onChangeText={(text) => setFormData({...formData, name: text})}
-                  placeholder="Enter first name"
+                  placeholder="First Name"
                   placeholderTextColor="#cbd5e1"
                 />
               </View>
@@ -99,7 +99,7 @@ export default function ProfileEditScreen() {
                   style={styles.input}
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({...formData, lastName: text})}
-                  placeholder="Enter last name"
+                  placeholder="Last Name"
                   placeholderTextColor="#cbd5e1"
                 />
               </View>
