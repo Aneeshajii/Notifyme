@@ -52,6 +52,7 @@ model User {
   blockedScanners   BlockedScanner[]
   securityAlerts    SecurityAlert[]
   pushSubscriptions PushSubscription[]
+  announcementStates UserAnnouncementState[]
   
   // Privacy Settings
   hideEmail         Boolean   @default(true)
@@ -296,4 +297,39 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  imageUrl        String?
+  actionButtonText String?
+  actionUrl       String?
+  deliveryTypes   String   // JSON string array: ["IN_APP", "PUSH", "BANNER"]
+  targetAudience  String   // "ALL", "BASIC", "PREMIUM", "SPECIFIC"
+  selectedUsers   String?  // JSON array of user IDs
+  publishAt       DateTime @default(now())
+  expiresAt       DateTime?
+  status          String   @default("ACTIVE") // ACTIVE, SCHEDULED, EXPIRED, CANCELLED
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userStates      UserAnnouncementState[]
+}
+
+model UserAnnouncementState {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcementId  String
+  announcement    Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  seen            Boolean  @default(false)
+  dismissed       Boolean  @default(false)
+  acknowledged    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, announcementId])
 }

@@ -158,7 +158,7 @@ router.post('/login', async (req, res) => {
         const { accessToken, refreshToken } = generateTokens(user);
         
         // Save refresh token as a Session
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
         await prisma.session.create({
             data: {
                 userId: user.id,
@@ -388,7 +388,7 @@ router.post('/login/verify-mfa', async (req, res) => {
         if (!isValid) return res.status(401).json({ message: 'Invalid MFA token' });
 
         const tokens = generateTokens(user);
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
         
         await prisma.session.create({
             data: { 
@@ -503,7 +503,7 @@ router.post('/google/verify', async (req, res) => {
         }
 
         const tokens = generateTokens(user);
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
         await prisma.session.create({
             data: {
@@ -612,7 +612,7 @@ router.post('/refresh', async (req, res) => {
 
         // Token Rotation: Issue new tokens and delete the old session
         const tokens = generateTokens(session.user);
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
         await prisma.session.delete({ where: { id: session.id } });
         await prisma.session.create({
@@ -634,6 +634,15 @@ router.post('/refresh', async (req, res) => {
 // GET /api/auth/sessions
 router.get('/sessions', verifyToken, async (req, res) => {
     try {
+        // Cleanup sessions older than 30 days
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        await prisma.session.deleteMany({
+            where: {
+                userId: req.user.id,
+                createdAt: { lt: thirtyDaysAgo }
+            }
+        });
+
         const sessions = await prisma.session.findMany({ where: { userId: req.user.id } });
         res.json(sessions);
     } catch (error) {

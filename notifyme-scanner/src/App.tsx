@@ -16,6 +16,10 @@ interface TagData {
   status: string;
   ownerName: string;
   isPremium?: boolean;
+  allowMessages?: boolean;
+  allowAudioCalls?: boolean;
+  allowVideoCalls?: boolean;
+  allowImageSharing?: boolean;
 }
 
 const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
@@ -365,34 +369,46 @@ function ScannerProfile() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            
-            {/* Premium Calling Feature */}
-            {tagData.isPremium ? (
-                <button onClick={initiateCall} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                  <div style={{ background: 'rgba(255,255,255,0.2)', padding: '16px', borderRadius: '50%' }}>
-                      <Phone size={28} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Premium Calling Feature */}
+              {tagData.isPremium && tagData.allowAudioCalls !== false ? (
+                  <button onClick={initiateCall} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                    <div style={{ background: 'rgba(255,255,255,0.2)', padding: '16px', borderRadius: '50%' }}>
+                        <Phone size={28} />
+                    </div>
+                    Call Owner
+                  </button>
+              ) : (
+                  <button disabled style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'not-allowed', width: '100%', fontSize: '20px', fontWeight: '700' }}>
+                    <div style={{ background: '#e2e8f0', padding: '16px', borderRadius: '50%', color: '#94a3b8' }}>
+                        <Lock size={28} />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ marginBottom: '4px', color: '#64748b' }}>Call Owner</div>
+                        <div style={{ fontSize: '13px', fontWeight: '500' }}>{tagData.allowAudioCalls === false ? 'Calling Disabled by Owner' : 'Calling Disabled (Free Tag)'}</div>
+                    </div>
+                  </button>
+              )}
+
+              {tagData.allowMessages !== false ? (
+                <button onClick={() => setShowMsgInput(!showMsgInput)} style={{ background: 'white', color: '#0f172a', border: '1px solid rgba(0,0,0,0.05)', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                  <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: '50%' }}>
+                      <MessageSquare size={28} color="#4f46e5" />
                   </div>
-                  Call Owner
+                  Message Owner
                 </button>
-            ) : (
+              ) : (
                 <button disabled style={{ background: '#f8fafc', color: '#94a3b8', border: '1px solid #e2e8f0', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'not-allowed', width: '100%', fontSize: '20px', fontWeight: '700' }}>
                   <div style={{ background: '#e2e8f0', padding: '16px', borderRadius: '50%', color: '#94a3b8' }}>
                       <Lock size={28} />
                   </div>
                   <div style={{ textAlign: 'left' }}>
-                      <div style={{ marginBottom: '4px', color: '#64748b' }}>Call Owner</div>
-                      <div style={{ fontSize: '13px', fontWeight: '500' }}>Calling Disabled (Free Tag)</div>
+                      <div style={{ marginBottom: '4px', color: '#64748b' }}>Message Owner</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500' }}>Messaging Disabled by Owner</div>
                   </div>
                 </button>
-            )}
-
-            <button onClick={() => setShowMsgInput(!showMsgInput)} style={{ background: 'white', color: '#0f172a', border: '1px solid rgba(0,0,0,0.05)', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-              <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: '50%' }}>
-                  <MessageSquare size={28} color="#4f46e5" />
-              </div>
-              Message Owner
-            </button>
+              )}
 
             {showMsgInput && (
                 <div className="animate-fade-in" style={{ background: 'white', borderRadius: '24px', border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.06)', marginTop: '8px' }}>
@@ -444,9 +460,11 @@ function ScannerProfile() {
                         ) : (
                             <>
                                 <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*,audio/*" />
-                                <button onClick={() => fileInputRef.current?.click()} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
-                                    <Paperclip size={22} />
-                                </button>
+                                {tagData.allowImageSharing !== false && (
+                                    <button onClick={() => fileInputRef.current?.click()} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                        <Paperclip size={22} />
+                                    </button>
+                                )}
                                 <button onClick={toggleRecording} style={{ background: isRecording ? '#ef4444' : 'transparent', borderRadius: '50%', padding: '6px', border: 'none', cursor: 'pointer', color: isRecording ? 'white' : '#64748b' }}>
                                     {isRecording ? <MicOff size={22} /> : <Mic size={22} />}
                                 </button>

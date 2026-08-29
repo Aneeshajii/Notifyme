@@ -258,6 +258,7 @@ app.use('/api/calls', callsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/announcements', require('./routes/announcements'));
 
 // Serve uploaded profile pictures statically
 const path = require('path');

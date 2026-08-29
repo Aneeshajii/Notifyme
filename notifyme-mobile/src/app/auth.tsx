@@ -25,7 +25,13 @@ export default function AuthScreen() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   
-  const { login } = useAuth();
+  const { login, user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace("/(tabs)");
+    }
+  }, [user, isLoading]);
 
   useEffect(() => {
     if (Platform.OS !== 'web') {

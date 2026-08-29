@@ -167,10 +167,10 @@ export default function PrivacyScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>Active Sessions</Text>
+        <Text style={styles.sectionTitle}>Login Devices</Text>
         <View style={styles.card}>
           {sessions.length === 0 ? (
-            <Text style={styles.emptyText}>No active sessions.</Text>
+            <Text style={styles.emptyText}>No login devices.</Text>
           ) : (
             sessions.map((s: any, index) => (
               <View key={s.id} style={[styles.listItem, index > 0 && styles.listBorder]}>
@@ -193,6 +193,10 @@ export default function PrivacyScreen() {
               </View>
             ))
           )}
+          
+          <Text style={{ marginTop: 16, fontSize: 13, color: '#64748b', textAlign: 'center' }}>
+            Login details are automatically deleted after 1 month.
+          </Text>
         </View>
         
         <View style={{height: 40}} />

@@ -11,6 +11,7 @@ import FloatingAssistant from './components/FloatingAssistant';
 import OnboardingFlow from './components/OnboardingFlow';
 import { useGoogleLogin } from '@react-oauth/google';
 import { socket } from './socket';
+import { motion, AnimatePresence } from 'framer-motion';
 import './index.css';
 
 const UserDashboard = lazy(() => import('./components/UserDashboard'));
@@ -117,6 +118,13 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  useEffect(() => {
+    if (showLoginModal) {
+      setIsVideoPlaying(true);
+    }
+  }, [showLoginModal]);
 
   useEffect(() => {
     if (!isCheckingSession && !isAuthenticated) {
@@ -607,7 +615,16 @@ function urlBase64ToUint8Array(base64String: string) {
         </header>
 
         <div className="content-area">
-          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeTab}
+              initial={{ opacity: 0, y: 15, scale: 0.98, filter: 'blur(5px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -15, scale: 0.98, filter: 'blur(5px)' }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              style={{ width: '100%', height: '100%' }}
+            >
+            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
           {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} />}
           {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
           {activeTab === 'analytics' && <QRAnalytics />}
@@ -905,8 +922,9 @@ function urlBase64ToUint8Array(base64String: string) {
                   <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. We’re working on this feature.</p>
               </div>
           )}
-
-        </div>
+            </motion.div>
+          </AnimatePresence>
+          </div>
       </main>
 
       {/* Incoming Call Overlay */}
@@ -964,7 +982,29 @@ function urlBase64ToUint8Array(base64String: string) {
       {/* LOGIN MODAL */}
       {showLoginModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px', overflowY: 'auto' }}>
-          <div className="login-card fade-in" style={{ background: 'white', padding: '32px 24px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative', margin: 'auto' }}>
+          
+          <AnimatePresence mode="wait">
+            {isVideoPlaying ? (
+              <motion.video 
+                key="video-intro"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} // Apple-style spring
+                src="/introofgetnotifye.mp4" 
+                autoPlay 
+                playsInline
+                onEnded={() => setIsVideoPlaying(false)}
+                onError={() => setIsVideoPlaying(false)}
+                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black', zIndex: 10000 }}
+              />
+            ) : (
+            <motion.div 
+              key="login-form"
+              initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="login-card" style={{ background: 'white', padding: '32px 24px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative', margin: 'auto' }}>
             <button onClick={() => { 
                 setShowLoginModal(false); 
                 setPendingAction(null); 
@@ -1032,7 +1072,9 @@ function urlBase64ToUint8Array(base64String: string) {
                 Maybe later
               </button>
             </div>
-          </div>
+          </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       )}
 

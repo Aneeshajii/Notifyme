@@ -9,6 +9,7 @@ import SupportTab from './components/SupportTab';
 import ReportsTab from './components/ReportsTab';
 import SubscriptionsTab from './components/SubscriptionsTab';
 import CommunicationsTab from './components/CommunicationsTab';
+import AnnouncementsTab from './components/AnnouncementsTab';
 import GlobalSettings from './components/GlobalSettings';
 import ChatViewer from './components/ChatViewer';
 import SecurityAlertsTab from './components/SecurityAlertsTab';
@@ -525,6 +526,9 @@ function App() {
           <button className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'notifications' ? '#4f46e5' : '#94a3b8' }}>
             <Bell size={20} /> Notification Center
           </button>
+          <button className={`nav-item ${activeTab === 'announcements' ? 'active' : ''}`} onClick={() => { setActiveTab('announcements'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'announcements' ? '#4f46e5' : '#94a3b8' }}>
+            <PhoneCall size={20} /> Announcements
+          </button>
           <button className={`nav-item ${activeTab === 'support' ? 'active' : ''}`} onClick={() => { setActiveTab('support'); setMobileMenuOpen(false); }} style={{ color: activeTab === 'support' ? '#4f46e5' : '#94a3b8' }}>
             <LifeBuoy size={20} /> Support Tickets
           </button>
@@ -996,6 +1000,7 @@ function App() {
               {activeTab === 'reports' && <ReportsTab />}
               {activeTab === 'subscriptions' && <SubscriptionsTab />}
               {activeTab === 'communications' && <CommunicationsTab />}
+              {activeTab === 'announcements' && <AnnouncementsTab />}
               {activeTab === 'settings' && <GlobalSettings />}
               
               {/* Placeholders for remaining tabs to ensure complete routing */}

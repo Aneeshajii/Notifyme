@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Dimensions } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, Dimensions, Modal, Image, Linking } from "react-native";
 import { QrCode, MessageSquare, Phone, HelpCircle, User, CreditCard, Activity, ChevronRight, Lock, CheckCircle2, ShieldAlert } from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
@@ -13,6 +13,10 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [activeInAppAnnouncement, setActiveInAppAnnouncement] = useState<any | null>(null);
+  const [localDismissed, setLocalDismissed] = useState<string[]>([]);
+
   useEffect(() => {
     if (user?.id) {
       fetchStats();
@@ -22,9 +26,10 @@ export default function HomeScreen() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [tagsRes, msgsRes] = await Promise.all([
+      const [tagsRes, msgsRes, annRes] = await Promise.all([
         api.get(`/tags/user/${user?.id}`),
-        api.get(`/messages/user/${user?.id}`)
+        api.get(`/messages/user/${user?.id}`),
+        api.get(`/announcements/active`)
       ]);
       
       const tags = tagsRes.data;
@@ -38,6 +43,12 @@ export default function HomeScreen() {
         scans: totalScans
       });
       setUnreadCount(msgs.length);
+      
+      setAnnouncements(annRes.data);
+      const inApp = annRes.data.find((a: any) => a.deliveryTypes.includes('IN_APP'));
+      if (inApp) {
+          setActiveInAppAnnouncement(inApp);
+      }
     } catch (e) {
       console.log('Error fetching stats:', e);
     } finally {
@@ -69,10 +80,39 @@ export default function HomeScreen() {
     { icon: <CreditCard size={24} color="#0ea5e9" />, label: 'Subscription', bg: '#e0f2fe', route: '/account/subscriptions' },
   ];
 
+  const activeBanners = announcements.filter((a: any) => a.deliveryTypes.includes('BANNER') && !localDismissed.includes(a.id));
+
+  const handleDismiss = async (id: string) => {
+      setLocalDismissed(prev => [...prev, id]);
+      try {
+          await api.post(`/announcements/${id}/dismiss`);
+      } catch (err) {}
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} bounces={true} showsVerticalScrollIndicator={false}>
         
+        {activeBanners.map((banner: any) => (
+            <View key={banner.id} style={{ backgroundColor: '#4f46e5', padding: 16, borderRadius: 16, marginBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flex: 1, marginRight: 16 }}>
+                    <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>{banner.title}</Text>
+                    <Text style={{ color: 'white', opacity: 0.9, fontSize: 14 }}>{banner.description}</Text>
+                    {!!banner.actionButtonText && !!banner.actionUrl && (
+                        <TouchableOpacity 
+                            onPress={() => Linking.openURL(banner.actionUrl)}
+                            style={{ backgroundColor: 'white', padding: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 }}
+                        >
+                            <Text style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: 13 }}>{banner.actionButtonText}</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+                <TouchableOpacity onPress={() => handleDismiss(banner.id)} style={{ padding: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20 }}>
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>X</Text>
+                </TouchableOpacity>
+            </View>
+        ))}
+
         {/* Top Greeting Section */}
         <View style={styles.topSection}>
           <View style={styles.greetingLeft}>
@@ -144,7 +184,7 @@ const styles = StyleSheet.create({
   qrUsageSub: { fontSize: 12, color: '#64748b', fontWeight: '400' },
   
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 },
-  actionCard: { width: (width - 48) / 3, backgroundColor: 'white', borderRadius: 16, padding: 16, alignItems: 'center', marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
+  actionCard: { width: '48%', backgroundColor: 'white', borderRadius: 16, padding: 16, alignItems: 'center', marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
   actionIconBg: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   actionCardLabel: { fontSize: 12, fontWeight: '600', color: '#1e293b', textAlign: 'center' },
   

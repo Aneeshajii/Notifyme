@@ -22,9 +22,10 @@ const getScanUrl = (uuid) => {
 };
 
 // POST /api/tags/create
-router.post('/create', async (req, res) => {
+router.post('/create', verifyToken, async (req, res) => {
   try {
-    const { ownerId, name, plateNumber } = req.body;
+    const ownerId = req.user.id;
+    const { name, plateNumber } = req.body;
     
     // Check Subscription Limits
     const user = await prisma.user.findUnique({
@@ -110,7 +111,8 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
             hideEmail: true,
             allowMessages: true,
             allowAudioCalls: true,
-            allowVideoCalls: true
+            allowVideoCalls: true,
+            allowImageSharing: true
           }
         }
       }
@@ -157,6 +159,7 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
         allowMessages: tag.owner.allowMessages,
         allowAudioCalls: tag.owner.allowAudioCalls,
         allowVideoCalls: tag.owner.allowVideoCalls,
+        allowImageSharing: tag.owner.allowImageSharing,
         phone: tag.owner.hidePhone ? null : tag.owner.phone,
         email: tag.owner.hideEmail ? null : tag.owner.email
     });

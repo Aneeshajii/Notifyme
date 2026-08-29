@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export const API_BASE = 'https://notifyme-api-px9n.onrender.com/api';
+export const API_BASE = 'http://localhost:5000/api';
 
 const getItem = async (key: string) => {
   if (Platform.OS === 'web') {

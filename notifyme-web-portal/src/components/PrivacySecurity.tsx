@@ -116,7 +116,7 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
         <button className={`security-tab ${activeTab === 'privacy' ? 'active' : ''}`} onClick={() => setActiveTab('privacy')}>Privacy Options</button>
         <button className={`security-tab ${activeTab === 'qrcodes' ? 'active' : ''}`} onClick={() => setActiveTab('qrcodes')}>QR Privacy</button>
         <button className={`security-tab ${activeTab === 'blocked' ? 'active' : ''}`} onClick={() => setActiveTab('blocked')}>Blocked Users</button>
-        <button className={`security-tab ${activeTab === 'sessions' ? 'active' : ''}`} onClick={() => setActiveTab('sessions')}>Active Sessions</button>
+        <button className={`security-tab ${activeTab === 'sessions' ? 'active' : ''}`} onClick={() => setActiveTab('sessions')}>Login Devices</button>
         <button className={`security-tab ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>Notifications</button>
         <button className={`security-tab ${activeTab === 'recovery' ? 'active' : ''}`} onClick={() => setActiveTab('recovery')}>Emergency Recovery</button>
       </div>
@@ -291,10 +291,11 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
 
         {/* =========================================
             ACTIVE SESSIONS
+            LOGIN DEVICES
         ========================================= */}
         {activeTab === 'sessions' && (
           <div style={{ animation: 'fadeIn 0.3s' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '24px' }}>Active Sessions</h2>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '24px' }}>Login Devices</h2>
             <div style={{ background: 'white', padding: '32px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
               
               <div className="session-card" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '24px', border: '2px solid #10b981', borderRadius: '16px', marginBottom: '16px', background: '#f0fdf4' }}>
@@ -330,6 +331,10 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
               <button className="premium-btn danger" style={{ width: '100%' }} onClick={() => showToast('Successfully logged out of all other devices.')}>
                 Log Out From All Other Devices
               </button>
+
+              <p style={{ marginTop: '24px', fontSize: '13px', color: '#64748b', textAlign: 'center' }}>
+                Login details are automatically deleted after 1 month.
+              </p>
 
             </div>
           </div>
