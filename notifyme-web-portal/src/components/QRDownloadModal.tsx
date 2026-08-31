@@ -27,7 +27,7 @@ const QRDownloadModal: React.FC<QRDownloadModalProps> = ({ tag, onClose }) => {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             link.href = image;
-            link.download = `${name}_NotifyMe_QR.png`;
+            link.download = `${name}_GetNotifye_QR.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

@@ -58,10 +58,10 @@ const AboutUs = ({ setActiveTab }: any) => {
                 <Shield size={48} color="white" />
             </div>
         </div>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: '800', color: '#0f172a', marginBottom: '16px', letterSpacing: '-0.5px', lineHeight: '1.2' }}>About NotifyMe</h1>
+        <h1 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: '800', color: '#0f172a', marginBottom: '16px', letterSpacing: '-0.5px', lineHeight: '1.2' }}>About GetNotifye</h1>
         <h2 style={{ fontSize: 'clamp(18px, 2.5vw, 24px)', color: '#4f46e5', fontWeight: '600', marginBottom: '24px' }}>Simple. Private. Secure.</h2>
         <p style={{ fontSize: 'clamp(15px, 2vw, 18px)', color: '#64748b', maxWidth: '700px', margin: '0 auto', lineHeight: '1.6', padding: '0 16px' }}>
-          NotifyMe is a privacy-first communication platform that allows people to connect securely through smart QR codes without exposing their personal contact information.
+          GetNotifye is a privacy-first communication platform that allows people to connect securely through smart QR codes without exposing their personal contact information.
         </p>
       </section>
 
@@ -70,8 +70,8 @@ const AboutUs = ({ setActiveTab }: any) => {
         <div className="premium-card" style={{ padding: '24px', background: 'white', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
             <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}><BookOpen size={24} color="#4f46e5" /> Our Story</h3>
             <p style={{ color: '#64748b', lineHeight: '1.6', fontSize: '15px', margin: 0 }}>
-                NotifyMe was built with a simple idea: people should be reachable when necessary without exposing their personal phone numbers or email addresses.<br/><br/>
-                Whether someone finds your wallet, keys, vehicle, luggage, or any valuable item, NotifyMe makes it easy for them to contact you securely while keeping you in complete control of your privacy.
+                GetNotifye was built with a simple idea: people should be reachable when necessary without exposing their personal phone numbers or email addresses.<br/><br/>
+                Whether someone finds your wallet, keys, vehicle, luggage, or any valuable item, GetNotifye makes it easy for them to contact you securely while keeping you in complete control of your privacy.
             </p>
         </div>
         <div className="premium-card" style={{ padding: '24px', background: 'white', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
@@ -90,7 +90,7 @@ const AboutUs = ({ setActiveTab }: any) => {
 
       {/* 5. How it Works */}
       <section>
-        <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3.5vw, 32px)', marginBottom: '32px', color: '#0f172a' }}>How NotifyMe Works</h2>
+        <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3.5vw, 32px)', marginBottom: '32px', color: '#0f172a' }}>How GetNotifye Works</h2>
         <div className="timeline-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px', margin: '0 auto' }}>
             {[
                 { title: 'Create your QR.', icon: <Search size={20} /> },
@@ -112,7 +112,7 @@ const AboutUs = ({ setActiveTab }: any) => {
 
       {/* 6. Why Choose */}
       <section>
-        <h2 style={{ textAlign: 'center', fontSize: '32px', marginBottom: '48px', color: '#0f172a' }}>Why Choose NotifyMe</h2>
+        <h2 style={{ textAlign: 'center', fontSize: '32px', marginBottom: '48px', color: '#0f172a' }}>Why Choose GetNotifye</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
             <div className="premium-card text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                 <Shield size={40} color="#4f46e5" style={{ marginBottom: '16px' }}/>
@@ -152,7 +152,7 @@ const AboutUs = ({ setActiveTab }: any) => {
         <ShieldCheck size={64} color="#10b981" style={{ margin: '0 auto 24px' }} />
         <h2 style={{ fontSize: '36px', color: 'white', marginBottom: '24px' }}>Your Privacy Comes First</h2>
         <p style={{ fontSize: '20px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
-            NotifyMe never shares your personal information without your permission.<br/><br/>
+            GetNotifye never shares your personal information without your permission.<br/><br/>
             You decide what others can see.<br/>
             You stay in complete control.
         </p>
@@ -191,7 +191,7 @@ const AboutUs = ({ setActiveTab }: any) => {
         <Users size={48} color="#4f46e5" style={{ margin: '0 auto 20px' }} />
         <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', marginBottom: '16px', color: '#0f172a' }}>Built for Everyone</h2>
         <p style={{ fontSize: 'clamp(15px, 2vw, 18px)', color: '#64748b', maxWidth: '600px', margin: '0 auto 24px', lineHeight: '1.6' }}>
-            The NotifyMe interface is intentionally simple and user-friendly, ensuring that anyone can secure their belongings with ease.
+            The GetNotifye interface is intentionally simple and user-friendly, ensuring that anyone can secure their belongings with ease.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
             {['Students', 'Families', 'Professionals', 'Senior Citizens', 'Travelers', 'Businesses'].map((aud, i) => (
@@ -203,11 +203,11 @@ const AboutUs = ({ setActiveTab }: any) => {
       {/* Footer */}
       <footer style={{ background: 'white', padding: '40px 24px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <Shield size={40} color="#0f172a" style={{ marginBottom: '16px' }} />
-          <h2 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: '20px' }}>NotifyMe</h2>
+          <h2 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: '20px' }}>GetNotifye</h2>
           <p style={{ color: '#64748b', marginBottom: '24px', fontWeight: '500', fontSize: '14px' }}>Protecting your privacy, one QR at a time.</p>
 
           <div style={{ color: '#94a3b8', fontSize: '13px', borderTop: '1px solid #f1f5f9', paddingTop: '24px', width: '100%' }}>
-              &copy; {new Date().getFullYear()} NotifyMe. All rights reserved.
+              &copy; {new Date().getFullYear()} GetNotifye. All rights reserved.
           </div>
       </footer>
       

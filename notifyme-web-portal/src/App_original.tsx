@@ -339,7 +339,7 @@ function App() {
           <div className="brand login-brand" style={{ justifyContent: 'center', marginBottom: '32px' }}>
             <Shield size={48} color="#4f46e5" />
           </div>
-          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '8px' }}>Welcome to NotifyMe</h2>
+          <h2 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '8px' }}>Welcome to GetNotifye</h2>
           <p style={{ color: '#64748b', marginBottom: '32px' }}>Secure, anonymous connections.</p>
           
             {authMode === 'login' ? (
@@ -393,7 +393,7 @@ function App() {
       <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="brand">
           <Shield size={28} />
-          <span>NotifyMe</span>
+          <span>GetNotifye</span>
         </div>
         <nav className="nav-menu" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 140px)', paddingRight: '8px' }}>
           
@@ -600,7 +600,7 @@ function App() {
                         <h3 style={{ marginBottom: '20px', color: '#0f172a' }}>Subscription Plans</h3>
                         <p style={{ color: '#64748b', fontSize: '14px' }}>
                             Your active subscription plan determines your tag limits and available features.
-                            Subscriptions are managed exclusively by NotifyMe Support. 
+                            Subscriptions are managed exclusively by GetNotifye Support. 
                             Please go to the <strong>Subscriptions</strong> tab to view your current benefits.
                         </p>
                     </div>
@@ -612,11 +612,11 @@ function App() {
                         <div style={{ marginBottom: '16px', color: '#475569', fontSize: '14px', lineHeight: '1.5' }}>
                             For support or inquiries, please use the secure in-app messaging system below to prevent misuse.
                             <br /><br />
-                            <strong>Direct Support Email:</strong> support@notifyme.com<br />
+                            <strong>Direct Support Email:</strong> support@getnotifye.com<br />
                             <strong>Direct Support Phone:</strong> +1 (555) 000-0000
                         </div>
-                        <textarea placeholder="Type your message to NotifyMe Support here..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '100px', marginBottom: '12px', resize: 'vertical' }}></textarea>
-                        <button className="primary-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => alert('Message sent securely to the official NotifyMe account!')}>Send Message</button>
+                        <textarea placeholder="Type your message to GetNotifye Support here..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '100px', marginBottom: '12px', resize: 'vertical' }}></textarea>
+                        <button className="primary-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => alert('Message sent securely to the official GetNotifye account!')}>Send Message</button>
                     </div>
 
 

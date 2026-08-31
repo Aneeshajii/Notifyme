@@ -27,8 +27,15 @@ export default function SubscriptionsScreen() {
   };
 
   const handleUpgradeClick = async (plan: any) => {
-    // Navigate directly to the web portal to avoid Apple/Google 30% tax rules
-    Linking.openURL('https://notifymehh.vercel.app/account/subscriptions');
+    try {
+      // Get short-lived handoff token for secure web session
+      const res = await api.post('/auth/web-handoff');
+      const token = res.data.handoffToken;
+      Linking.openURL(`https://notifymehh.vercel.app/account/subscriptions?handoff=${token}`);
+    } catch (err) {
+      console.error("Handoff failed, falling back to standard URL:", err);
+      Linking.openURL('https://notifymehh.vercel.app/account/subscriptions');
+    }
   };
 
   const currentPlanId = user?.subscriptionId;
@@ -47,7 +54,8 @@ export default function SubscriptionsScreen() {
 
         <View style={styles.webBanner}>
           <Text style={styles.webBannerText}>
-            🔒 To comply with app guidelines, all subscription upgrades and payments are managed securely on the NotifyMe website.
+            <Text style={{fontWeight: '700', fontSize: 16}}>Manage your subscription on the web</Text>{'\n\n'}
+            To upgrade, change, or manage your subscription, visit the GetNotifye website. Your subscription is managed securely through your web account.
           </Text>
         </View>
 

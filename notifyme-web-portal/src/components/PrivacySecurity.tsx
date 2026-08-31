@@ -81,15 +81,15 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
                 <div style={{ padding: '32px', overflowY: 'auto', flex: 1, color: '#475569', lineHeight: '1.8' }}>
                     <p style={{ marginBottom: '24px', fontSize: '16px' }}><strong>Last Updated:</strong> October 2026</p>
                     <h3 style={{ color: '#0f172a', marginBottom: '16px', fontSize: '18px' }}>1. Introduction & Overview</h3>
-                    <p style={{ marginBottom: '24px' }}>Welcome to NotifyMe. This is a professionally structured placeholder for your official {activeLegalModal}. Once your legal team has finalized the official documentation, you can seamlessly drop the text directly into this securely rendered component.</p>
+                    <p style={{ marginBottom: '24px' }}>Welcome to GetNotifye. This is a professionally structured placeholder for your official {activeLegalModal}. Once your legal team has finalized the official documentation, you can seamlessly drop the text directly into this securely rendered component.</p>
                     <h3 style={{ color: '#0f172a', marginBottom: '16px', fontSize: '18px' }}>2. Data Collection & Privacy</h3>
-                    <p style={{ marginBottom: '24px' }}>NotifyMe is built on a foundation of absolute privacy. We ensure that personal contact information remains hidden when interacting via QR codes. (Replace this section with detailed clauses regarding data retention, anonymization, and third-party sharing policies).</p>
+                    <p style={{ marginBottom: '24px' }}>GetNotifye is built on a foundation of absolute privacy. We ensure that personal contact information remains hidden when interacting via QR codes. (Replace this section with detailed clauses regarding data retention, anonymization, and third-party sharing policies).</p>
                     <h3 style={{ color: '#0f172a', marginBottom: '16px', fontSize: '18px' }}>3. User Rights & Responsibilities</h3>
                     <p style={{ marginBottom: '24px' }}>Users have the right to access, modify, or permanently delete their data from our servers at any time. Accounts found abusing the secure messaging system for spam or harassment will be subject to immediate termination. (Insert official legal jargon regarding liabilities here).</p>
                     <h3 style={{ color: '#0f172a', marginBottom: '16px', fontSize: '18px' }}>4. Governing Law & Dispute Resolution</h3>
                     <p style={{ marginBottom: '24px' }}>These terms and conditions are governed by the applicable privacy laws and international regulations. Any disputes shall be resolved through binding arbitration in the jurisdiction of the company's incorporation. (Pending finalized corporate counsel review).</p>
                     <h3 style={{ color: '#0f172a', marginBottom: '16px', fontSize: '18px' }}>5. Contact Information</h3>
-                    <p>If you have any questions or concerns regarding this {activeLegalModal}, please contact our designated Data Protection Officer at legal@notifyme.app.</p>
+                    <p>If you have any questions or concerns regarding this {activeLegalModal}, please contact our designated Data Protection Officer at legal@getnotifye.app.</p>
                 </div>
                 <div style={{ padding: '20px 32px', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', justifyContent: 'flex-end' }}>
                     <button className="premium-btn primary" onClick={() => setActiveLegalModal(null)}>I Understand</button>
@@ -186,7 +186,7 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
             />
             <SeniorToggle 
               title="Hide Phone Number" 
-              description="Your phone number stays private. People can still contact you through NotifyMe's secure calling." 
+              description="Your phone number stays private. People can still contact you through GetNotifye's secure calling." 
               checked={settings.hidePhone} 
               onChange={() => updateSetting('hidePhone', !settings.hidePhone)} 
             /><h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '24px', marginTop: '48px' }}>Communication Permissions</h2>
@@ -283,7 +283,7 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
               
               <div style={{ marginTop: '24px', padding: '16px', background: '#f0fdf4', color: '#166534', borderRadius: '12px', fontSize: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                 <Shield size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>NotifyMe Master Admin accounts cannot be blocked to ensure you always receive critical security alerts and support responses.</span>
+                <span>GetNotifye Master Admin accounts cannot be blocked to ensure you always receive critical security alerts and support responses.</span>
               </div>
             </div>
           </div>
@@ -379,13 +379,13 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
             />
             <SeniorToggle 
               title="Support Updates" 
-              description="Notifications when NotifyMe Support replies to your tickets." 
+              description="Notifications when GetNotifye Support replies to your tickets." 
               checked={settings.notifSupport} 
               onChange={() => updateSetting('notifSupport', !settings.notifSupport)} 
             />
             <SeniorToggle 
               title="Announcements" 
-              description="News and feature updates from the NotifyMe team." 
+              description="News and feature updates from the GetNotifye team." 
               checked={settings.notifAnnouncements} 
               onChange={() => updateSetting('notifAnnouncements', !settings.notifAnnouncements)} 
             />

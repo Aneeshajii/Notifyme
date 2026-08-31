@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GetNotifye</string>
+    <string name="title_activity_main">GetNotifye</string>
+    <string name="package_name">com.getnotifye.app</string>
+    <string name="custom_url_scheme">com.getnotifye.app</string>
+    <string name="server_client_id">908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com</string>
+</resources>

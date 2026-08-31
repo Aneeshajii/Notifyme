@@ -4,9 +4,9 @@ import { Shield } from 'lucide-react';
 const LoadingScreen = () => {
     const [msgIndex, setMsgIndex] = useState(0);
     const messages = [
-        "Please wait, NotifyMe is getting things ready for you…",
-        "Missing something? NotifyMe lets you create a custom message so people know what to do when they scan your QR.",
-        "Your car, wallet, keys and more can stay connected with NotifyMe."
+        "Please wait, GetNotifye is getting things ready for you…",
+        "Missing something? GetNotifye lets you create a custom message so people know what to do when they scan your QR.",
+        "Your car, wallet, keys and more can stay connected with GetNotifye."
     ];
 
     useEffect(() => {

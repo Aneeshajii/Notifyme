@@ -186,7 +186,8 @@ router.post('/send', messageRateLimiter, async (req, res) => {
                 mediaType: req.body.mediaType || null,
                 latitude: req.body.latitude || null,
                 longitude: req.body.longitude || null
-            }
+            },
+            include: { tag: true, conversation: true }
         });
 
         const io = req.app.get('io');
@@ -335,7 +336,8 @@ router.post('/admin/direct', async (req, res) => {
         senderInfo: 'System Admin',
         senderRole: 'owner',
         conversationId: conv.id
-      }
+      },
+      include: { tag: true, conversation: true }
     });
     
     const io = req.app.get('io');

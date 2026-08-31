@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform, SafeAreaView, Switch } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform, SafeAreaView, Switch, Linking } from "react-native";
 import { Plus, Search, Settings, MoreVertical, X, QrCode } from "lucide-react-native";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
@@ -124,6 +124,16 @@ export default function TagsScreen() {
     }
   };
 
+  const handleUpgradeClick = async () => {
+    try {
+      const res = await api.post('/auth/web-handoff');
+      const token = res.data.handoffToken;
+      Linking.openURL(`https://notifymehh.vercel.app/account/subscriptions?handoff=${token}`);
+    } catch (err) {
+      Linking.openURL('https://notifymehh.vercel.app/account/subscriptions');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -159,7 +169,7 @@ export default function TagsScreen() {
               <Text style={styles.usageTitle}>{user?.subscription?.name || 'No Plan'}</Text>
               <Text style={styles.usageCount}>{`${tagCount}/${tagLimit} Tags Used`}</Text>
             </View>
-            <TouchableOpacity style={styles.upgradeBtn}>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={handleUpgradeClick}>
               <Text style={styles.upgradeText}>Manage Plan</Text>
             </TouchableOpacity>
           </View>

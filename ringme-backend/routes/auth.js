@@ -45,6 +45,42 @@ const generateTokens = (user) => {
     return { accessToken, refreshToken };
 };
 
+// POST /api/auth/web-handoff
+router.post('/web-handoff', verifyToken, async (req, res) => {
+    try {
+        const payload = { id: req.user.id, handoff: true };
+        const handoffToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1m' }); 
+        res.json({ handoffToken });
+    } catch (e) {
+        res.status(500).json({ message: 'Failed to generate handoff token' });
+    }
+});
+
+// POST /api/auth/web-handoff/exchange
+router.post('/web-handoff/exchange', async (req, res) => {
+    try {
+        const { handoffToken } = req.body;
+        if (!handoffToken) return res.status(400).json({ message: 'Missing token' });
+
+        const decoded = jwt.verify(handoffToken, JWT_SECRET);
+        if (!decoded.handoff) {
+            return res.status(400).json({ message: 'Invalid token type' });
+        }
+
+        const user = await prisma.user.findUnique({ 
+            where: { id: decoded.id },
+            include: { subscription: true }
+        });
+        
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const tokens = generateTokens(user);
+        res.json({ user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    } catch (e) {
+        res.status(401).json({ message: 'Invalid or expired handoff token' });
+    }
+});
+
 // POST /api/auth/register
 // Registers a new user
 router.post('/register', async (req, res) => {

@@ -20,7 +20,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
     const [isOpen, setIsOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { id: '1', text: "Hi there! I'm your NotifyMe Assistant. How can I help you manage your QR codes or account today?", sender: 'ai', timestamp: new Date() }
+        { id: '1', text: "Hi there! I'm your GetNotifye Assistant. How can I help you manage your QR codes or account today?", sender: 'ai', timestamp: new Date() }
     ]);
     const [currentQuickActions, setCurrentQuickActions] = useState<{label: string, action: string}[]>([
         { label: 'Create a QR', action: 'OPEN_QR' },
@@ -164,7 +164,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
                                 <Bot size={24} color="white" />
                             </div>
                             <div>
-                                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>NotifyMe Assistant</h3>
+                                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>GetNotifye Assistant</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', opacity: 0.9 }}>
                                     <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%' }}></div>
                                     Online & Secure
@@ -282,7 +282,7 @@ const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ onNavigate }) => 
                             boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                             animation: 'fadeIn 0.2s ease-out'
                         }}>
-                            Ask NotifyMe
+                            Ask GetNotifye
                             <div style={{
                                 position: 'absolute',
                                 right: '-4px',

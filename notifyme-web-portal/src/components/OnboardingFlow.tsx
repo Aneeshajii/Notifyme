@@ -90,7 +90,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
     const handleDownloadQR = () => {
         if (!qrCodeUrl) return;
         const link = document.createElement('a');
-        link.download = `NotifyMe-QR-${createdTagId}.png`;
+        link.download = `GetNotifye-QR-${createdTagId}.png`;
         link.href = qrCodeUrl;
         link.click();
     };
@@ -140,7 +140,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
             {/* Header */}
             <div style={{ position: 'absolute', top: '30px', left: '30px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Shield size={28} color="#4f46e5" />
-                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>NotifyMe</span>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>GetNotifye</span>
             </div>
 
             <div className={`responsive-container ${step === 2 ? 'step-2' : ''}`} style={{ width: '100%', maxWidth: '900px', background: 'white', borderRadius: '24px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex' }}>
@@ -149,7 +149,7 @@ const OnboardingFlow: React.FC<OnboardingProps> = ({ user, onComplete }) => {
                 {step === 1 && (
                     <div style={{ padding: '60px', width: '100%', maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-                            <h1 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '12px' }}>Welcome to NotifyMe!</h1>
+                            <h1 style={{ fontSize: '28px', color: '#0f172a', marginBottom: '12px' }}>Welcome to GetNotifye!</h1>
                             <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.5' }}>Let's set up your profile so people know who they are contacting securely.</p>
                         </div>
 

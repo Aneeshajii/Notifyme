@@ -9,7 +9,9 @@ import QRDownloadModal from './components/QRDownloadModal';
 import LoadingScreen from './components/LoadingScreen';
 import FloatingAssistant from './components/FloatingAssistant';
 import OnboardingFlow from './components/OnboardingFlow';
-import { useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { socket } from './socket';
 import { motion, AnimatePresence } from 'framer-motion';
 import './index.css';
@@ -24,7 +26,7 @@ const SupportCenter = lazy(() => import('./components/SupportCenter'));
 const AboutUs = lazy(() => import('./components/AboutUs'));
 import PublicHomepage from './components/PublicHomepage';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://notifyme-api-px9n.onrender.com/api';
 
 interface UserType {
   id: string;
@@ -107,10 +109,47 @@ function App() {
   const [activeTabState, setActiveTabState] = useState<'dashboard'|'tags'|'analytics'|'inbox'|'notifications'|'scan_history'|'vehicle'|'home'|'emergency'|'business'|'subscriptions'|'privacy'|'security'|'family'|'about_us'|'support'|'profile'|'settings'>('dashboard');
   
   useEffect(() => {
-    const hash = window.location.hash.replace('#', '') as any;
-    if (hash) {
-      setActiveTabState(hash);
-    }
+    const handleUrlParams = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const handoffToken = urlParams.get('handoff');
+      const isSubRoute = window.location.pathname.includes('/account/subscriptions') || urlParams.get('tab') === 'subscriptions';
+      
+      if (handoffToken) {
+        setIsCheckingSession(true);
+        try {
+          const res = await axios.post(`${API_BASE}/auth/web-handoff/exchange`, { handoffToken });
+          localStorage.setItem('userToken', res.data.accessToken);
+          localStorage.setItem('refreshToken', res.data.refreshToken);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
+          setUser(res.data.user);
+          setProfileData(res.data.user);
+          setIsAuthenticated(true);
+          
+          // Clear query params to not leave token in URL
+          const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '#subscriptions';
+          window.history.replaceState({path:newUrl}, '', newUrl);
+          sessionStorage.setItem('isFromMobileApp', 'true');
+          setActiveTabState('subscriptions');
+        } catch (e) {
+          console.error("Handoff failed", e);
+          if (isSubRoute) {
+            setActiveTabState('subscriptions');
+            setPendingAction('subscriptions');
+            setShowLoginModal(true);
+          }
+        } finally {
+          setIsCheckingSession(false);
+        }
+      } else {
+        const hash = window.location.hash.replace('#', '') as any;
+        if (isSubRoute) {
+          setActiveTabState('subscriptions');
+        } else if (hash) {
+          setActiveTabState(hash);
+        }
+      }
+    };
+    handleUrlParams();
   }, []);
 
   // Profile Form State
@@ -426,6 +465,35 @@ function urlBase64ToUint8Array(base64String: string) {
     }
   };
 
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            GoogleAuth.initialize();
+        }
+    }, []);
+
+    const handleNativeGoogleLogin = async () => {
+        try {
+            const response = await GoogleAuth.signIn();
+            const res = await axios.post(`${API_BASE}/auth/google/verify`, { 
+                token: response.authentication.accessToken 
+            });
+            const loggedInUser = res.data.user; 
+            if (loggedInUser && res.data.accessToken) {
+                const token = res.data.accessToken;
+                localStorage.setItem('userToken', token);
+                if (res.data.refreshToken) localStorage.setItem('refreshToken', res.data.refreshToken);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                setUser(loggedInUser);
+                setIsAuthenticated(true);
+                setShowLoginModal(false);
+                fetchTagsAndMessages(loggedInUser.id);
+            }
+        } catch (err: any) {
+            console.error('Native Google login failed', err);
+            alert('Google Login Error: ' + (err.message || JSON.stringify(err)));
+        }
+    };
+
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -545,7 +613,15 @@ function urlBase64ToUint8Array(base64String: string) {
   }
 
   if (isAuthenticated && user && (!user.tags || user.tags.length === 0)) {
-    return <OnboardingFlow user={user} onComplete={setUser} />;
+    return <OnboardingFlow 
+        user={user} 
+        onComplete={(newUser: any) => {
+            setUser(newUser);
+            fetchTagsAndMessages(newUser.id);
+            setActiveTabState('dashboard');
+            window.location.hash = 'dashboard';
+        }} 
+    />;
   }
 
   return (
@@ -556,7 +632,7 @@ function urlBase64ToUint8Array(base64String: string) {
       <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="brand">
           <Shield size={28} />
-          <span>NotifyMe</span>
+          <span>GetNotifye</span>
         </div>
         <nav className="nav-menu" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 140px)', paddingRight: '8px' }}>
           
@@ -615,18 +691,18 @@ function urlBase64ToUint8Array(base64String: string) {
         </header>
 
         <div className="content-area">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeTab}
-              initial={{ opacity: 0, y: 15, scale: 0.98, filter: 'blur(5px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -15, scale: 0.98, filter: 'blur(5px)' }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: '100%', height: '100%' }}
-            >
-            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
-          {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} />}
-          {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
+          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading content...</div>}>
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={activeTab}
+                initial={{ opacity: 0, y: 15, scale: 0.98, filter: 'blur(5px)' }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -15, scale: 0.98, filter: 'blur(5px)' }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                style={{ width: '100%', height: '100%' }}
+              >
+            {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} />}
+            {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
           {activeTab === 'analytics' && <QRAnalytics />}
 
           {activeTab === 'tags' && (
@@ -855,7 +931,7 @@ function urlBase64ToUint8Array(base64String: string) {
               <div className="header-actions" style={{ marginBottom: '32px' }}>
                 <div>
                   <h1>Contact Us</h1>
-                  <p>Get in touch with the NotifyMe team</p>
+                  <p>Get in touch with the GetNotifye team</p>
                 </div>
               </div>
               
@@ -887,9 +963,9 @@ function urlBase64ToUint8Array(base64String: string) {
                       +91 6238774181
                     </a>
                     
-                    <a href="mailto:notifymeowner@gmail.com" className="contact-link">
+                    <a href="mailto:getnotifyeowner@gmail.com" className="contact-link">
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                      notifymeowner@gmail.com
+                      getnotifyeowner@gmail.com
                     </a>
                   </div>
 
@@ -912,8 +988,6 @@ function urlBase64ToUint8Array(base64String: string) {
           {activeTab === 'security' && <PrivacySecurity mode="security" />}
           {activeTab === 'support' && <SupportCenter user={user} />}
           {activeTab === 'about_us' && <AboutUs />}
-          </Suspense>
-
           {/* Placeholders for remaining modules */}
           {['notifications', 'family'].includes(activeTab) && (
               <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginTop: '24px' }}>
@@ -924,6 +998,7 @@ function urlBase64ToUint8Array(base64String: string) {
           )}
             </motion.div>
           </AnimatePresence>
+          </Suspense>
           </div>
       </main>
 
@@ -1019,11 +1094,11 @@ function urlBase64ToUint8Array(base64String: string) {
               <Shield size={32} color="#4f46e5" />
             </div>
             <h2 style={{ fontSize: '24px', color: '#0f172a', marginBottom: '8px' }}>Login to continue</h2>
-            <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Please log in to use this feature and manage your NotifyMe account.</p>
+            <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Please log in to use this feature and manage your GetNotifye account.</p>
             
             {authMode === 'login' ? (
               <>
-                  <button type="button" onClick={() => handleGoogleLogin()} style={{ width: '100%', padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <button type="button" onClick={() => Capacitor.isNativePlatform() ? handleNativeGoogleLogin() : handleGoogleLogin()} style={{ width: '100%', padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                       <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: '24px', height: '24px' }} />
                       Continue with Google
                   </button>

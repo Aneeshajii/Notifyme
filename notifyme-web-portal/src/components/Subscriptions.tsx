@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CreditCard, CheckCircle, ShieldCheck, Check } from 'lucide-react';
+import { CreditCard, CheckCircle, ShieldCheck, Check, Smartphone } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -70,7 +70,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
               key: key,
               amount: amount * 100,
               currency: "INR",
-              name: "NotifyMe",
+              name: "GetNotifye",
               description: `Upgrade to ${plan.name}`,
               image: "/logo.png",
               order_id: orderId,
@@ -191,12 +191,53 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
         }
     };
 
+  const isFromApp = sessionStorage.getItem('isFromMobileApp') === 'true';
+  const currentPlan = plans.find(p => p.id === currentPlanId);
+
+  const handleReturnToApp = () => {
+      // Basic deep linking back to the app (will fail gracefully if not installed on standard OS, though on some it might show an error)
+      window.location.href = 'notifymemobile://';
+  };
+
   return (
     <>
       <div className="header-actions" style={{ marginBottom: '48px', alignItems: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
         <h1 style={{ fontSize: '36px', fontWeight: '800', letterSpacing: '-1px', color: '#0f172a', marginBottom: '12px' }}>Choose your plan</h1>
         <p style={{ color: '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>Simple, transparent pricing for teams of all sizes. Upgrade your tags and protect your privacy today.</p>
       </div>
+
+      {currentPlan && (
+        <div style={{ marginBottom: '40px', padding: '24px', background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px', color: '#0f172a' }}>Your Current Subscription</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                <div>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Plan Name</div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{currentPlan.name}</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Status</div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: profileData?.isPremium ? '#10b981' : '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {profileData?.isPremium && <CheckCircle size={16} />}
+                        {profileData?.isPremium ? 'Active' : 'Basic / Inactive'}
+                    </div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Renewal / Expiry</div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                        {profileData?.premiumExpiresAt ? new Date(profileData.premiumExpiresAt).toLocaleDateString() : 'N/A'}
+                    </div>
+                </div>
+            </div>
+            {isFromApp && (
+                <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '24px', display: 'flex', justifyContent: 'flex-start' }}>
+                    <button onClick={handleReturnToApp} style={{ padding: '12px 24px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                        <Smartphone size={18} />
+                        Return to GetNotifye App
+                    </button>
+                </div>
+            )}
+        </div>
+      )}
 
       <div className="subscriptions-grid">
           

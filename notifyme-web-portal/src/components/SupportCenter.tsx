@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BookOpen, MessageSquare, AlertCircle, Clock, X, Send, BadgeCheck, ShieldCheck } from 'lucide-react';
 
-const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
+const GetNotifyeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <ShieldCheck size={size * 0.55} color="white" />
     </div>
@@ -91,8 +91,8 @@ export default function SupportCenter({ user }: any) {
                   <BookOpen color="#4f46e5" size={24} />
               </div>
               <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>Knowledge Base</h3>
-              <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: '14px' }}>Browse articles and guides to learn how to use NotifyMe.</p>
-              <button onClick={() => window.open('/NotifyMe_Manual.pdf', '_blank')} style={{ width: '100%', padding: '12px', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>View Articles</button>
+              <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: '14px' }}>Browse articles and guides to learn how to use GetNotifye.</p>
+              <button onClick={() => window.open('/GetNotifye_Manual.pdf', '_blank')} style={{ width: '100%', padding: '12px', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>View Articles</button>
           </div>
 
           <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', textAlign: 'center' }}>
@@ -166,9 +166,9 @@ export default function SupportCenter({ user }: any) {
               {selectedTicket.adminReply && (
                   <div style={{ marginBottom: '24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <NotifyMeLogo size={24} />
+                          <GetNotifyeLogo size={24} />
                           <h4 style={{ margin: 0, color: '#111b21', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              NotifyMe <BadgeCheck size={16} color="#1d9bf0" />
+                              GetNotifye <BadgeCheck size={16} color="#1d9bf0" />
                           </h4>
                       </div>
                       <div style={{ background: '#f0f7ff', padding: '16px', borderRadius: '12px', border: '1px solid #cce4ff', color: '#111b21', fontSize: '15px', lineHeight: '1.5', position: 'relative', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>

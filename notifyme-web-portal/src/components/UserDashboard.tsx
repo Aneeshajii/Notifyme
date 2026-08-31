@@ -1,7 +1,7 @@
 import React from 'react';
 import { QrCode, MessageSquare, Phone, HelpCircle, User, CreditCard, Clock, BadgeCheck, ShieldCheck, ChevronRight, Activity, MapPin, Lock, CheckCircle2, Download, Settings, ShieldAlert, List, Star } from 'lucide-react';
 
-const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
+const GetNotifyeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <ShieldCheck size={size * 0.55} color="white" />
     </div>
@@ -69,10 +69,10 @@ export default function UserDashboard({ tags, messages, setActiveTab, user, prof
                       {unreadCount > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold' }}>{unreadCount} Unread</span>}
                   </div>
                   <div style={{ background: '#f8fafc', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f1f5f9' }}>
-                      <NotifyMeLogo size={48} />
+                      <GetNotifyeLogo size={48} />
                       <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                              <span style={{ fontWeight: 'bold', color: '#0f172a' }}>NotifyMe</span>
+                              <span style={{ fontWeight: 'bold', color: '#0f172a' }}>GetNotifye</span>
                               <BadgeCheck size={16} color="#1d9bf0" />
                           </div>
                           <p style={{ margin: 0, color: '#64748b', fontSize: '15px' }}>"We've upgraded your subscription."</p>

@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'GetNotifye',
-        short_name: 'NotifyMe',
+        short_name: 'GetNotifye',
         description: 'Secure, instant push notifications and alerts',
         theme_color: '#0f172a',
         background_color: '#ffffff',

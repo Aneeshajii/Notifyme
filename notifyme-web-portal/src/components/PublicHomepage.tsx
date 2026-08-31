@@ -13,7 +13,7 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
               <Shield size={48} color="#4f46e5" />
             </div>
           </div>
-          <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', marginBottom: '24px', letterSpacing: '-1px' }}>Welcome to NotifyMe</h1>
+          <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', marginBottom: '24px', letterSpacing: '-1px' }}>Welcome to GetNotifye</h1>
           <p style={{ fontSize: '20px', color: '#64748b', marginBottom: '40px', lineHeight: '1.6' }}>The easiest way to let people contact you without sharing your personal phone number. Secure, anonymous connections.</p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <button onClick={() => handleProtectedAction('dashboard')} style={{ padding: '16px 32px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '100px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>Get Started Now</button>
@@ -22,9 +22,9 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
       </div>
 
       {/* WHY NOTIFYME SECTION */}
-      <div id="why-notifyme" style={{ padding: '80px 24px', background: 'white' }}>
+      <div id="why-getnotifye" style={{ padding: '80px 24px', background: 'white' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center', marginBottom: '48px' }}>Why NotifyMe?</h2>
+          <h2 style={{ fontSize: '32px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center', marginBottom: '48px' }}>Why GetNotifye?</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
             <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
@@ -45,7 +45,7 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
                 <Globe size={28} />
               </div>
               <h3 style={{ fontSize: '18px', color: '#0f172a', marginBottom: '8px', fontWeight: '700' }}>Versatile Communication</h3>
-              <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>Use NotifyMe across different situations and locations without unnecessarily exposing your personal phone number.</p>
+              <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>Use GetNotifye across different situations and locations without unnecessarily exposing your personal phone number.</p>
             </div>
             <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#ffe4e6', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
@@ -71,7 +71,7 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
             <div style={{ padding: '32px', background: 'white', borderRadius: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
               <Car size={32} color="#4f46e5" style={{ marginBottom: '20px' }} />
               <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '12px', fontWeight: '700' }}>On Your Car</h3>
-              <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>Keep a NotifyMe tag on your dashboard so someone can instantly alert you if your vehicle needs to be moved or if there's an emergency, without displaying your number.</p>
+              <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>Keep a GetNotifye tag on your dashboard so someone can instantly alert you if your vehicle needs to be moved or if there's an emergency, without displaying your number.</p>
             </div>
             <div style={{ padding: '32px', background: 'white', borderRadius: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
               <Briefcase size={32} color="#4f46e5" style={{ marginBottom: '20px' }} />
@@ -88,10 +88,10 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', color: 'white' }}>
               <Shield size={32} color="#6366f1" />
-              <span style={{ fontSize: '24px', fontWeight: 'bold' }}>NotifyMe</span>
+              <span style={{ fontSize: '24px', fontWeight: 'bold' }}>GetNotifye</span>
             </div>
             <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', marginBottom: '24px', margin: 0 }}>
-              NotifyMe provides a convenient, privacy-conscious way for people to reach you. Stay connected in everyday situations—from parked cars to lost keys—without unnecessarily exposing your personal contact details.
+              GetNotifye provides a convenient, privacy-conscious way for people to reach you. Stay connected in everyday situations—from parked cars to lost keys—without unnecessarily exposing your personal contact details.
             </p>
           </div>
 
@@ -125,7 +125,7 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
           </div>
         </div>
         <div style={{ maxWidth: '1200px', margin: '48px auto 0', paddingTop: '32px', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-          © {new Date().getFullYear()} NotifyMe. All rights reserved.
+          © {new Date().getFullYear()} GetNotifye. All rights reserved.
         </div>
       </footer>
     </div>

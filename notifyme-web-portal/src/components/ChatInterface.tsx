@@ -3,7 +3,7 @@ import axios from 'axios';
 import { socket } from '../socket';
 import { Send, Image, Mic, Check, CheckCheck, Clock, Trash2, Ban, BadgeCheck, ShieldCheck, ChevronLeft, MicOff, Paperclip, MapPin } from 'lucide-react';
 
-const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
+const GetNotifyeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <ShieldCheck size={size * 0.55} color="white" />
     </div>
@@ -319,7 +319,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                         >
                             <div style={{ flexShrink: 0, marginRight: '12px' }}>
                                 {chat.scanner === 'ADMIN' ? (
-                                    <NotifyMeLogo size={48} />
+                                    <GetNotifyeLogo size={48} />
                                 ) : (
                                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#dfe5e7', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                         <img src={`https://api.dicebear.com/6.x/initials/svg?seed=${chat.scanner}&backgroundColor=00a884`} alt="avatar" style={{ width: '100%', height: '100%' }} />
@@ -329,7 +329,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                             <div style={{ flex: 1, borderBottom: '1px solid #f2f2f2', paddingBottom: '12px', minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
                                     <span style={{ fontWeight: '500', color: '#111b21', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        {chat.scanner === 'ADMIN' ? 'NotifyMe' : chat.scanner}
+                                        {chat.scanner === 'ADMIN' ? 'GetNotifye' : chat.scanner}
                                         {chat.scanner === 'ADMIN' && <BadgeCheck size={16} color="#1d9bf0" style={{ flexShrink: 0 }} />}
                                     </span>
                                     <span style={{ fontSize: '12px', color: '#667781' }}>{new Date(chat.lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -368,7 +368,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <button className="chat-back-btn" onClick={() => setSelectedChat(null)}><ChevronLeft size={24} /></button>
                                 {activeChat.scanner === 'ADMIN' ? (
-                                    <NotifyMeLogo size={40} />
+                                    <GetNotifyeLogo size={40} />
                                 ) : (
                                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden' }}>
                                         <img src={`https://api.dicebear.com/6.x/initials/svg?seed=${activeChat.scanner}&backgroundColor=00a884`} alt="avatar" style={{ width: '100%', height: '100%' }} />
@@ -376,7 +376,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                                 )}
                                 <div>
                                     <h3 style={{ margin: 0, fontSize: '16px', color: '#111b21', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        {activeChat.scanner === 'ADMIN' ? 'NotifyMe' : activeChat.scanner}
+                                        {activeChat.scanner === 'ADMIN' ? 'GetNotifye' : activeChat.scanner}
                                         {activeChat.scanner === 'ADMIN' && <BadgeCheck size={16} color="#1d9bf0" />}
                                     </h3>
                                     <div style={{ fontSize: '13px', color: typingUsers.has(activeChat.scanner) ? '#25d366' : '#667781', fontWeight: typingUsers.has(activeChat.scanner) ? 'bold' : 'normal' }}>
@@ -419,7 +419,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                                     }}>
                                         {!isOwner && activeChat.scanner === 'ADMIN' && isFirstInGroup && (
                                             <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#1d9bf0', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                NotifyMe <BadgeCheck size={12} color="#1d9bf0" />
+                                                GetNotifye <BadgeCheck size={12} color="#1d9bf0" />
                                             </div>
                                         )}
                                         {m.mediaType === 'call_event' ? (
@@ -542,7 +542,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                     </>
                 ) : (
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5', color: '#667781', textAlign: 'center', borderBottom: '6px solid #25d366' }}>
-                        <h1 style={{ fontWeight: '300', color: '#41525d', fontSize: '32px', marginBottom: '16px' }}>NotifyMe Web</h1>
+                        <h1 style={{ fontWeight: '300', color: '#41525d', fontSize: '32px', marginBottom: '16px' }}>GetNotifye Web</h1>
                         <p style={{ fontSize: '14px', maxWidth: '400px', lineHeight: '20px' }}>
                             Send and receive messages securely without sharing your phone number.<br/>
                             End-to-end encryption ensures your privacy.

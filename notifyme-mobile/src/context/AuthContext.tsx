@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { Platform, AppState, AppStateStatus } from 'react-native';
 import { socketService } from '../services/socket';
 import api from '../services/api';
 import { registerForPushNotificationsAsync } from '../services/notifications';
@@ -78,6 +78,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     loadUser();
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        // App has come to the foreground, fetch latest subscription state
+        api.get('/auth/me').then(res => {
+          if (res.data.user) {
+            updateUser(res.data.user);
+          }
+        }).catch(() => {});
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const loadUser = async () => {
