@@ -467,7 +467,11 @@ function urlBase64ToUint8Array(base64String: string) {
 
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
-            GoogleAuth.initialize();
+            GoogleAuth.initialize({
+                clientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
+                scopes: ['profile', 'email'],
+                grantOfflineAccess: true,
+            });
         }
     }, []);
 
@@ -490,7 +494,8 @@ function urlBase64ToUint8Array(base64String: string) {
             }
         } catch (err: any) {
             console.error('Native Google login failed', err);
-            alert('Google Login Error: ' + (err.message || JSON.stringify(err)));
+            const errorDetails = err.message || err.error || JSON.stringify(err);
+            alert('Google Login Error: ' + errorDetails + (err.code ? ' (Code: ' + err.code + ')' : ''));
         }
     };
 
@@ -1068,10 +1073,14 @@ function urlBase64ToUint8Array(base64String: string) {
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} // Apple-style spring
                 src="/introofgetnotifye.mp4" 
                 autoPlay 
+                muted={true}
                 playsInline
+                controls={false}
+                disablePictureInPicture
+                disableRemotePlayback
                 onEnded={() => setIsVideoPlaying(false)}
                 onError={() => setIsVideoPlaying(false)}
-                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black', zIndex: 10000 }}
+                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', zIndex: 10000, pointerEvents: 'none' }}
               />
             ) : (
             <motion.div 
