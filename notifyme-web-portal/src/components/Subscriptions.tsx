@@ -52,7 +52,27 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
       }
   }, [profileData]);
 
+  const WEB_APP_URL = import.meta.env.VITE_WEB_APP_URL || 'https://notifyme-web-portal.vercel.app';
+
   const handleUpgradeClick = async (plan: any) => {
+      // If opened inside the mobile app, redirect to the web browser for payment
+      if (isFromApp) {
+          try {
+              const token = localStorage.getItem('userToken') || '';
+              // Generate a secure short-lived handoff token so the web app can auto-login
+              const res = await axios.post(`${API_BASE}/auth/web-handoff/generate`, {}, {
+                  headers: { Authorization: `Bearer ${token}` }
+              });
+              const handoffToken = res.data.handoffToken;
+              const url = `${WEB_APP_URL}?handoff=${encodeURIComponent(handoffToken)}&tab=subscriptions`;
+              window.open(url, '_blank');
+          } catch {
+              // Fallback: open subscriptions page without auto-login
+              window.open(`${WEB_APP_URL}?tab=subscriptions`, '_blank');
+          }
+          return;
+      }
+
       setSelectedPlan(plan);
       setIsProcessing(true);
       try {
@@ -204,6 +224,15 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
       <div className="header-actions" style={{ marginBottom: '48px', alignItems: 'center', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
         <h1 style={{ fontSize: '36px', fontWeight: '800', letterSpacing: '-1px', color: '#0f172a', marginBottom: '12px' }}>Choose your plan</h1>
         <p style={{ color: '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>Simple, transparent pricing for teams of all sizes. Upgrade your tags and protect your privacy today.</p>
+        {isFromApp && (
+          <div style={{ marginTop: '20px', padding: '14px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', maxWidth: '520px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>🔒</span>
+            <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.6', textAlign: 'left' }}>
+              <strong style={{ color: '#0f172a' }}>Subscriptions are managed on the GetNotifye website.</strong><br />
+              Tapping a plan will open the GetNotifye web app in your browser where you can securely complete your purchase using your existing account.
+            </p>
+          </div>
+        )}
       </div>
 
       {currentPlan && (
