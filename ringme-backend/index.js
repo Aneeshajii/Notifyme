@@ -37,8 +37,8 @@ app.use(express.json({ limit: '10kb' })); // Limit body size to prevent payload 
 // TEMPORARY SEED ROUTE (Can be removed later)
 app.get('/api/admin-setup', async (req, res) => {
    try {
-       await prisma.user.updateMany({ where: { email: 'aneesha6868@gmail.com' }, data: { role: 'MASTER_ADMIN' } });
-       res.send('Admin access granted to aneesha6868@gmail.com! You can now use the Admin Panel.');
+       await prisma.user.updateMany({ where: { email: { in: ['aneesha6868@gmail.com', 'admin@notifyme.com'] } }, data: { role: 'MASTER_ADMIN' } });
+       res.send('Admin access granted to your accounts! You can now use the Admin Panel.');
    } catch(err) {
        res.send(err.message);
    }
