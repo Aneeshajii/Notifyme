@@ -1,4 +1,4 @@
-package com.notifyme.app;
+package com.getnotifye.app;
 
 import com.getcapacitor.BridgeActivity;
 

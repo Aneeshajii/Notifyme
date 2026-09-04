@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "GetNotifye",
+    "slug": "getnotifye-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.getnotifye.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "GetNotifye uses the camera to scan QR codes.",
+        "NSMicrophoneUsageDescription": "GetNotifye uses the microphone for voice calls.",
+        "UIBackgroundModes": [
+          "remote-notification",
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.getnotifye.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "GetNotifye needs camera access to scan QR codes."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0f172a"
+        }
+      ],
+      "expo-barcode-scanner",
+      "expo-status-bar"
+    ],
+    "scheme": "getnotifye",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

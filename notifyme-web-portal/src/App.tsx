@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer/simplepeer.min.js';
-import { Shield, Plus, Settings, Info, LogOut, QrCode, Search, User, Eye, Inbox, Phone, PhoneOff, CreditCard, Bell, Smartphone, Activity, Car, Home, Briefcase, FileText, Lock, Users, Download, HelpCircle, MapPin, TriangleAlert, ShieldAlert, FileSpreadsheet, List, Menu, X, Zap, Globe, Smile, Key, MessageCircle, Mail } from 'lucide-react';
+import { AlertCircle, QrCode, Home, Shield, History, MapPin, EyeOff, FileText, Smartphone, Lock, Search, Eye, Download, Info, Activity, Star, Users, PhoneOff, Phone, HelpCircle, ShieldCheck, Mail, Zap, X, Image as ImageIcon, Send, Clock, User, LogOut, CheckCircle2, ChevronRight, Inbox, MessageSquare, CreditCard, Bell, ChevronLeft, Plus, Settings, TriangleAlert, ShieldAlert, FileSpreadsheet, List, Menu, Globe, Smile, Key, MessageCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import ChatInterface from './components/ChatInterface';
 import QRDownloadModal from './components/QRDownloadModal';
@@ -23,7 +23,7 @@ const PrivacySecurity = lazy(() => import('./components/PrivacySecurity'));
 const Subscriptions = lazy(() => import('./components/Subscriptions'));
 const ScanHistory = lazy(() => import('./components/ScanHistory'));
 const SupportCenter = lazy(() => import('./components/SupportCenter'));
-const AboutUs = lazy(() => import('./components/AboutUs'));
+import AboutUs from './components/AboutUs';
 import PublicHomepage from './components/PublicHomepage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://notifyme-api-px9n.onrender.com/api';
@@ -992,7 +992,7 @@ function urlBase64ToUint8Array(base64String: string) {
           {activeTab === 'privacy' && <PrivacySecurity mode="privacy" />}
           {activeTab === 'security' && <PrivacySecurity mode="security" />}
           {activeTab === 'support' && <SupportCenter user={user} />}
-          {activeTab === 'about_us' && <AboutUs />}
+          {activeTab === 'about_us' && <AboutUs setActiveTab={setActiveTab} />}
           {/* Placeholders for remaining modules */}
           {['notifications', 'family'].includes(activeTab) && (
               <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginTop: '24px' }}>
