@@ -37,8 +37,16 @@ app.use(express.json({ limit: '10kb' })); // Limit body size to prevent payload 
 // TEMPORARY SEED ROUTE (Can be removed later)
 app.get('/api/admin-setup', async (req, res) => {
    try {
-       await prisma.user.updateMany({ where: { email: { in: ['aneesha6868@gmail.com', 'admin@notifyme.com'] } }, data: { role: 'MASTER_ADMIN' } });
-       res.send('Admin access granted to your accounts! You can now use the Admin Panel.');
+       const argon2 = require('argon2');
+       const hashedPassword = await argon2.hash('password123');
+       const existing = await prisma.user.findUnique({ where: { email: 'admin@notifyme.com' } });
+       if (!existing) {
+           await prisma.user.create({ data: { email: 'admin@notifyme.com', name: 'Master', lastName: 'Admin', password: hashedPassword, role: 'MASTER_ADMIN' } });
+       } else {
+           await prisma.user.update({ where: { email: 'admin@notifyme.com' }, data: { role: 'MASTER_ADMIN', password: hashedPassword } });
+       }
+       await prisma.user.updateMany({ where: { email: 'aneesha6868@gmail.com' }, data: { role: 'MASTER_ADMIN' } });
+       res.send('Admin account created/updated with default password! You can now use the Admin Panel.');
    } catch(err) {
        res.send(err.message);
    }
