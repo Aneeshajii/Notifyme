@@ -200,12 +200,13 @@ router.get('/admin/all', async (req, res) => {
 });
 
 // POST /api/tags/admin/:tagId/status
-router.post('/admin/:tagId/status', async (req, res) => {
+router.post('/admin/:tagId/status', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
   try {
     const { status } = req.body;
+    const isActive = status === 'active';
     const tag = await prisma.tag.update({
       where: { tagId: req.params.tagId },
-      data: { status }
+      data: { status, isActive }
     });
 
     await prisma.auditLog.create({
@@ -218,7 +219,13 @@ router.post('/admin/:tagId/status', async (req, res) => {
         }
     });
 
-    res.json({ message: `Tag status updated to ${status}`, tag });
+    // Notify user's active sessions (Web/Mobile) to sync state
+    const io = req.app.get('io');
+    if (io) {
+        io.to(`user-room-${tag.ownerId}`).emit('account-updated');
+    }
+
+    res.json(tag);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -274,6 +281,12 @@ router.delete('/admin/:tagId', async (req, res) => {
             ipAddress: req.ip || req.socket.remoteAddress
         }
     });
+
+    // Notify user's active sessions (Web/Mobile) to sync state
+    const io = req.app.get('io');
+    if (io) {
+        io.to(`user-room-${tag.ownerId}`).emit('account-updated');
+    }
 
     res.json({ message: 'Tag deleted successfully' });
   } catch (error) {
