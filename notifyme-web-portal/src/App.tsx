@@ -744,17 +744,29 @@ function urlBase64ToUint8Array(base64String: string) {
                             <div className={`status-dot ${tag.status}`}></div>
                             <span className="status-text">{tag.status}</span>
                         </div>
-                        <div className="tag-header-actions" style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => handleEditTag(tag)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline' }}>Edit Name</button>
-                            <button onClick={() => handleToggleTagStatus(tag)} style={{ background: tag.isActive ? '#fef2f2' : '#ecfdf5', color: tag.isActive ? '#ef4444' : '#10b981', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                                {tag.isActive ? 'Pause' : 'Activate'}
-                            </button>
-                        </div>
-                    </div>
-                    <h3>{tag.name}</h3>
-                    <div className="qr-preview"><img src={tag.qrCodeDataUrl} alt="QR Code" style={{ width: '120px', height: '120px', opacity: tag.isActive ? 1 : 0.2 }} /><div className="tag-id">{tag.tagId}</div></div>
-                    {!tag.isActive && <div style={{ textAlign: 'center', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', marginTop: '-10px', marginBottom: '10px' }}>QR Code Inactive</div>}
-                    <div className="tag-footer"><span className="scans-count"><Eye size={16} /> 0 Scans</span>
+                          <div className="tag-header-actions" style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={() => handleEditTag(tag)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline' }}>Edit Name</button>
+                              {tag.status !== 'deleted' && (
+                                <button onClick={() => handleToggleTagStatus(tag)} style={{ background: tag.isActive ? '#fef2f2' : '#ecfdf5', color: tag.isActive ? '#ef4444' : '#10b981', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                                    {tag.isActive ? 'Pause' : 'Activate'}
+                                </button>
+                              )}
+                          </div>
+                      </div>
+                      <h3>{tag.name}</h3>
+                      <div className="qr-preview"><img src={tag.qrCodeDataUrl} alt="QR Code" style={{ width: '120px', height: '120px', opacity: tag.isActive ? 1 : 0.2 }} /><div className="tag-id">{tag.tagId}</div></div>
+                      {!tag.isActive && (
+                          <div style={{ textAlign: 'center', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', marginTop: '-10px', marginBottom: '10px' }}>
+                              QR Status: {tag.status === 'deleted' ? 'Deleted' : 'Paused'}
+                              {tag.adminReason && (
+                                  <div style={{ marginTop: '8px', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px', borderRadius: '4px', textAlign: 'left', fontWeight: 'normal' }}>
+                                      <strong style={{ color: '#991b1b', display: 'block', marginBottom: '2px' }}>Reason from GetNotifyMe Admin:</strong>
+                                      <span style={{ color: '#7f1d1d' }}>{tag.adminReason}</span>
+                                  </div>
+                              )}
+                          </div>
+                      )}
+                      <div className="tag-footer"><span className="scans-count"><Eye size={16} /> 0 Scans</span>
                       <div className="tag-footer-buttons" style={{ display: 'flex', gap: '8px' }}>
                         <button className="secondary-btn" onClick={() => setDownloadingTag(tag)}>Download QR</button>
                       </div>

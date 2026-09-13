@@ -123,10 +123,11 @@ model Tag {
   tagId        String    @unique // The unique 6-char ID printed on the QR
   name         String
   plateNumber  String?
-  status       String    @default("active") // active, paused
+  status       String    @default("active") // active, paused, deleted
   isActive     Boolean   @default(true)
   qrCodeDataUrl String?
   placeholderMessage String?
+  adminReason  String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

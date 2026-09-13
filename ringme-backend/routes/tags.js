@@ -202,11 +202,15 @@ router.get('/admin/all', async (req, res) => {
 // POST /api/tags/admin/:tagId/status
 router.post('/admin/:tagId/status', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, adminReason } = req.body;
     const isActive = status === 'active';
     const tag = await prisma.tag.update({
       where: { tagId: req.params.tagId },
-      data: { status, isActive }
+      data: { 
+        status, 
+        isActive,
+        adminReason: adminReason !== undefined ? adminReason : undefined
+      }
     });
 
     await prisma.auditLog.create({
@@ -214,7 +218,7 @@ router.post('/admin/:tagId/status', verifyToken, requireRole('MASTER_ADMIN'), as
             adminId: req.user ? req.user.id : 'SYSTEM',
             action: status === 'active' ? 'QR_ACTIVATED' : (status === 'paused' ? 'QR_PAUSED' : 'QR_STATUS_CHANGED'),
             entityId: tag.ownerId,
-            details: JSON.stringify({ tagId: tag.tagId, status }),
+            details: JSON.stringify({ tagId: tag.tagId, status, adminReason }),
             ipAddress: req.ip || req.socket.remoteAddress
         }
     });
@@ -250,26 +254,29 @@ router.post('/admin/:tagId/placeholder', async (req, res) => {
         }
     });
 
-    res.json({ message: 'Placeholder message updated', tag });
+    res.json({ message: 'Placeholder updated successfully', tag });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // DELETE /api/tags/admin/:tagId
-router.delete('/admin/:tagId', async (req, res) => {
+router.delete('/admin/:tagId', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
   try {
+    const { adminReason } = req.body;
     const tag = await prisma.tag.findUnique({ where: { tagId: req.params.tagId } });
     if (!tag) {
         return res.status(404).json({ message: 'Tag not found' });
     }
 
-    // Delete associated messages and logs first if any exist (SQLite constraint) using the UUID tag.id
-    await prisma.message.deleteMany({ where: { tagId: tag.id } });
-    await prisma.scanHistory.deleteMany({ where: { tagId: tag.id } });
-    
-    await prisma.tag.delete({
-      where: { id: tag.id }
+    // Soft delete so it shows in user UI
+    await prisma.tag.update({
+      where: { tagId: req.params.tagId },
+      data: { 
+        status: 'deleted',
+        isActive: false,
+        adminReason: adminReason || 'Deleted by admin'
+      }
     });
 
     await prisma.auditLog.create({
@@ -277,7 +284,7 @@ router.delete('/admin/:tagId', async (req, res) => {
             adminId: req.user ? req.user.id : 'SYSTEM',
             action: 'QR_DELETED',
             entityId: tag.ownerId,
-            details: JSON.stringify({ tagId: tag.tagId, name: tag.name }),
+            details: JSON.stringify({ tagId: tag.tagId, name: tag.name, adminReason }),
             ipAddress: req.ip || req.socket.remoteAddress
         }
     });

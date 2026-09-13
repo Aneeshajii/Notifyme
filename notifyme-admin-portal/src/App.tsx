@@ -102,6 +102,8 @@ function App() {
   const [tagPlaceholderText, setTagPlaceholderText] = useState('');
   const [grantPremiumType, setGrantPremiumType] = useState<string>('');
   const [grantPremiumExpiry, setGrantPremiumExpiry] = useState<string>('');
+  const [pendingTagAction, setPendingTagAction] = useState<{ [key: string]: 'pause' | 'delete' | null }>({});
+  const [tagActionReason, setTagActionReason] = useState<{ [key: string]: string }>({});
 
   const handleUserClick = async (user: UserType) => {
     setSelectedUser(user);
@@ -261,24 +263,29 @@ function App() {
     }
   };
 
-  const handleTagStatusUpdate = async (tagId: string, currentStatus: string) => {
+  const handleTagStatusUpdate = async (tagId: string, currentStatus: string, reason?: string) => {
     try {
       const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-      await axios.post(`${API_BASE}/tags/admin/${tagId}/status`, { status: newStatus });
-      setTags(tags.map(t => t.tagId === tagId ? {...t, status: newStatus} : t));
+      const payload: any = { status: newStatus };
+      if (reason) payload.adminReason = reason;
+      else if (newStatus === 'active') payload.adminReason = null;
+      await axios.post(`${API_BASE}/tags/admin/${tagId}/status`, payload);
+      setTags(tags.map(t => t.tagId === tagId ? {...t, status: newStatus, adminReason: payload.adminReason} : t));
+      setPendingTagAction(prev => ({...prev, [tagId]: null}));
+      setTagActionReason(prev => ({...prev, [tagId]: ''}));
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDeleteTag = async (tagId: string) => {
-    if (window.confirm('Are you sure you want to delete this tag?')) {
-        try {
-            await axios.delete(`${API_BASE}/tags/admin/${tagId}`);
-            setTags(tags.filter(t => t.tagId !== tagId));
-        } catch (err) {
-            console.error(err);
-        }
+  const handleDeleteTag = async (tagId: string, reason: string) => {
+    try {
+        await axios.delete(`${API_BASE}/tags/admin/${tagId}`, { data: { adminReason: reason } });
+        setTags(tags.map(t => t.tagId === tagId ? {...t, status: 'deleted', adminReason: reason} : t));
+        setPendingTagAction(prev => ({...prev, [tagId]: null}));
+        setTagActionReason(prev => ({...prev, [tagId]: ''}));
+    } catch (err) {
+        console.error(err);
     }
   };
 
@@ -816,22 +823,54 @@ function App() {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         {tags.filter(t => t.ownerId === selectedUser.id).map(tag => (
                                             <div key={tag.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <strong style={{ color: '#0f172a' }}>{tag.name}</strong>
-                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                        <span style={{ fontSize: '12px', background: tag.status === 'active' ? '#ecfdf5' : (tag.status === 'paused' ? '#fef3c7' : '#fef2f2'), color: tag.status === 'active' ? '#10b981' : (tag.status === 'paused' ? '#d97706' : '#ef4444'), padding: '2px 8px', borderRadius: '100px', fontWeight: 'bold' }}>{tag.status}</span>
-                                                        <button onClick={() => handleTagStatusUpdate(tag.tagId, tag.status)} style={{ padding: '2px 8px', background: tag.status === 'active' ? '#fef3c7' : '#ecfdf5', color: tag.status === 'active' ? '#d97706' : '#10b981', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>{tag.status === 'active' ? 'Pause' : 'Resume'}</button>
-                                                        <button onClick={() => handleDeleteTag(tag.tagId)} style={{ padding: '2px 8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Del</button>
-                                                    </div>
-                                                </div>
-                                                <div style={{ fontSize: '14px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span>Tag ID: <strong style={{color:'#4f46e5'}}>{tag.tagId}</strong></span>
-                                                    <span style={{ fontSize: '12px' }}>Scans: <strong>{tag._count?.scans || 0}</strong></span>
-                                                </div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                                    Created: {new Date(tag.createdAt).toLocaleDateString()}
-                                                </div>
-                                                <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                      <strong style={{ color: '#0f172a' }}>{tag.name}</strong>
+                                                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                          <span style={{ fontSize: '12px', background: tag.status === 'active' ? '#ecfdf5' : (tag.status === 'paused' ? '#fef3c7' : '#fef2f2'), color: tag.status === 'active' ? '#10b981' : (tag.status === 'paused' ? '#d97706' : '#ef4444'), padding: '2px 8px', borderRadius: '100px', fontWeight: 'bold' }}>{tag.status}</span>
+                                                          {tag.status !== 'deleted' && (
+                                                            <>
+                                                              <button onClick={() => {
+                                                                  if (tag.status === 'active') {
+                                                                      setPendingTagAction(prev => ({...prev, [tag.tagId]: 'pause'}));
+                                                                  } else {
+                                                                      handleTagStatusUpdate(tag.tagId, tag.status);
+                                                                  }
+                                                              }} style={{ padding: '2px 8px', background: tag.status === 'active' ? '#fef3c7' : '#ecfdf5', color: tag.status === 'active' ? '#d97706' : '#10b981', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>{tag.status === 'active' ? 'Pause' : 'Resume'}</button>
+                                                              <button onClick={() => setPendingTagAction(prev => ({...prev, [tag.tagId]: 'delete'}))} style={{ padding: '2px 8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Del</button>
+                                                            </>
+                                                          )}
+                                                      </div>
+                                                  </div>
+                                                  <div style={{ fontSize: '14px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                                                      <span>Tag ID: <strong style={{color:'#4f46e5'}}>{tag.tagId}</strong></span>
+                                                      <span style={{ fontSize: '12px' }}>Scans: <strong>{tag._count?.scans || 0}</strong></span>
+                                                  </div>
+                                                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                      Created: {new Date(tag.createdAt).toLocaleDateString()}
+                                                  </div>
+                                                  {pendingTagAction[tag.tagId] && (
+                                                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                                                          <div style={{ fontSize: '12px', fontWeight: 'bold', color: pendingTagAction[tag.tagId] === 'delete' ? '#ef4444' : '#d97706', marginBottom: '4px' }}>
+                                                              Reason for {pendingTagAction[tag.tagId] === 'delete' ? 'Deletion' : 'Pausing'}:
+                                                          </div>
+                                                          <div style={{ display: 'flex', gap: '4px' }}>
+                                                              <input type="text" value={tagActionReason[tag.tagId] || ''} onChange={e => setTagActionReason(prev => ({...prev, [tag.tagId]: e.target.value}))} placeholder="Required..." style={{ flex: 1, padding: '4px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                                              <button onClick={() => {
+                                                                  const reason = tagActionReason[tag.tagId];
+                                                                  if (!reason || reason.trim() === '') return alert('Reason is required');
+                                                                  if (pendingTagAction[tag.tagId] === 'delete') handleDeleteTag(tag.tagId, reason);
+                                                                  else handleTagStatusUpdate(tag.tagId, tag.status, reason);
+                                                              }} style={{ background: '#4f46e5', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Confirm</button>
+                                                              <button onClick={() => setPendingTagAction(prev => ({...prev, [tag.tagId]: null}))} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                                                          </div>
+                                                      </div>
+                                                  )}
+                                                  {tag.adminReason && (
+                                                      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '8px', marginTop: '4px', fontSize: '12px' }}>
+                                                          <strong style={{ color: '#ef4444' }}>Admin Note:</strong> <span style={{ color: '#991b1b' }}>{tag.adminReason}</span>
+                                                      </div>
+                                                  )}
+                                                  <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
                                                   <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
                                                       <span>Scanner Placeholder:</span>
                                                       {!editingTagPlaceholder || editingTagPlaceholder !== tag.tagId ? (

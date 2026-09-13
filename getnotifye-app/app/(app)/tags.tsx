@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Alert, RefreshControl, Modal, TextInput, ActivityIndicator, Share
+  Alert, RefreshControl, Modal, TextInput, ActivityIndicator, Share, Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,27 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const SCANNER_BASE = 'https://scan.getnotifye.com/scan';
+
+// Animated Button Component for "Liquid" Press Effect
+const AnimatedTouchable = ({ onPress, style, children }: any) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, speed: 30, bounciness: 10 }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 10 }).start();
+  };
+
+  return (
+    <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress}>
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export default function TagsScreen() {
   const { user, tags, fetchTagsAndMessages } = useAuth();
@@ -79,14 +100,14 @@ export default function TagsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>My QR Tags</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowCreate(true)}>
-          <Ionicons name="add" size={22} color="white" />
+          <Ionicons name="add" size={24} color="#007AFF" />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />}
-        contentContainerStyle={{ padding: 20, paddingTop: 8 }}
+        contentContainerStyle={{ padding: 20, paddingTop: 8, paddingBottom: 120 }}
       >
         {tags.length === 0 ? (
           <View style={styles.emptyBox}>
@@ -99,40 +120,53 @@ export default function TagsScreen() {
           </View>
         ) : (
           tags.map((tag: any) => (
-            <TouchableOpacity key={tag.id} style={styles.tagCard} onPress={() => setSelectedTag(tag)}>
-              <View style={styles.tagLeft}>
-                <View style={styles.qrPreview}>
-                  <QRCode value={`${SCANNER_BASE}/${tag.tagId}`} size={56} />
-                </View>
-                <View style={styles.tagInfo}>
-                  <Text style={styles.tagName}>{tag.name}</Text>
-                  <Text style={styles.tagId}>ID: {tag.tagId}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: tag.isActive ? '#dcfce7' : '#f1f5f9' }]}>
-                    <View style={[styles.statusDot, { backgroundColor: tag.isActive ? '#10b981' : '#94a3b8' }]} />
-                    <Text style={[styles.statusText, { color: tag.isActive ? '#059669' : '#64748b' }]}>
-                      {tag.isActive ? 'Active' : 'Paused'}
-                    </Text>
+            <AnimatedTouchable key={tag.id} onPress={() => setSelectedTag(tag)}>
+              <View style={styles.tagCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={styles.tagLeft}>
+                    <View style={styles.qrPreview}>
+                      <QRCode value={`${SCANNER_BASE}/${tag.tagId}`} size={56} />
+                    </View>
+                    <View style={styles.tagInfo}>
+                      <Text style={styles.tagName}>{tag.name}</Text>
+                      <Text style={styles.tagId}>ID: {tag.tagId}</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: tag.isActive ? '#dcfce7' : '#f2f2f7' }]}>
+                        <View style={[styles.statusDot, { backgroundColor: tag.isActive ? '#34C759' : '#8e8e93' }]} />
+                        <Text style={[styles.statusText, { color: tag.isActive ? '#34C759' : '#8e8e93' }]}>
+                          {tag.status === 'deleted' ? 'Deleted' : (tag.isActive ? 'Active' : 'Paused')}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.tagActions}>
+                    <TouchableOpacity onPress={() => handleShare(tag)} style={styles.iconBtn}>
+                      <Ionicons name="share-outline" size={22} color="#007AFF" />
+                    </TouchableOpacity>
+                    {tag.status !== 'deleted' && (
+                      <TouchableOpacity onPress={() => handleToggle(tag)} style={styles.iconBtn}>
+                        <Ionicons name={tag.isActive ? 'pause-circle-outline' : 'play-circle-outline'} size={22} color="#5856D6" />
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity onPress={() => handleDelete(tag)} style={styles.iconBtn}>
+                      <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+                    </TouchableOpacity>
                   </View>
                 </View>
+
+                {!tag.isActive && tag.adminReason && (
+                  <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 8, borderColor: '#fecaca', borderWidth: 1 }}>
+                    <Text style={{ color: '#991b1b', fontWeight: 'bold', fontSize: 12, marginBottom: 2 }}>Reason from GetNotifyMe Admin:</Text>
+                    <Text style={{ color: '#7f1d1d', fontSize: 12 }}>{tag.adminReason}</Text>
+                  </View>
+                )}
               </View>
-              <View style={styles.tagActions}>
-                <TouchableOpacity onPress={() => handleShare(tag)} style={styles.iconBtn}>
-                  <Ionicons name="share-outline" size={20} color="#6366f1" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleToggle(tag)} style={styles.iconBtn}>
-                  <Ionicons name={tag.isActive ? 'pause-circle-outline' : 'play-circle-outline'} size={20} color="#0891b2" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(tag)} style={styles.iconBtn}>
-                  <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+            </AnimatedTouchable>
           ))
         )}
       </ScrollView>
 
       {/* QR Modal */}
-      <Modal visible={!!selectedTag} transparent animationType="slide" onRequestClose={() => setSelectedTag(null)}>
+      <Modal visible={!!selectedTag} transparent animationType="fade" onRequestClose={() => setSelectedTag(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>{selectedTag?.name}</Text>
@@ -155,14 +189,14 @@ export default function TagsScreen() {
       </Modal>
 
       {/* Create Modal */}
-      <Modal visible={showCreate} transparent animationType="slide" onRequestClose={() => setShowCreate(false)}>
+      <Modal visible={showCreate} transparent animationType="fade" onRequestClose={() => setShowCreate(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Create New Tag</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="e.g. My Car, Home, Bike"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor="#8e8e93"
               value={newTagName}
               onChangeText={setNewTagName}
               autoFocus
@@ -181,36 +215,40 @@ export default function TagsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#f2f2f7' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
-  title: { fontSize: 26, fontWeight: '800', color: '#0f172a' },
-  addBtn: { backgroundColor: '#4f46e5', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 32, fontWeight: '800', color: '#000', letterSpacing: -1 },
+  addBtn: { backgroundColor: '#e5e5ea', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  
   emptyBox: { alignItems: 'center', paddingTop: 60, paddingBottom: 40 },
   emptyEmoji: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 20 },
-  createBtn: { backgroundColor: '#4f46e5', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 14 },
-  createBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
-  tagCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#000', marginBottom: 8 },
+  emptySubtitle: { fontSize: 15, color: '#8e8e93', textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 20 },
+  createBtn: { backgroundColor: '#007AFF', borderRadius: 18, paddingHorizontal: 28, paddingVertical: 14 },
+  createBtnText: { color: 'white', fontWeight: '600', fontSize: 16 },
+  
+  tagCard: { backgroundColor: '#ffffff', borderRadius: 24, padding: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 3 },
   tagLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  qrPreview: { marginRight: 14, padding: 4, backgroundColor: 'white', borderRadius: 8 },
+  qrPreview: { marginRight: 14, padding: 4, backgroundColor: '#ffffff', borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   tagInfo: { flex: 1 },
-  tagName: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  tagId: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, alignSelf: 'flex-start', marginTop: 6 },
+  tagName: { fontSize: 18, fontWeight: '600', color: '#000', letterSpacing: -0.5 },
+  tagId: { fontSize: 13, color: '#8e8e93', marginTop: 2 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start', marginTop: 8 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontSize: 11, fontWeight: '600' },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  
   tagActions: { flexDirection: 'row', gap: 4 },
-  iconBtn: { padding: 8 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalCard: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 28, alignItems: 'center' },
-  modalTitle: { fontSize: 22, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#94a3b8', marginBottom: 24 },
-  qrContainer: { padding: 16, backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 16 },
-  qrHint: { fontSize: 13, color: '#64748b', textAlign: 'center', marginBottom: 20, lineHeight: 18 },
-  shareFullBtn: { backgroundColor: '#4f46e5', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 32, flexDirection: 'row', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'center', marginBottom: 10 },
-  shareFullBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
-  closeBtn: { paddingVertical: 12, width: '100%', alignItems: 'center' },
-  closeBtnText: { color: '#64748b', fontSize: 15 },
-  modalInput: { width: '100%', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, fontSize: 15, color: '#0f172a', backgroundColor: '#f8fafc', marginBottom: 20 },
+  iconBtn: { padding: 8, backgroundColor: '#f2f2f7', borderRadius: 20, marginLeft: 6 },
+  
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#ffffff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 32, alignItems: 'center' },
+  modalTitle: { fontSize: 24, fontWeight: '700', color: '#000', marginBottom: 4, letterSpacing: -0.5 },
+  modalSubtitle: { fontSize: 14, color: '#8e8e93', marginBottom: 24 },
+  qrContainer: { padding: 16, backgroundColor: '#ffffff', borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 4, marginBottom: 24 },
+  qrHint: { fontSize: 15, color: '#8e8e93', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  shareFullBtn: { backgroundColor: '#007AFF', borderRadius: 18, paddingVertical: 16, paddingHorizontal: 32, flexDirection: 'row', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'center', marginBottom: 12 },
+  shareFullBtnText: { color: 'white', fontWeight: '600', fontSize: 16 },
+  closeBtn: { paddingVertical: 14, width: '100%', alignItems: 'center' },
+  closeBtnText: { color: '#007AFF', fontSize: 16, fontWeight: '500' },
+  modalInput: { width: '100%', borderWidth: 1, borderColor: '#e5e5ea', borderRadius: 16, padding: 16, fontSize: 16, color: '#000', backgroundColor: '#f2f2f7', marginBottom: 24 },
 });
