@@ -9,7 +9,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-const SCANNER_BASE = 'https://scan.getnotifye.com/scan';
+const SCANNER_BASE = 'https://notifyme-pztc.vercel.app/scan';
 
 // Animated Button Component for "Liquid" Press Effect
 const AnimatedTouchable = ({ onPress, style, children }: any) => {
