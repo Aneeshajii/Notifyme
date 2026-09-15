@@ -22,7 +22,7 @@ interface TagData {
   allowImageSharing?: boolean;
 }
 
-const NotifyMeLogo = ({ size = 48 }: { size?: number }) => (
+const GetNotifyeLogo = ({ size = 48 }: { size?: number }) => (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #1d9bf0 0%, #005bb5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <ShieldCheck size={size * 0.55} color="white" />
     </div>
@@ -305,7 +305,7 @@ function ScannerProfile() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
               <div style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
-                  <NotifyMeLogo size={64} />
+                  <GetNotifyeLogo size={64} />
               </div>
               <p style={{ color: '#64748b', fontWeight: '500' }}>Establishing Secure Connection...</p>
           </div>
@@ -339,7 +339,7 @@ function ScannerProfile() {
       {/* Trustful Branding Banner */}
       <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 50 }}>
           <ShieldCheck size={24} color="#1d9bf0" />
-          <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '18px', letterSpacing: '-0.5px' }}>Verified by NotifyMe</span>
+          <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '18px', letterSpacing: '-0.5px' }}>Verified by GetNotifye</span>
       </div>
 
       <main style={{ maxWidth: '480px', margin: '40px auto 0', padding: '0 20px' }}>
@@ -347,7 +347,7 @@ function ScannerProfile() {
         {/* Connection Header / Wallet Pass Style */}
         <div className="animate-fade-in" style={{ background: 'white', borderRadius: '32px', padding: '40px 32px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.04)', marginBottom: '32px', border: '1px solid rgba(0,0,0,0.02)' }}>
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-                <NotifyMeLogo size={72} />
+                <GetNotifyeLogo size={72} />
             </div>
             <h1 style={{ margin: '0 0 8px', color: '#0f172a', fontSize: '32px', letterSpacing: '-1px' }}>Connect</h1>
             <p style={{ color: '#64748b', fontSize: '16px', margin: '0 0 32px', lineHeight: '1.5' }}>You are securely connecting to the owner of this item.</p>
@@ -455,7 +455,7 @@ function ScannerProfile() {
                     <div style={{ padding: '16px', borderTop: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {chatStatus === 'closed' ? (
                             <div style={{ flex: 1, textAlign: 'center', color: '#ef4444', fontWeight: 'bold', padding: '10px', fontSize: '14px' }}>
-                                NotifyMe Agent ended this conversation.
+                                GetNotifye Agent ended this conversation.
                             </div>
                         ) : (
                             <>
@@ -538,7 +538,7 @@ function Home() {
                     const url = new URL(decodedText);
                     window.location.href = url.pathname + url.search;
                 } else {
-                    alert('Invalid NotifyMe QR Code');
+                    alert('Invalid GetNotifye QR Code');
                 }
             }, (error) => {});
             
@@ -550,9 +550,9 @@ function Home() {
         <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <main className="animate-fade-in" style={{ maxWidth: '440px', width: '100%', padding: '48px 32px', background: 'white', borderRadius: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.02)', textAlign: 'center' }}>
                 <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
-                    <NotifyMeLogo size={80} />
+                    <GetNotifyeLogo size={80} />
                 </div>
-                <h1 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: '32px', letterSpacing: '-1px' }}>NotifyMe Scanner</h1>
+                <h1 style={{ margin: '0 0 12px', color: '#0f172a', fontSize: '32px', letterSpacing: '-1px' }}>GetNotifye Scanner</h1>
                 <p style={{ color: '#64748b', margin: '0 0 40px', fontSize: '16px', lineHeight: '1.5' }}>Scan a secure QR code or enter a Tag ID manually.</p>
                 
                 {isScanning ? (
