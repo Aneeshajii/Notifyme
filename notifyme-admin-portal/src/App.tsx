@@ -42,12 +42,42 @@ interface TagType {
   tagId: string;
   name: string;
   plateNumber?: string;
-  status: string;
   ownerId: string;
   owner: UserType;
+  status: string;
+  isActive: boolean;
   placeholderMessage?: string;
+  adminReason?: string;
+  _count?: { scans: number };
   createdAt: string;
 }
+
+const formatAuditLogMessage = (log: any) => {
+    let actor = 'System';
+    if (log.adminId && log.adminId !== 'SYSTEM') {
+        actor = log.adminId.length > 20 ? 'User' : `Admin (${log.adminId.substring(0, 8)})`;
+    }
+    
+    let detailsObj: any = {};
+    try {
+        if (log.details && log.details.startsWith('{')) detailsObj = JSON.parse(log.details);
+    } catch (e) {}
+
+    let humanAction = log.action.replace(/_/g, ' ');
+    if (log.action === 'QR_ACTIVATED') humanAction = `Activated tag ${detailsObj.tagId || ''}`;
+    if (log.action === 'QR_PAUSED') humanAction = `Paused tag ${detailsObj.tagId || ''}`;
+    if (log.action === 'QR_DELETED') humanAction = `Deleted tag ${detailsObj.tagId || ''}`;
+    if (log.action === 'QR_CREATED') humanAction = `Created new tag "${detailsObj.name || ''}" (${detailsObj.tagId || ''})`;
+    if (log.action === 'QR_SCANNED') {
+        actor = 'Anonymous Scanner';
+        humanAction = `Scanned a tag (Device: ${detailsObj.userAgent ? detailsObj.userAgent.split(' ')[0] : 'Unknown'})`;
+    }
+    if (log.action === 'QR_RENAMED') humanAction = `Updated tag settings for ${detailsObj.tagId || ''}`;
+    if (log.action.includes('LOGIN')) humanAction = `Logged in successfully`;
+    if (log.action === 'ACCOUNT_CREATED') humanAction = `Account was created`;
+
+    return { actor, humanAction };
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'tags' | 'communications' | 'subscriptions' | 'analytics' | 'notifications' | 'support' | 'abuse' | 'security' | 'content' | 'monitoring' | 'settings' | 'reports' | 'ai-alerts'>('dashboard');
@@ -969,24 +999,24 @@ function App() {
                                               }
                                           });
 
-                                          return filteredLogs.length > 0 ? (
-                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
-                                                  {filteredLogs.map(log => (
-                                                      <div key={log.id} style={{ padding: '12px', borderLeft: '4px solid #4f46e5', background: '#f8fafc', borderRadius: '0 8px 8px 0' }}>
-                                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                              <strong style={{ color: '#0f172a', fontSize: '14px' }}>{log.action.replace(/_/g, ' ')}</strong>
-                                                              <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(log.createdAt).toLocaleString()}</span>
-                                                          </div>
-                                                          <p style={{ margin: 0, fontSize: '12px', color: '#475569' }}>Admin ID: {log.adminId} | IP: {log.ipAddress || 'Unknown'}</p>
-                                                          {log.details && (
-                                                              <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b', background: '#e2e8f0', padding: '8px', borderRadius: '4px', wordBreak: 'break-word' }}>
-                                                                  {log.details}
-                                                              </div>
-                                                          )}
-                                                      </div>
-                                                  ))}
-                                              </div>
-                                          ) : (
+                                            return filteredLogs.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                                                    {filteredLogs.map(log => {
+                                                        const { actor, humanAction } = formatAuditLogMessage(log);
+                                                        return (
+                                                            <div key={log.id} style={{ padding: '12px', borderLeft: '4px solid #4f46e5', background: '#f8fafc', borderRadius: '0 8px 8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <strong style={{ color: '#0f172a', fontSize: '14px' }}>{humanAction}</strong>
+                                                                    <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(log.createdAt).toLocaleString()}</span>
+                                                                </div>
+                                                                <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>
+                                                                    <span style={{ fontWeight: '600' }}>By:</span> {actor}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
                                               <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No audit logs found matching criteria.</p>
                                           );
                                       })()}
@@ -1104,40 +1134,37 @@ function App() {
                     </div>
                 )}
             </div>
-            <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Audit Logs</h3>
-              <div style={{ overflowX: 'auto' }}>
-                <div className="table-responsive"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
-                  <thead>
-                    <tr style={{ background: '#f8fafc', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Time</th>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Admin ID</th>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Target Entity ID</th>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>IP Address</th>
-                      <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map(log => (
-                      <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '14px' }}>{new Date(log.createdAt).toLocaleString()}</td>
-                        <td style={{ padding: '12px 16px', color: '#0f172a', fontSize: '14px', fontFamily: 'monospace' }}>{log.adminId.substring(0, 8)}...</td>
-                        <td style={{ padding: '12px 16px', color: '#0f172a', fontSize: '14px', fontWeight: 'bold' }}>{log.action}</td>
-                        <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '14px', fontFamily: 'monospace' }}>{log.entityId}</td>
-                        <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '14px' }}>{log.ipAddress || 'Unknown'}</td>
-                        <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '14px' }}>{log.details || '-'}</td>
+              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Audit Logs</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <div className="table-responsive"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
+                        <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Time</th>
+                        <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Who</th>
+                        <th style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>Action Performed</th>
                       </tr>
-                    ))}
-                    {auditLogs.length === 0 && (
-                      <tr>
-                        <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>No audit logs found.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table></div>
+                    </thead>
+                    <tbody>
+                      {auditLogs.map(log => {
+                        const { actor, humanAction } = formatAuditLogMessage(log);
+                        return (
+                          <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '14px' }}>{new Date(log.createdAt).toLocaleString()}</td>
+                            <td style={{ padding: '12px 16px', color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>{actor}</td>
+                            <td style={{ padding: '12px 16px', color: '#0f172a', fontSize: '14px' }}>{humanAction}</td>
+                          </tr>
+                        );
+                      })}
+                      {auditLogs.length === 0 && (
+                        <tr>
+                          <td colSpan={3} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>No audit logs found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table></div>
+                </div>
               </div>
-            </div>
           </div>
         )}
 
