@@ -720,19 +720,20 @@ function App() {
                                           
                                           {selectedUser.isPremium ? (
                                               <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                                                  <span style={{ color: '#d97706', fontSize: '12px', fontWeight: 'bold' }}>
-                                                      Premium Member ({selectedUser.premiumGrantType || 'Paid'})
+                                                  <span style={{ color: '#d97706', fontSize: '13px', fontWeight: 'bold' }}>
+                                                      {(() => {
+                                                          const plan = subscriptions.find(s => s.id === selectedUser.subscriptionId);
+                                                          return plan ? `${plan.name} (${plan.maxQrCodes} Tags)` : `Premium Member (${selectedUser.premiumGrantType || 'Paid'})`;
+                                                      })()}
                                                   </span>
                                                   {selectedUser.premiumExpiresAt && (
                                                       <span style={{ color: '#b45309', fontSize: '11px' }}>
                                                           Expires: {new Date(selectedUser.premiumExpiresAt).toLocaleDateString()}
                                                       </span>
                                                   )}
-                                                  {selectedUser.isPremium && (
-                                                      <button onClick={handleRevokePremium} style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
-                                                          Revoke Subscription
-                                                      </button>
-                                                  )}
+                                                  <button onClick={handleRevokePremium} style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
+                                                      Revoke Subscription
+                                                  </button>
                                               </div>
                                           ) : (
                                               <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
