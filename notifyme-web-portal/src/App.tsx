@@ -754,7 +754,7 @@ function urlBase64ToUint8Array(base64String: string) {
                           </div>
                       </div>
                       <h3>{tag.name}</h3>
-                      <div className="qr-preview"><img src={tag.qrCodeDataUrl} alt="QR Code" style={{ width: '120px', height: '120px', opacity: tag.isActive ? 1 : 0.2 }} /><div className="tag-id">{tag.tagId}</div></div>
+                      <div className="qr-preview"><img src={tag.qrCodeDataUrl} alt="QR Code" style={{ width: '120px', height: '120px', opacity: tag.isActive ? 1 : 0.2 }} /></div>
                       {!tag.isActive && (
                           <div style={{ textAlign: 'center', color: '#ef4444', fontSize: '12px', fontWeight: 'bold', marginTop: '-10px', marginBottom: '10px' }}>
                               QR Status: {tag.status === 'deleted' ? 'Deleted' : 'Paused'}

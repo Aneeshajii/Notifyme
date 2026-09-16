@@ -64,15 +64,28 @@ const formatAuditLogMessage = (log: any) => {
     } catch (e) {}
 
     let humanAction = log.action.replace(/_/g, ' ');
-    if (log.action === 'QR_ACTIVATED') humanAction = `Activated tag ${detailsObj.tagId || ''}`;
-    if (log.action === 'QR_PAUSED') humanAction = `Paused tag ${detailsObj.tagId || ''}`;
-    if (log.action === 'QR_DELETED') humanAction = `Deleted tag ${detailsObj.tagId || ''}`;
+    const nameStr = detailsObj.name ? ` (${detailsObj.name})` : '';
+    
+    if (log.action === 'QR_ACTIVATED') humanAction = `Activated tag ${detailsObj.tagId || ''}${nameStr}`;
+    if (log.action === 'QR_PAUSED') humanAction = `Paused tag ${detailsObj.tagId || ''}${nameStr}`;
+    if (log.action === 'QR_DELETED') humanAction = `Deleted tag ${detailsObj.tagId || ''}${nameStr}`;
     if (log.action === 'QR_CREATED') humanAction = `Created new tag "${detailsObj.name || ''}" (${detailsObj.tagId || ''})`;
     if (log.action === 'QR_SCANNED') {
         actor = 'Anonymous Scanner';
         humanAction = `Scanned a tag (Device: ${detailsObj.userAgent ? detailsObj.userAgent.split(' ')[0] : 'Unknown'})`;
     }
-    if (log.action === 'QR_RENAMED') humanAction = `Updated tag settings for ${detailsObj.tagId || ''}`;
+    if (log.action === 'QR_RENAMED') {
+        if (detailsObj.status === 'paused') {
+            humanAction = `Paused tag ${detailsObj.tagId || ''}${nameStr}`;
+        } else if (detailsObj.status === 'active') {
+            humanAction = `Resumed tag ${detailsObj.tagId || ''}${nameStr}`;
+        } else if (detailsObj.status === 'deleted') {
+            humanAction = `Deleted tag ${detailsObj.tagId || ''}${nameStr}`;
+        } else {
+            humanAction = `Updated tag settings for ${detailsObj.tagId || ''}${nameStr}`;
+        }
+    }
+    
     if (log.action.includes('LOGIN')) humanAction = `Logged in successfully`;
     if (log.action === 'ACCOUNT_CREATED') humanAction = `Account was created`;
 
@@ -693,7 +706,7 @@ function App() {
                               <div style={{ background: 'white', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', height: 'fit-content' }}>
                                   <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                                       {selectedUser.profilePicUrl ? (
-                                          <div style={{ width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 16px', backgroundImage: `url(http://localhost:5000${selectedUser.profilePicUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '2px solid #e2e8f0' }} />
+                                          <div style={{ width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 16px', backgroundImage: `url(${API_BASE.replace('/api', '')}${selectedUser.profilePicUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '2px solid #e2e8f0' }} />
                                       ) : (
                                           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', margin: '0 auto 16px', fontWeight: 'bold' }}>
                                               {selectedUser.name?.charAt(0).toUpperCase()}

@@ -3,8 +3,8 @@ import axios from 'axios';
 import { Search, Filter, MessageCircle, AlertCircle, CheckCircle, Send, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const SOCKET_URL = 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://notifyme-api-px9n.onrender.com/api';
+const SOCKET_URL = 'https://notifyme-api-px9n.onrender.com';
 
 export default function SupportTab() {
   const [tickets, setTickets] = useState<any[]>([]);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://notifyme-api-px9n.onrender.com/api';
 
 export default function AnnouncementsTab() {
     const [activeSection, setActiveSection] = useState<'create' | 'active' | 'scheduled' | 'expired' | 'history'>('create');
