@@ -5,17 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import * as Notifications from 'expo-notifications';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Note: expo-notifications is removed here because it breaks Expo Go on Android SDK 53+.
+// Push notifications will require a custom EAS development build.
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, user } = useAuth();

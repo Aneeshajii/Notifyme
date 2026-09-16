@@ -103,8 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     connectSocket(res.data.user.id);
   };
 
-  const loginWithGoogle = async (idToken: string) => {
-    const res = await api.post('/auth/google', { idToken });
+  const loginWithGoogle = async (token: string) => {
+    const res = await api.post('/auth/google/verify', { token });
     await SecureStore.setItemAsync('userToken', res.data.accessToken);
     await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
     setUser(res.data.user);

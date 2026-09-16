@@ -1,18 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
+import * as AuthSession from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
+    androidClientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
+    iosClientId: '908105327441-30fotv2b3e8omgono9r41gjqrq4dvo0u.apps.googleusercontent.com',
+    redirectUri: AuthSession.makeRedirectUri({
+      scheme: 'getnotifye'
+    })
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      if (authentication?.idToken || authentication?.accessToken) {
+        handleGoogleLoginWithBackend(authentication.idToken || authentication.accessToken || '');
+      }
+    } else if (response?.type === 'error') {
+      Alert.alert('Authentication Error', response.error?.message || 'Google Sign-In failed');
+    }
+  }, [response]);
+
+  const handleGoogleLoginWithBackend = async (token: string) => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle(token);
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert('Error', err.response?.data?.message || 'Google Sign-In failed on backend');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEmailAuth = async () => {
     if (!email || !password) return Alert.alert('Error', 'Please fill in all fields');
@@ -36,63 +75,62 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b', '#0f172a']} style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           {/* Logo */}
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
-              <Text style={styles.logoEmoji}>🔔</Text>
+              <Ionicons name="shield" size={48} color="#4f46e5" />
             </View>
             <Text style={styles.logoText}>GetNotifye</Text>
-            <Text style={styles.tagline}>Your privacy-first QR communication platform</Text>
           </View>
 
           {/* Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{isRegister ? 'Create Account' : 'Welcome Back'}</Text>
-            <Text style={styles.cardSubtitle}>{isRegister ? 'Join GetNotifye today' : 'Sign in to your account'}</Text>
+            <View style={styles.cardHeader}>
+              <Ionicons name="shield" size={32} color="#4f46e5" />
+            </View>
+            <Text style={styles.cardTitle}>{isRegister ? 'Create Account' : 'Login to continue'}</Text>
+            <Text style={styles.cardSubtitle}>
+              {isRegister ? 'Join GetNotifye today' : 'Please log in to use this feature and manage your GetNotifye account.'}
+            </Text>
 
             {isRegister && (
-              <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Full Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="John Doe"
-                  placeholderTextColor="#94a3b8"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#cbd5e1"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
             )}
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="you@example.com"
-                placeholderTextColor="#94a3b8"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Email Address"
+              placeholderTextColor="#cbd5e1"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#94a3b8"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#cbd5e1"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-            <TouchableOpacity style={styles.primaryBtn} onPress={handleEmailAuth} disabled={isLoading}>
+            <TouchableOpacity 
+              style={[styles.primaryBtn, { backgroundColor: isRegister ? '#4f46e5' : '#0f172a' }]} 
+              onPress={handleEmailAuth} 
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <ActivityIndicator color="white" />
               ) : (
@@ -102,9 +140,18 @@ export default function LoginScreen() {
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
+              <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
             </View>
+
+            <TouchableOpacity 
+              style={styles.googleBtn} 
+              onPress={() => promptAsync()}
+              disabled={!request || isLoading}
+            >
+              <Ionicons name="logo-google" size={20} color="#0f172a" />
+              <Text style={styles.googleBtnText}>Continue with Google</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.switchBtn}
@@ -118,47 +165,50 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   inner: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  logoContainer: { alignItems: 'center', marginBottom: 40 },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  logoContainer: { alignItems: 'center', marginBottom: 32 },
   logoIcon: {
-    width: 80, height: 80, borderRadius: 24,
-    backgroundColor: 'rgba(99,102,241,0.2)',
-    borderWidth: 1, borderColor: 'rgba(99,102,241,0.5)',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 16
+    padding: 16, borderRadius: 24,
+    backgroundColor: 'white',
+    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15, shadowRadius: 25, elevation: 10,
+    marginBottom: 16
   },
-  logoEmoji: { fontSize: 40 },
-  logoText: { fontSize: 32, fontWeight: '800', color: 'white', letterSpacing: -1 },
-  tagline: { fontSize: 14, color: '#94a3b8', marginTop: 8, textAlign: 'center' },
+  logoText: { fontSize: 32, fontWeight: '800', color: '#0f172a', letterSpacing: -1 },
   card: {
-    backgroundColor: 'white', borderRadius: 24, padding: 28,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3, shadowRadius: 40, elevation: 10
+    backgroundColor: 'white', borderRadius: 24, padding: 32,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 25 },
+    shadowOpacity: 0.1, shadowRadius: 50, elevation: 12,
+    alignItems: 'center'
   },
-  cardTitle: { fontSize: 24, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
-  cardSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 24 },
-  inputWrapper: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 },
+  cardHeader: { marginBottom: 16 },
+  cardTitle: { fontSize: 24, fontWeight: '700', color: '#0f172a', marginBottom: 8, textAlign: 'center' },
+  cardSubtitle: { fontSize: 14, color: '#64748b', marginBottom: 24, textAlign: 'center', paddingHorizontal: 10 },
   input: {
-    borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 12,
-    padding: 14, fontSize: 15, color: '#0f172a', backgroundColor: '#f8fafc'
+    width: '100%', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12,
+    padding: 12, fontSize: 16, color: '#0f172a', backgroundColor: 'white',
+    marginBottom: 12
   },
   primaryBtn: {
-    backgroundColor: '#4f46e5', borderRadius: 14, padding: 16,
-    alignItems: 'center', marginTop: 8,
-    shadowColor: '#4f46e5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4, shadowRadius: 12, elevation: 6
+    width: '100%', borderRadius: 12, padding: 12,
+    alignItems: 'center', marginTop: 4
   },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
-  dividerText: { marginHorizontal: 12, color: '#94a3b8', fontSize: 13 },
+  dividerText: { marginHorizontal: 12, color: '#cbd5e1', fontSize: 14 },
+  googleBtn: {
+    width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 12, padding: 12, marginBottom: 16
+  },
+  googleBtnText: { color: '#0f172a', fontSize: 16, fontWeight: '600', marginLeft: 8 },
   switchBtn: { alignItems: 'center', paddingVertical: 8 },
   switchText: { fontSize: 14, color: '#64748b' },
   switchLink: { color: '#4f46e5', fontWeight: '700' },

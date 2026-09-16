@@ -204,12 +204,17 @@ router.post('/admin/:tagId/status', verifyToken, requireRole('MASTER_ADMIN'), as
   try {
     const { status, adminReason } = req.body;
     const isActive = status === 'active';
+    
+    // Automatically clear adminReason if the admin is activating the tag, 
+    // otherwise update it if provided.
+    const newAdminReason = isActive ? null : (adminReason !== undefined ? adminReason : undefined);
+
     const tag = await prisma.tag.update({
       where: { tagId: req.params.tagId },
       data: { 
         status, 
         isActive,
-        adminReason: adminReason !== undefined ? adminReason : undefined
+        adminReason: newAdminReason
       }
     });
 
@@ -312,6 +317,12 @@ router.put('/:id', verifyToken, async (req, res) => {
         
         const { name, isActive, status } = req.body;
         
+        // Prevent user from resuming an admin-paused tag
+        const isTryingToResume = (isActive === true || status === 'active');
+        if (isTryingToResume && tag.adminReason) {
+             return res.status(403).json({ error: 'This QR code has been paused by the Master Admin and cannot be resumed manually. Please contact support.' });
+        }
+
         const updatedTag = await prisma.tag.update({
             where: { id: req.params.id },
             data: {

@@ -25,7 +25,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0f172a"
       },
       "package": "com.getnotifye.app",
@@ -34,8 +34,7 @@
         "RECORD_AUDIO",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
