@@ -37,6 +37,28 @@ const upload = multer({
     }
 });
 
+async function cleanupExcessTags(userId) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { subscription: true, tags: { orderBy: { createdAt: 'asc' }, where: { status: { not: 'deleted' } } } }
+    });
+    if (!user) return;
+    
+    const maxQrCodes = user.subscription ? user.subscription.maxQrCodes : 1;
+    
+    if (user.tags.length > maxQrCodes) {
+        const tagsToDelete = user.tags.slice(maxQrCodes);
+        const tagIdsToDelete = tagsToDelete.map(t => t.id);
+        for (const tagId of tagIdsToDelete) {
+            await prisma.message.deleteMany({ where: { tagId } });
+            await prisma.scanHistory.deleteMany({ where: { tagId } });
+            await prisma.conversation.deleteMany({ where: { tagId } });
+            await prisma.callLog.deleteMany({ where: { tagId } });
+            await prisma.tag.delete({ where: { id: tagId } });
+        }
+    }
+}
+
 // Helper to create tokens
 const generateTokens = (user) => {
     const payload = { id: user.id, role: user.role, email: user.email };
@@ -728,8 +750,8 @@ router.get('/users', verifyToken, requireRole('MASTER_ADMIN', 'ADMIN'), async (r
                 where: { id: u.id },
                 data: { isPremium: false, premiumGrantType: null, premiumExpiresAt: null }
             });
+            await cleanupExcessTags(u.id);
             madeChanges = true;
-            // Optionally log auto-revoke? Not strictly an admin action.
         }
     }
     
@@ -1112,6 +1134,8 @@ router.post('/users/:id/revoke-premium', verifyToken, requireRole('MASTER_ADMIN'
         where: { id: req.params.id },
         data: { isPremium: false, subscriptionId: null, premiumGrantType: null, premiumExpiresAt: null }
       });
+      
+      await cleanupExcessTags(req.params.id);
       
       // Notify the user client via socket
       const io = req.app.get('io');
