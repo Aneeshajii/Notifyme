@@ -16,7 +16,7 @@
       "bundleIdentifier": "com.getnotifye.app",
       "infoPlist": {
         "NSCameraUsageDescription": "GetNotifye uses the camera to scan QR codes.",
-        "NSMicrophoneUsageDescription": "GetNotifye uses the microphone for voice calls.",
+        "NSMicrophoneUsageDescription": "GetNotifye uses the microphone for voice calls.", "NSPhotoLibraryUsageDescription": "GetNotifye needs access to your photos.", "NSLocationWhenInUseUsageDescription": "GetNotifye needs access to your location.",
         "UIBackgroundModes": [
           "remote-notification",
           "fetch"
@@ -33,7 +33,7 @@
         "CAMERA",
         "RECORD_AUDIO",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -56,7 +56,7 @@
         }
       ],
       "expo-barcode-scanner",
-      "expo-status-bar"
+      "expo-status-bar", ["expo-image-picker", {"photosPermission": "GetNotifye needs access to your photos to share images in chat."}], ["expo-location", {"locationAlwaysAndWhenInUsePermission": "GetNotifye needs location access to share your location in chat."}]
     ],
     "scheme": "getnotifye",
     "experiments": {

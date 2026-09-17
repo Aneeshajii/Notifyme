@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
-  TextInput, KeyboardAvoidingView, Platform, RefreshControl, Animated
+  TextInput, KeyboardAvoidingView, Platform, RefreshControl, Animated, Image, Linking
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -102,23 +104,76 @@ export default function InboxScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
   };
 
-  const sendReply = async () => {
-    if (!replyText.trim() || !selectedConv) return;
+  const sendReply = async (textToSend = replyText, type = 'text', mediaUrl = null, lat = null, lng = null) => {
+    if (!textToSend.trim() && !mediaUrl && !lat) return;
+    if (!selectedConv) return;
     setSending(true);
-    const text = replyText;
     setReplyText('');
     try {
       const res = await api.post('/messages/reply', {
         conversationId: selectedConv.id,
         tagId: selectedConv.tagId,
-        content: text,
+        content: textToSend,
         senderRole: 'owner',
         senderInfo: user?.name || 'Owner',
+        mediaUrl: mediaUrl,
+        mediaType: type !== 'text' && type !== 'location' ? type : null,
+        latitude: lat,
+        longitude: lng
       });
       setConvMessages((prev) => [...prev, res.data]);
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     } catch {
-      setReplyText(text);
+      setReplyText(textToSend);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setSending(true);
+      try {
+        const formData = new FormData();
+        formData.append('media', {
+          uri: asset.uri,
+          name: asset.fileName || 'upload.jpg',
+          type: asset.mimeType || 'image/jpeg'
+        } as any);
+        const uploadRes = await api.post('/messages/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        if (uploadRes.data.url) {
+          await sendReply('', 'image', uploadRes.data.url);
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Failed to send image');
+      } finally {
+        setSending(false);
+      }
+    }
+  };
+
+  const shareLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access location was denied');
+      return;
+    }
+    setSending(true);
+    try {
+      const loc = await Location.getCurrentPositionAsync({});
+      await sendReply('My Location', 'location', null, loc.coords.latitude, loc.coords.longitude);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to get location');
     } finally {
       setSending(false);
     }
@@ -203,14 +258,34 @@ export default function InboxScreen() {
           contentContainerStyle={styles.chatContent}
           renderItem={({ item }) => {
             const isOwner = item.senderRole === 'owner';
+            const hasLocation = item.latitude && item.longitude;
             return (
               <View style={[styles.bubble, isOwner ? styles.bubbleOwner : styles.bubbleScanner]}>
-                <Text style={[styles.bubbleText, isOwner && styles.bubbleTextOwner]}>{item.content}</Text>
+                {item.mediaType === 'image' && item.mediaUrl && (
+                  <Image source={{ uri: item.mediaUrl }} style={styles.bubbleImage} />
+                )}
+                {hasLocation && (
+                  <TouchableOpacity onPress={() => Linking.openURL(Platform.OS === 'ios' ? `maps:0,0?q=${item.latitude},${item.longitude}` : `geo:0,0?q=${item.latitude},${item.longitude}`)}>
+                    <View style={styles.locationBubble}>
+                      <Ionicons name="location" size={20} color="#007AFF" />
+                      <Text style={styles.locationText}>View Location</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {!!item.content && (
+                  <Text style={[styles.bubbleText, isOwner && styles.bubbleTextOwner]}>{item.content}</Text>
+                )}
               </View>
             );
           }}
         />
         <View style={styles.inputBar}>
+          <TouchableOpacity style={styles.iconBtn} onPress={pickImage}>
+            <Ionicons name="image" size={24} color="#8e8e93" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={shareLocation}>
+            <Ionicons name="location" size={24} color="#8e8e93" />
+          </TouchableOpacity>
           <TextInput
             style={styles.chatInput}
             placeholder="Type a message..."
@@ -293,8 +368,12 @@ const styles = StyleSheet.create({
   bubbleOwner: { backgroundColor: '#007AFF', alignSelf: 'flex-end', borderBottomRightRadius: 4 },
   bubbleText: { fontSize: 16, color: '#000', lineHeight: 22 },
   bubbleTextOwner: { color: 'white' },
+  bubbleImage: { width: 200, height: 200, borderRadius: 12, marginBottom: 4, resizeMode: 'cover' },
+  locationBubble: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: 8, gap: 6, marginBottom: 4 },
+  locationText: { fontSize: 14, fontWeight: '600', color: '#007AFF' },
   
-  inputBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f7', paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#c6c6c8', gap: 10 },
+  inputBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f7', paddingHorizontal: 12, paddingVertical: 10, paddingBottom: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#c6c6c8', gap: 8 },
+  iconBtn: { padding: 4 },
   chatInput: { flex: 1, backgroundColor: '#ffffff', borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontSize: 16, color: '#000', maxHeight: 100, borderWidth: 1, borderColor: '#e5e5ea' },
   sendBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#c7c7cc' },
