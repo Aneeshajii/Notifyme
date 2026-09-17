@@ -117,8 +117,6 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
         <button className={`security-tab ${activeTab === 'qrcodes' ? 'active' : ''}`} onClick={() => setActiveTab('qrcodes')}>QR Privacy</button>
         <button className={`security-tab ${activeTab === 'blocked' ? 'active' : ''}`} onClick={() => setActiveTab('blocked')}>Blocked Users</button>
         <button className={`security-tab ${activeTab === 'sessions' ? 'active' : ''}`} onClick={() => setActiveTab('sessions')}>Login Devices</button>
-        <button className={`security-tab ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>Notifications</button>
-        <button className={`security-tab ${activeTab === 'recovery' ? 'active' : ''}`} onClick={() => setActiveTab('recovery')}>Emergency Recovery</button>
       </div>
 
       <div style={{ maxWidth: '800px' }}>
@@ -335,101 +333,6 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
               <p style={{ marginTop: '24px', fontSize: '13px', color: '#64748b', textAlign: 'center' }}>
                 Login details are automatically deleted after 1 month.
               </p>
-
-            </div>
-          </div>
-        )}
-
-        {/* =========================================
-            NOTIFICATIONS
-        ========================================= */}
-        {activeTab === 'notifications' && (
-          <div style={{ animation: 'fadeIn 0.3s' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '24px' }}>Notification Preferences</h2>
-            
-            <SeniorToggle 
-              title="New Messages" 
-              description="Get notified when someone sends you a message." 
-              checked={settings.notifMessages} 
-              onChange={() => updateSetting('notifMessages', !settings.notifMessages)} 
-            />
-            <SeniorToggle 
-              title="Incoming Calls" 
-              description="Get notified when someone calls your QR code." 
-              checked={settings.notifCalls} 
-              onChange={() => updateSetting('notifCalls', !settings.notifCalls)} 
-            />
-            <SeniorToggle 
-              title="QR Scan Alerts" 
-              description="Get notified the moment someone scans your QR code." 
-              checked={settings.notifScans} 
-              onChange={() => updateSetting('notifScans', !settings.notifScans)} 
-            />
-            <SeniorToggle 
-              title="Subscription Alerts" 
-              description="Updates regarding your billing and premium plan." 
-              checked={settings.notifSubscriptions} 
-              onChange={() => updateSetting('notifSubscriptions', !settings.notifSubscriptions)} 
-            />
-            <SeniorToggle 
-              title="Security Alerts" 
-              description="Important alerts about new logins and account changes." 
-              checked={settings.notifSecurity} 
-              onChange={() => updateSetting('notifSecurity', !settings.notifSecurity)} 
-            />
-            <SeniorToggle 
-              title="Support Updates" 
-              description="Notifications when GetNotifye Support replies to your tickets." 
-              checked={settings.notifSupport} 
-              onChange={() => updateSetting('notifSupport', !settings.notifSupport)} 
-            />
-            <SeniorToggle 
-              title="Announcements" 
-              description="News and feature updates from the GetNotifye team." 
-              checked={settings.notifAnnouncements} 
-              onChange={() => updateSetting('notifAnnouncements', !settings.notifAnnouncements)} 
-            />
-          </div>
-        )}
-
-        {/* =========================================
-            EMERGENCY RECOVERY
-        ========================================= */}
-        {activeTab === 'recovery' && (
-          <div style={{ animation: 'fadeIn 0.3s' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '24px' }}>Emergency Recovery</h2>
-            <div style={{ background: 'white', padding: '32px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-              <p style={{ color: '#64748b', fontSize: '16px', lineHeight: '1.6', marginBottom: '32px' }}>
-                If you lose access to your account, you can use these methods to recover it safely. Make sure you have access to your verified email or phone number.
-              </p>
-
-              <div className="profile-grid-2" style={{ marginBottom: '24px' }}>
-                <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                  <div style={{ background: 'white', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                    <Key size={24} color="#0f172a" />
-                  </div>
-                  <h4 style={{ margin: '0 0 8px', fontSize: '18px', color: '#0f172a' }}>Email Recovery</h4>
-                  <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>Send a recovery link to your verified email address.</p>
-                  <button className="premium-btn primary" style={{ width: '100%', padding: '12px' }} onClick={() => showToast('Recovery email sent.')}>Send Link</button>
-                </div>
-                
-                <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '16px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                  <div style={{ background: 'white', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                    <Smartphone size={24} color="#0f172a" />
-                  </div>
-                  <h4 style={{ margin: '0 0 8px', fontSize: '18px', color: '#0f172a' }}>SMS Recovery</h4>
-                  <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>Send a recovery PIN to your verified mobile number.</p>
-                  <button className="premium-btn primary" style={{ width: '100%', padding: '12px' }} onClick={() => showToast('Recovery SMS sent.')}>Send PIN</button>
-                </div>
-              </div>
-
-              <div style={{ padding: '24px', background: '#f0f9ff', borderRadius: '16px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 8px', fontSize: '18px', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}><HelpCircle size={20} /> Need Human Help?</h4>
-                  <p style={{ margin: 0, color: '#0c4a6e', fontSize: '15px' }}>If you are completely locked out, our support team can verify your identity manually.</p>
-                </div>
-                <button className="premium-btn" style={{ background: '#0284c7', color: 'white', flexShrink: 0, marginLeft: '24px' }}>Contact Support</button>
-              </div>
 
             </div>
           </div>
