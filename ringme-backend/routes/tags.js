@@ -157,8 +157,8 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
         isPremium: tag.owner.isPremium,
         placeholderMessage: tag.placeholderMessage,
         allowMessages: tag.owner.allowMessages,
-        allowAudioCalls: tag.owner.allowAudioCalls,
-        allowVideoCalls: tag.owner.allowVideoCalls,
+        allowAudioCalls: tag.owner.isPremium ? tag.owner.allowAudioCalls : false,
+        allowVideoCalls: tag.owner.isPremium ? tag.owner.allowVideoCalls : false,
         allowImageSharing: tag.owner.allowImageSharing,
         phone: tag.owner.hidePhone ? null : tag.owner.phone,
         email: tag.owner.hideEmail ? null : tag.owner.email

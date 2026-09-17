@@ -869,8 +869,7 @@ router.post('/verify-otp', verifyToken, async (req, res) => {
     if (user.pendingSubscriptionId) {
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: user.pendingSubscriptionId } });
         if (plan) {
-            const isGold = plan.name.toLowerCase().includes('gold');
-            updateData.isPremium = isGold;
+            updateData.isPremium = true;
             updateData.subscriptionId = plan.id;
             updateData.premiumGrantType = plan.name;
             updateData.premiumExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -1074,12 +1073,12 @@ router.post('/users/:id/grant-premium', verifyToken, requireRole('MASTER_ADMIN')
           if (!plan) return res.status(404).json({ error: "Subscription plan not found." });
       }
 
-      const isGold = plan && plan.name.toLowerCase().includes('gold');
+      const isPremium = !!plan; // Any assigned subscription makes them premium
       
       const updatedUser = await prisma.user.update({
         where: { id: req.params.id },
         data: { 
-            isPremium: isGold, 
+            isPremium: isPremium, 
             subscriptionId: plan ? plan.id : null,
             premiumGrantType: plan ? plan.name : null, 
             premiumExpiresAt: expiresDate 
