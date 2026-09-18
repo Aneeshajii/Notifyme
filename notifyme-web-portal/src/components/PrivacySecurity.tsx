@@ -8,6 +8,38 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
   const [activeTab, setActiveTab] = useState(mode === 'security' ? 'account' : 'privacy');
   const [toast, setToast] = useState('');
   const [activeLegalModal, setActiveLegalModal] = useState<string | null>(null);
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (activeTab === 'blocked') {
+      fetchBlockedUsers();
+    }
+  }, [activeTab]);
+
+  const fetchBlockedUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_BASE}/auth/blocked`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBlockedUsers(res.data);
+    } catch (err) {
+      console.error('Failed to fetch blocked users', err);
+    }
+  };
+
+  const handleUnblock = async (scannerId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE}/auth/blocked/${scannerId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      showToast('User unblocked.');
+      fetchBlockedUsers();
+    } catch (err) {
+      showToast('Failed to unblock user.');
+    }
+  };
 
   // Centralized Settings State (Simulating DB Sync via LocalStorage)
   const [settings, setSettings] = useState({
@@ -264,20 +296,23 @@ export default function PrivacySecurity({ mode = 'privacy', user }: { mode?: str
                 <input type="text" placeholder="Search blocked users..." className="premium-input" style={{ paddingLeft: '48px' }} />
               </div>
 
-              <div className="blocked-user-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '16px', color: '#0f172a' }}>Anonymous Scanner (IP: 192.168.x.x)</strong>
-                  <span style={{ fontSize: '14px', color: '#64748b' }}>Blocked on: Aug 5, 2026 • Reason: Spam messages</span>
-                </div>
-                <button className="premium-btn" style={{ background: '#f8fafc', padding: '10px 16px', fontSize: '14px' }} onClick={() => showToast('User unblocked.')}>Unblock</button>
-              </div>
-              <div className="blocked-user-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px' }}>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '16px', color: '#0f172a' }}>John Doe</strong>
-                  <span style={{ fontSize: '14px', color: '#64748b' }}>Blocked on: Aug 1, 2026 • Reason: Harassment</span>
-                </div>
-                <button className="premium-btn" style={{ background: '#f8fafc', padding: '10px 16px', fontSize: '14px' }} onClick={() => showToast('User unblocked.')}>Unblock</button>
-              </div>
+              {blockedUsers.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#64748b' }}>No blocked users found.</div>
+              ) : (
+                blockedUsers.map((bu: any) => (
+                  <div key={bu.id} className="blocked-user-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '16px', color: '#0f172a' }}>
+                        {bu.scannerId === 'anonymous' ? 'Anonymous Scanner' : `Scanner: ${bu.scannerId}`}
+                      </strong>
+                      <span style={{ fontSize: '14px', color: '#64748b' }}>
+                        Blocked on: {new Date(bu.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <button className="premium-btn" style={{ background: '#f8fafc', padding: '10px 16px', fontSize: '14px' }} onClick={() => handleUnblock(bu.scannerId)}>Unblock</button>
+                  </div>
+                ))
+              )}
               
               <div style={{ marginTop: '24px', padding: '16px', background: '#f0fdf4', color: '#166534', borderRadius: '12px', fontSize: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                 <Shield size={18} style={{ flexShrink: 0, marginTop: '2px' }} />

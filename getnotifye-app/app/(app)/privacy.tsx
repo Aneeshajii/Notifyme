@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import api from '../../services/api';
 
 export default function PrivacyScreen() {
   const router = useRouter();
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+  const [loadingBlocked, setLoadingBlocked] = useState(false);
+  
   const [settings, setSettings] = useState({
     hideEmail: true,
     hidePhone: true,
@@ -17,6 +21,32 @@ export default function PrivacyScreen() {
 
   const toggleSetting = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  useEffect(() => {
+    fetchBlockedUsers();
+  }, []);
+
+  const fetchBlockedUsers = async () => {
+    try {
+      setLoadingBlocked(true);
+      const res = await api.get('/auth/blocked');
+      setBlockedUsers(res.data);
+    } catch (error) {
+      console.log('Error fetching blocked users:', error);
+    } finally {
+      setLoadingBlocked(false);
+    }
+  };
+
+  const handleUnblock = async (scannerId: string) => {
+    try {
+      await api.delete(`/auth/blocked/${scannerId}`);
+      Alert.alert('Success', 'User unblocked.');
+      fetchBlockedUsers();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to unblock user.');
+    }
   };
 
   const SeniorToggle = ({ title, description, checked, onChange }: any) => (
@@ -94,6 +124,34 @@ export default function PrivacyScreen() {
               <Ionicons name="arrow-forward" size={16} color="#94a3b8" />
             </TouchableOpacity>
           ))}
+        </View>
+
+        <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Blocked Users</Text>
+        <View style={styles.legalBox}>
+          {loadingBlocked ? (
+            <ActivityIndicator size="small" color="#0f172a" style={{ padding: 16 }} />
+          ) : blockedUsers.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#64748b', padding: 16 }}>No blocked users found.</Text>
+          ) : (
+            blockedUsers.map((bu, index) => (
+              <View key={bu.id} style={[styles.legalBtn, index === blockedUsers.length - 1 && { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.legalBtnText}>
+                    {bu.scannerId === 'anonymous' ? 'Anonymous Scanner' : `Scanner: ${bu.scannerId}`}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                    Blocked on: {new Date(bu.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                  onPress={() => handleUnblock(bu.scannerId)}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>Unblock</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
         </View>
 
       </ScrollView>
