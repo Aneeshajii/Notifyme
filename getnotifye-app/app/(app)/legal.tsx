@@ -4,6 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f2f2f7' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#c6c6c8' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', padding: 4, width: 80 },
+  backBtnText: { fontSize: 17, color: '#007AFF', marginLeft: -4 },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: '#000', textAlign: 'center', flex: 1 },
+  content: { padding: 16, paddingBottom: 40 },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  subheading: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginTop: 24, marginBottom: 12 },
+  paragraph: { fontSize: 15, color: '#334155', lineHeight: 24, marginBottom: 16 },
+});
+
 const LEGAL_CONTENT: Record<string, { title: string, content: React.ReactNode }> = {
   'privacy-policy': {
     title: 'Privacy Policy',
@@ -74,18 +86,6 @@ const LEGAL_CONTENT: Record<string, { title: string, content: React.ReactNode }>
     )
   }
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f2f2f7' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#c6c6c8' },
-  backBtn: { flexDirection: 'row', alignItems: 'center', padding: 4, width: 80 },
-  backBtnText: { fontSize: 17, color: '#007AFF', marginLeft: -4 },
-  headerTitle: { fontSize: 17, fontWeight: '600', color: '#000', textAlign: 'center', flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  subheading: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginTop: 24, marginBottom: 12 },
-  paragraph: { fontSize: 15, color: '#334155', lineHeight: 24, marginBottom: 16 },
-});
 
 export default function LegalScreen() {
   const router = useRouter();
