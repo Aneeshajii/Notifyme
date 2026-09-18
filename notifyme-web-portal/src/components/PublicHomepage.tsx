@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield, Zap, Globe, Smile, Home, Car, Briefcase, MessageCircle, Phone, HelpCircle } from 'lucide-react';
 
-export default function PublicHomepage({ handleProtectedAction }: { handleProtectedAction: (action: string) => void }) {
+export default function PublicHomepage({ handleProtectedAction, setActiveTab }: { handleProtectedAction: (action: string) => void, setActiveTab?: (tab: string) => void }) {
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', background: '#f8fafc', margin: '-24px', borderRadius: '24px', overflow: 'hidden' }}>
       
@@ -15,8 +15,9 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
           </div>
           <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', marginBottom: '24px', letterSpacing: '-1px' }}>Welcome to GetNotifye</h1>
           <p style={{ fontSize: '20px', color: '#64748b', marginBottom: '40px', lineHeight: '1.6' }}>The easiest way to let people contact you without sharing your personal phone number. Secure, anonymous connections.</p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => handleProtectedAction('dashboard')} style={{ padding: '16px 32px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '100px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>Get Started Now</button>
+            <button onClick={() => setActiveTab && setActiveTab('about_us')} style={{ padding: '16px 32px', background: 'white', color: '#0f172a', border: '2px solid #e2e8f0', borderRadius: '100px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>About Us</button>
           </div>
         </div>
       </div>
@@ -98,6 +99,7 @@ export default function PublicHomepage({ handleProtectedAction }: { handleProtec
           <div>
             <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '24px', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Agreements</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <li><button onClick={() => setActiveTab && setActiveTab('about_us')} style={{ background: 'none', border: 'none', padding: 0, color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>About Us</button></li>
               <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Refund Policy</a></li>
               <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Terms & Conditions</a></li>
               <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Privacy Policy</a></li>

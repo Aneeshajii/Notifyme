@@ -144,6 +144,8 @@ function App() {
         const hash = window.location.hash.replace('#', '') as any;
         if (isSubRoute) {
           setActiveTabState('subscriptions');
+        } else if (window.location.pathname.includes('/about')) {
+          setActiveTabState('about_us');
         } else if (hash) {
           setActiveTabState(hash);
         }
@@ -706,7 +708,7 @@ function urlBase64ToUint8Array(base64String: string) {
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 style={{ width: '100%', height: '100%' }}
               >
-            {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} />}
+            {activeTab === 'home' && <PublicHomepage handleProtectedAction={handleProtectedAction} setActiveTab={setActiveTab} />}
             {activeTab === 'dashboard' && <UserDashboard tags={tags} messages={messages} setActiveTab={setActiveTab} user={user} profileData={profileData} />}
           {activeTab === 'analytics' && <QRAnalytics />}
 
