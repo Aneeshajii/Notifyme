@@ -631,13 +631,24 @@ router.post('/logout', verifyToken, async (req, res) => {
 // Returns the currently logged in user profile
 router.get('/me', verifyToken, async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { id: req.user.id },
             include: { subscription: true, tags: true }
         });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+
+        const now = new Date();
+        if (user.isPremium && user.premiumExpiresAt && new Date(user.premiumExpiresAt) < now) {
+            user = await prisma.user.update({
+                where: { id: user.id },
+                data: { isPremium: false, premiumGrantType: null, premiumExpiresAt: null },
+                include: { subscription: true, tags: true }
+            });
+        }
+        
+        await cleanupExcessTags(user.id);
 
         // Check for pending unverified payments
         const pendingPayment = await prisma.payment.findFirst({
