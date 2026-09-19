@@ -87,6 +87,7 @@ export default function AppLayout() {
       <Tabs.Screen name="about" options={{ href: null, title: 'About Us' }} />
       <Tabs.Screen name="support" options={{ href: null, title: 'Support Center' }} />
       <Tabs.Screen name="contact" options={{ href: null, title: 'Contact Us' }} />
+      <Tabs.Screen name="legal" options={{ href: null, title: 'Legal' }} />
     </Tabs>
   );
 }
