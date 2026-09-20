@@ -32,7 +32,7 @@ export default function SubscriptionsScreen() {
     setIsProcessing(true);
     try {
       // Generate a secure short-lived handoff token so the web app can auto-login
-      const res = await api.post('/auth/web-handoff/generate');
+      const res = await api.post('/auth/web-handoff');
       const handoffToken = res.data.handoffToken;
       const url = `${WEB_APP_URL}?handoff=${encodeURIComponent(handoffToken)}&tab=subscriptions`;
       

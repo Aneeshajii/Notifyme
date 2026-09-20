@@ -60,7 +60,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
           try {
               const token = localStorage.getItem('userToken') || '';
               // Generate a secure short-lived handoff token so the web app can auto-login
-              const res = await axios.post(`${API_BASE}/auth/web-handoff/generate`, {}, {
+              const res = await axios.post(`${API_BASE}/auth/web-handoff`, {}, {
                   headers: { Authorization: `Bearer ${token}` }
               });
               const handoffToken = res.data.handoffToken;
