@@ -98,11 +98,31 @@ console.log('Using Prisma ORM for PostgreSQL');
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
-  // Car owner joins a private room with their userId
-  socket.on('join-owner-room', (userId) => {
-    socket.join(userId);
-    socket.join(`user-room-${userId}`);
-    console.log(`User ${userId} joined their rooms for incoming calls and updates.`);
+  const jwt = require('jsonwebtoken');
+
+  // Car owner securely joins a private room with their userId and JWT
+  socket.on('join-owner-room', (payload) => {
+    try {
+      const userId = typeof payload === 'string' ? payload : payload.userId;
+      const token = typeof payload === 'string' ? null : payload.token;
+      
+      if (!token) {
+          console.log(`Unauthenticated attempt to join room ${userId}`);
+          return;
+      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_super_secret_key_change_in_production');
+      if (decoded.id !== userId) {
+          console.log(`Unauthorized room join attempt for ${userId}`);
+          return;
+      }
+      
+      socket.userId = userId; // Mark socket as authenticated owner
+      socket.join(userId);
+      socket.join(`user-room-${userId}`);
+      console.log(`User ${userId} securely joined their rooms for incoming calls and updates.`);
+    } catch (e) {
+      console.log(`Token verification failed for join-owner-room`);
+    }
   });
 
   // Scanner initiates a call
@@ -212,7 +232,11 @@ io.on('connection', (socket) => {
 
   // Owner answers the call
   socket.on('answer-call', (data) => {
-    console.log(`Owner answered call, bridging to caller: ${data.callerId}`);
+    if (!socket.userId) {
+        console.log(`Unauthenticated answer-call attempt blocked for ${data.callerId}`);
+        return;
+    }
+    console.log(`Owner ${socket.userId} answered call, bridging to caller: ${data.callerId}`);
     io.to(data.callerId).emit('call-accepted', data.signalData);
   });
 

@@ -114,6 +114,20 @@ router.post('/upload', upload.single('media'), async (req, res) => {
 router.post('/send', messageRateLimiter, async (req, res) => {
     try {
         const { tagId, content, senderInfo, scannerId, senderRole } = req.body;
+        
+        if (senderRole === 'owner') {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) return res.status(401).json({ error: 'Unauthorized to send as owner' });
+            try {
+                const jwt = require('jsonwebtoken');
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_super_secret_key_change_in_production');
+                req.user = decoded;
+            } catch (err) {
+                return res.status(401).json({ error: 'Invalid token' });
+            }
+        }
+
         let tag = await prisma.tag.findUnique({ 
             where: { tagId: tagId },
             include: { owner: true }
@@ -125,6 +139,10 @@ router.post('/send', messageRateLimiter, async (req, res) => {
             });
         }
         if (!tag) return res.status(404).json({ message: 'Tag not found' });
+        
+        if (senderRole === 'owner' && req.user.id !== tag.ownerId) {
+            return res.status(403).json({ error: 'Forbidden. You do not own this tag.' });
+        }
 
         if (tag.status === 'dnd' || tag.status === 'paused' || !tag.isActive) {
             return res.status(403).json({ error: 'This QR code is currently paused and cannot receive messages.' });

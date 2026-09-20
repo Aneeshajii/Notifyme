@@ -270,7 +270,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
   useEffect(() => {
     if (user) {
-      socket.emit('join-owner-room', user.id);
+      socket.emit('join-owner-room', { userId: user.id, token: localStorage.getItem('userToken') });
       
       // Register Service Worker for Push Notifications
       if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) {

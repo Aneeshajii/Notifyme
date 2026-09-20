@@ -43,10 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
 
   // Connect socket when user logs in
-  const connectSocket = (userId: string) => {
+  const connectSocket = (userId: string, token: string) => {
     if (socketRef.current) socketRef.current.disconnect();
     const s = io(SOCKET_URL, { transports: ['websocket'] });
-    s.on('connect', () => console.log('Socket connected'));
+    s.on('connect', () => {
+      console.log('Socket connected');
+      s.emit('join-owner-room', { userId, token });
+    });
     s.on(`user-${userId}-new-message`, (msg: any) => {
       setMessages((prev) => {
         const exists = prev.find((m) => m.id === msg.id);
@@ -80,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(res.data);
           setIsAuthenticated(true);
           await fetchTagsAndMessages(res.data.id);
-          connectSocket(res.data.id);
+          connectSocket(res.data.id, token);
         }
       } catch {
         await SecureStore.deleteItemAsync('userToken');
@@ -100,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.data.user);
     setIsAuthenticated(true);
     await fetchTagsAndMessages(res.data.user.id);
-    connectSocket(res.data.user.id);
+    connectSocket(res.data.user.id, res.data.accessToken);
   };
 
   const loginWithGoogle = async (token: string) => {
@@ -110,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.data.user);
     setIsAuthenticated(true);
     await fetchTagsAndMessages(res.data.user.id);
-    connectSocket(res.data.user.id);
+    connectSocket(res.data.user.id, res.data.accessToken);
   };
 
   const logout = async () => {
@@ -143,3 +146,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
