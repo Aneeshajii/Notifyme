@@ -96,7 +96,7 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={20} color="#ef4444" />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-        <View style={{ height: 120 }} /> {/* Extra padding at bottom for safe scrolling above nav bar */}
+        <View style={{ height: 120 }} />
       </ScrollView>
     </SafeAreaView>
   );
