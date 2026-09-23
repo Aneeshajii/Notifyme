@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+﻿import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, RefreshControl, Modal, TextInput, ActivityIndicator, Share, Animated
@@ -113,7 +113,7 @@ export default function TagsScreen() {
       >
         {tags.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>ðŸ·ï¸</Text>
+            <Text style={styles.emptyEmoji}>Ã°Å¸ÂÂ·Ã¯Â¸Â</Text>
             <Text style={styles.emptyTitle}>No QR Tags Yet</Text>
             <Text style={styles.emptySubtitle}>Create your first QR tag and place it on anything you want to protect.</Text>
             <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(true)}>
@@ -139,7 +139,8 @@ export default function TagsScreen() {
                       </View>
                     </View>
                   </View>
-                  {/* Actions moved to Modal */}
+
+
                 </View>
 
                 {!tag.isActive && tag.adminReason && (
@@ -154,11 +155,13 @@ export default function TagsScreen() {
         )}
       </ScrollView>
 
-      {/* QR Modal */}
+
+
       <Modal visible={!!selectedTag} transparent animationType="fade" onRequestClose={() => setSelectedTag(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            {/* Elegant Drag Pill */}
+
+
             <View style={{ width: 48, height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, marginBottom: 24 }} />
             
             <Text style={styles.modalTitle}>{selectedTag?.name}</Text>
@@ -178,7 +181,8 @@ export default function TagsScreen() {
 
             <Text style={styles.qrHint}>Show or print this QR code. When scanned, people can message or call you safely.</Text>
             
-            {/* Refined Quick Actions */}
+
+
             <View style={{ flexDirection: 'row', gap: 12, width: '100%', marginBottom: 16 }}>
               {selectedTag?.status !== 'deleted' && (
                 <TouchableOpacity 
@@ -214,7 +218,8 @@ export default function TagsScreen() {
         </View>
       </Modal>
 
-      {/* Create Modal */}
+
+
       <Modal visible={showCreate} transparent animationType="fade" onRequestClose={() => setShowCreate(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
