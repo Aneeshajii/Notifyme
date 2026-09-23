@@ -54,18 +54,19 @@ export default function LoginScreen() {
   };
 
   const handleEmailAuth = async () => {
-    if (!email || !password) return Alert.alert('Error', 'Please fill in all fields');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) return Alert.alert('Error', 'Please fill in all fields');
     setIsLoading(true);
     try {
       if (isRegister) {
         const apiModule = (await import('../../services/api')).default;
-        const res = await apiModule.post('/auth/register', { email, password, name });
+        const res = await apiModule.post('/auth/register', { email: cleanEmail, password, name });
         const SecureStore = await import('expo-secure-store');
         await SecureStore.setItemAsync('userToken', res.data.accessToken);
         await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
-        await login(email, password);
+        await login(cleanEmail, password);
       } else {
-        await login(email, password);
+        await login(cleanEmail, password);
       }
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.message || 'Authentication failed');

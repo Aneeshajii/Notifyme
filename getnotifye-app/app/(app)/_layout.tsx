@@ -1,4 +1,4 @@
-import { Tabs, useRouter } from 'expo-router';
+﻿import { Tabs, useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -148,3 +148,4 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
 });
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -134,7 +134,7 @@ export default function SubscriptionsScreen() {
                 
                 <Text style={styles.planName}>{plan.name}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.price}>₹{plan.price}</Text>
+                  <Text style={styles.price}>â‚¹{plan.price}</Text>
                   <Text style={styles.period}>/mo</Text>
                 </View>
                 
@@ -234,3 +234,4 @@ const styles = StyleSheet.create({
   manageWebBtn: { backgroundColor: '#3b82f6', flexDirection: 'row', paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 32, gap: 8, shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   manageWebBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' }
 });
+

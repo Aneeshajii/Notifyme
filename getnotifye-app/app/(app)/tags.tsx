@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { WEB_APP_URL } from '../../constants/config';
 
 const SCANNER_BASE = 'https://notifyme-pztc.vercel.app/scan';
 
