@@ -7,8 +7,8 @@ import { Shield, Phone, MessageSquare, MapPin, Send, CheckCircle, PhoneOff, Came
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import './index.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const socket = io(import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
+const API_BASE = 'https://notifyme-api-px9n.onrender.com/api';
+const socket = io('https://notifyme-api-px9n.onrender.com');
 
 interface TagData {
   id: string;
