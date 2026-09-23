@@ -250,7 +250,7 @@ export default function InboxScreen() {
           <Text style={styles.chatTag}>Tag: {selectedConv.tagName}</Text>
         </View>
       </View>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
         <FlatList
           ref={flatListRef}
           data={convMessages}
@@ -280,6 +280,9 @@ export default function InboxScreen() {
           }}
         />
         <View style={styles.inputBar}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => alert('Voice recording coming in next update!')}>
+            <Ionicons name="mic" size={24} color="#8e8e93" />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={pickImage}>
             <Ionicons name="image" size={24} color="#8e8e93" />
           </TouchableOpacity>
