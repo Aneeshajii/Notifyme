@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+﻿import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, RefreshControl, Modal, TextInput, ActivityIndicator, Share, Animated
@@ -93,7 +93,7 @@ export default function TagsScreen() {
   };
 
   const handleShare = async (tag: any) => {
-    const url = `${SCANNER_BASE}/${tag.tagId}`;
+    const url = `${SCANNER_BASE}/${tag.id}`;
     await Share.share({ message: `Scan my GetNotifye QR: ${url}`, url });
   };
 
@@ -113,7 +113,7 @@ export default function TagsScreen() {
       >
         {tags.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>🏷️</Text>
+            <Text style={styles.emptyEmoji}>ðŸ·ï¸</Text>
             <Text style={styles.emptyTitle}>No QR Tags Yet</Text>
             <Text style={styles.emptySubtitle}>Create your first QR tag and place it on anything you want to protect.</Text>
             <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(true)}>
@@ -127,7 +127,7 @@ export default function TagsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={styles.tagLeft}>
                     <View style={styles.qrPreview}>
-                      <QRCode value={`${SCANNER_BASE}/${tag.tagId}`} size={56} />
+                      <QRCode value={`${SCANNER_BASE}/${tag.id}`} size={56} />
                     </View>
                     <View style={styles.tagInfo}>
                       <Text style={styles.tagName}>{tag.name}</Text>
@@ -162,7 +162,7 @@ export default function TagsScreen() {
             
             <View style={styles.qrContainer}>
               {selectedTag && (
-                <QRCode value={`${SCANNER_BASE}/${selectedTag.tagId}`} size={220} />
+                <QRCode value={`${SCANNER_BASE}/${selectedTag.id}`} size={220} />
               )}
             </View>
 
