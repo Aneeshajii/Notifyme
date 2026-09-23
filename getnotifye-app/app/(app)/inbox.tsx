@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   TextInput, KeyboardAvoidingView, Platform, RefreshControl, Animated, Image, Linking
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { Audio } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -49,6 +50,7 @@ export default function InboxScreen() {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   // Group messages by conversation
@@ -179,6 +181,55 @@ export default function InboxScreen() {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const perm = await Audio.requestPermissionsAsync();
+      if (perm.status !== 'granted') return alert('Microphone permission required');
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      setRecording(recording);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+    setRecording(null);
+    setSending(true);
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      if (!uri) throw new Error('No audio URI');
+      const formData = new FormData();
+      formData.append('media', {
+        uri,
+        name: 'voice-message.m4a',
+        type: 'audio/m4a'
+      } as any);
+      const uploadRes = await api.post('/messages/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (uploadRes.data.url) {
+        await sendReply('', 'audio', uploadRes.data.url);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to send voice message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const playAudio = async (url: string) => {
+    try {
+      const { sound } = await Audio.Sound.createAsync({ uri: url });
+      await sound.playAsync();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     if (user) await fetchTagsAndMessages(user.id);
@@ -191,7 +242,7 @@ export default function InboxScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         {conversations.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>💬</Text>
+            <Text style={styles.emptyEmoji}>ðŸ’¬</Text>
             <Text style={styles.emptyTitle}>No messages yet</Text>
             <Text style={styles.emptySubtitle}>When someone scans your QR and messages you, it will appear here.</Text>
           </View>
