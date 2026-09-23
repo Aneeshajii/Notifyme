@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CreditCard, CheckCircle, ShieldCheck, Check, Smartphone } from 'lucide-react';
 
@@ -226,7 +226,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
         <p style={{ color: '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>Simple, transparent pricing for teams of all sizes. Upgrade your tags and protect your privacy today.</p>
         {isFromApp && (
           <div style={{ marginTop: '20px', padding: '14px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', maxWidth: '520px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-            <span style={{ fontSize: '20px', flexShrink: 0 }}>🔒</span>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>ðŸ”’</span>
             <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.6', textAlign: 'left' }}>
               <strong style={{ color: '#0f172a' }}>Subscriptions are managed on the GetNotifye website.</strong><br />
               Tapping a plan will open the GetNotifye web app in your browser where you can securely complete your purchase using your existing account.
@@ -272,6 +272,8 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
           
           {plans.map((plan) => {
               const isCurrent = currentPlanId === plan.id;
+                const targetPlanName = new URLSearchParams(window.location.search).get('plan');
+                const isTarget = targetPlanName && plan.name.toLowerCase() === targetPlanName.toLowerCase();
               let benefits = [];
               try { benefits = JSON.parse(plan.benefits || "[]"); } catch (e) {}
 
@@ -280,14 +282,19 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
                       background: 'white', 
                       padding: '40px 32px', 
                       borderRadius: '24px', 
-                      border: isCurrent ? '2px solid #0f172a' : '1px solid #e2e8f0',
+                      border: isCurrent || isTarget ? '2px solid #0f172a' : '1px solid #e2e8f0',
                       boxShadow: isCurrent ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' : '0 4px 6px -1px rgba(0,0,0,0.05)', 
                       display: 'flex', 
                       flexDirection: 'column', 
                       position: 'relative',
                       transition: 'all 0.3s ease'
                   }}>
-                      {isCurrent && (
+                      {(isCurrent || isTarget) && (
+                            <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: isCurrent ? '#0f172a' : '#10b981', color: 'white', padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                {isCurrent ? 'Current Plan' : 'Selected Plan'}
+                            </div>
+                        )}
+                        {false && (
                           <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', color: 'white', padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
                               Current Plan
                           </div>
@@ -295,7 +302,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
                       
                       <h2 style={{ fontSize: '20px', color: '#64748b', fontWeight: '600', margin: '0 0 16px' }}>{plan.name}</h2>
                       <div style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', marginBottom: '8px', letterSpacing: '-2px', display: 'flex', alignItems: 'baseline' }}>
-                          ₹{plan.price} <span style={{ fontSize: '16px', fontWeight: '500', color: '#64748b', letterSpacing: 'normal', marginLeft: '4px' }}>/mo</span>
+                          â‚¹{plan.price} <span style={{ fontSize: '16px', fontWeight: '500', color: '#64748b', letterSpacing: 'normal', marginLeft: '4px' }}>/mo</span>
                       </div>
                       
                       <p style={{ color: '#475569', fontSize: '15px', marginBottom: '32px', lineHeight: '1.5' }}>

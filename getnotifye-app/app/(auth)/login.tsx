@@ -19,6 +19,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -55,12 +56,12 @@ export default function LoginScreen() {
 
   const handleEmailAuth = async () => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !password) return Alert.alert('Error', 'Please fill in all fields');
+    if (!cleanEmail || !password || (isRegister && (!name || !lastName))) return Alert.alert('Error', 'Please fill in all fields');
     setIsLoading(true);
     try {
       if (isRegister) {
         const apiModule = (await import('../../services/api')).default;
-        const res = await apiModule.post('/auth/register', { email: cleanEmail, password, name });
+        const res = await apiModule.post('/auth/register', { email: cleanEmail, password, name, lastName });
         const SecureStore = await import('expo-secure-store');
         await SecureStore.setItemAsync('userToken', res.data.accessToken);
         await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
@@ -98,14 +99,24 @@ export default function LoginScreen() {
             </Text>
 
             {isRegister && (
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#cbd5e1"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="First Name"
+                  placeholderTextColor="#cbd5e1"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Last Name"
+                  placeholderTextColor="#cbd5e1"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  autoCapitalize="words"
+                />
+              </>
             )}
 
             <TextInput

@@ -619,7 +619,9 @@ function urlBase64ToUint8Array(base64String: string) {
       return <LoadingScreen />;
   }
 
-  if (isAuthenticated && user && (!user.tags || user.tags.length === 0)) {
+  const isSubRoute = window.location.pathname.includes('/account/subscriptions') || new URLSearchParams(window.location.search).get('tab') === 'subscriptions';
+
+  if (isAuthenticated && user && (!user.tags || user.tags.length === 0) && !isSubRoute) {
     return <OnboardingFlow 
         user={user} 
         onComplete={(newUser: any) => {

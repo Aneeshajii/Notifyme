@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -34,7 +34,8 @@ export default function SubscriptionsScreen() {
       // Generate a secure short-lived handoff token so the web app can auto-login
       const res = await api.post('/auth/web-handoff');
       const handoffToken = res.data.handoffToken;
-      const url = `${WEB_APP_URL}?handoff=${encodeURIComponent(handoffToken)}&tab=subscriptions`;
+      const planQuery = plan && plan.name ? `&plan=${encodeURIComponent(plan.name)}` : '';
+      const url = `${WEB_APP_URL}?handoff=${encodeURIComponent(handoffToken)}&tab=subscriptions${planQuery}`;
       
       const supported = await Linking.canOpenURL(url);
       if (supported) {
