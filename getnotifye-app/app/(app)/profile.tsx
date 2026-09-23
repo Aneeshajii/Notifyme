@@ -94,8 +94,9 @@ export default function ProfileScreen() {
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
+        <View style={{ height: 40 }} /> {/* Extra padding at bottom for safe scrolling */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -120,6 +121,6 @@ const styles = StyleSheet.create({
   menuText: { flex: 1, fontSize: 16, fontWeight: '600', color: '#0f172a' },
   planStatusBox: { backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 12 },
   planStatusText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fee2e2', padding: 16, borderRadius: 16, marginTop: 8 },
-  logoutText: { color: '#ef4444', fontSize: 16, fontWeight: '700', marginLeft: 8 },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, marginTop: 16, borderWidth: 1, borderColor: '#fecaca', shadowColor: '#ef4444', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 1 },
+  logoutText: { color: '#ef4444', fontSize: 16, fontWeight: '600', marginLeft: 8 },
 });
