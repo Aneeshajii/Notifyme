@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, RefreshControl, Modal, TextInput, ActivityIndicator, Share, Animated
@@ -158,6 +158,9 @@ export default function TagsScreen() {
       <Modal visible={!!selectedTag} transparent animationType="fade" onRequestClose={() => setSelectedTag(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
+            {/* Elegant Drag Pill */}
+            <View style={{ width: 48, height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, marginBottom: 24 }} />
+            
             <Text style={styles.modalTitle}>{selectedTag?.name}</Text>
             
             <View style={styles.qrContainer}>
@@ -175,23 +178,18 @@ export default function TagsScreen() {
 
             <Text style={styles.qrHint}>Show or print this QR code. When scanned, people can message or call you safely.</Text>
             
-            <TouchableOpacity style={styles.shareFullBtn} onPress={() => selectedTag && handleShare(selectedTag)}>
-              <Ionicons name="share-outline" size={18} color="white" />
-              <Text style={styles.shareFullBtnText}>Share QR Link</Text>
-            </TouchableOpacity>
-
-            {/* Quick Actions moved inside modal */}
-            <View style={{ flexDirection: 'row', gap: 12, width: '100%', marginBottom: 12 }}>
+            {/* Refined Quick Actions */}
+            <View style={{ flexDirection: 'row', gap: 12, width: '100%', marginBottom: 16 }}>
               {selectedTag?.status !== 'deleted' && (
                 <TouchableOpacity 
-                  style={[styles.actionModalBtn, { flex: 1, backgroundColor: '#f2f2f7' }]} 
+                  style={[styles.actionModalBtn, { flex: 1, backgroundColor: '#f1f5f9' }]} 
                   onPress={async () => {
                     await handleToggle(selectedTag);
                     setSelectedTag(null);
                   }}
                 >
-                  <Ionicons name={selectedTag?.isActive ? 'pause-circle-outline' : 'play-circle-outline'} size={20} color="#5856D6" />
-                  <Text style={{ color: '#5856D6', fontWeight: '600', marginLeft: 8 }}>
+                  <Ionicons name={selectedTag?.isActive ? 'pause-outline' : 'play-outline'} size={22} color="#0f172a" />
+                  <Text style={{ color: '#0f172a', fontWeight: '700', marginLeft: 8, fontSize: 16 }}>
                     {selectedTag?.isActive ? 'Pause' : 'Resume'}
                   </Text>
                 </TouchableOpacity>
@@ -204,8 +202,8 @@ export default function TagsScreen() {
                   setSelectedTag(null);
                 }}
               >
-                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-                <Text style={{ color: '#FF3B30', fontWeight: '600', marginLeft: 8 }}>Delete</Text>
+                <Ionicons name="trash-outline" size={22} color="#ef4444" />
+                <Text style={{ color: '#ef4444', fontWeight: '700', marginLeft: 8, fontSize: 16 }}>Delete</Text>
               </TouchableOpacity>
             </View>
 
@@ -276,3 +274,4 @@ const styles = StyleSheet.create({
   closeBtnText: { color: '#007AFF', fontSize: 16, fontWeight: '500' },
   modalInput: { width: '100%', borderWidth: 1, borderColor: '#e5e5ea', borderRadius: 16, padding: 16, fontSize: 16, color: '#000', backgroundColor: '#f2f2f7', marginBottom: 24 },
 });
+
