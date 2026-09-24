@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -135,7 +135,7 @@ export default function SubscriptionsScreen() {
                 
                 <Text style={styles.planName}>{plan.name}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.price}>â‚¹{plan.price}</Text>
+                  <Text style={styles.price}>Ã¢â€šÂ¹{plan.price}</Text>
                   <Text style={styles.period}>/mo</Text>
                 </View>
                 

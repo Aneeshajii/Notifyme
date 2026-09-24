@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +24,8 @@ export default function ProfileScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* User Info */}
+
+
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase()}</Text>
@@ -39,7 +40,8 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Subscription / Plan Settings */}
+
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>BILLING & PLAN</Text>
           
@@ -55,7 +57,8 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Settings Links */}
+
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>SETTINGS & SUPPORT</Text>
           

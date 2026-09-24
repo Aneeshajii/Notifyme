@@ -42,7 +42,8 @@ export default function AppLayout() {
           ),
         }}
       />
-      {/* Custom Scanner Button */}
+
+
       <Tabs.Screen
         name="scanner"
         options={{
@@ -81,7 +82,8 @@ export default function AppLayout() {
         }}
       />
       
-      {/* Hidden Screens */}
+
+
       <Tabs.Screen name="subscriptions" options={{ href: null, title: 'Subscriptions' }} />
       <Tabs.Screen name="privacy" options={{ href: null, title: 'Privacy Center' }} />
       <Tabs.Screen name="about" options={{ href: null, title: 'About Us' }} />

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+﻿import React, { useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, Animated, Image
@@ -65,7 +65,8 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />}
         contentContainerStyle={{ paddingBottom: 100 }} // Extra padding for the floating tab bar scanner
       >
-        {/* Header - Custom Text Requested by User */}
+
+
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>{user?.name || 'Guest'},</Text>
@@ -79,7 +80,8 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Big Tag Counter Card */}
+
+
         <View style={styles.centerContainer}>
           <View style={styles.bigTagCard}>
             <View style={styles.qrIconWrapper}>
@@ -89,7 +91,8 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 2x2 Grid Menu */}
+
+
         <View style={styles.gridContainer}>
           <View style={styles.gridRow}>
             <AnimatedTouchable style={styles.gridCard} onPress={() => router.push('/(app)/tags')}>

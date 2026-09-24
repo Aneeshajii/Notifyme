@@ -255,17 +255,20 @@ export default function InboxScreen() {
             renderItem={({ item }) => (
               <AnimatedTouchable onPress={() => openConversation(item)}>
                 <View style={styles.convRow}>
-                  {/* Unread Indicator */}
+
+
                   <View style={styles.unreadIndicatorContainer}>
                     {item.unread > 0 && <View style={styles.unreadDot} />}
                   </View>
                   
-                  {/* Avatar */}
+
+
                   <View style={styles.convAvatar}>
                     <Ionicons name="person" size={24} color="#6366f1" />
                   </View>
                   
-                  {/* Info */}
+
+
                   <View style={styles.convInfo}>
                     <View style={styles.convTop}>
                       <Text style={styles.convName} numberOfLines={1}>
@@ -312,7 +315,7 @@ export default function InboxScreen() {
             const hasLocation = item.latitude && item.longitude;
             return (
               <View style={[styles.bubble, isOwner ? styles.bubbleOwner : styles.bubbleScanner]}>
-                {item.mediaType === 'image' && item.mediaUrl && (
+                {item.mediaType === 'image' && !!item.mediaUrl && (
                   <Image source={{ uri: item.mediaUrl }} style={styles.bubbleImage} />
                 )}
                 {hasLocation && (

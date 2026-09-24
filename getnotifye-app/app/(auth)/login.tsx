@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image
@@ -80,7 +80,8 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.inner}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* Logo */}
+
+
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
               <Ionicons name="shield" size={48} color="#4f46e5" />
@@ -88,7 +89,8 @@ export default function LoginScreen() {
             <Text style={styles.logoText}>GetNotifye</Text>
           </View>
 
-          {/* Card */}
+
+
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="shield" size={32} color="#4f46e5" />

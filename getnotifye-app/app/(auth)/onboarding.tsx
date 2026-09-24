@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, ActivityIndicator
@@ -38,25 +38,25 @@ export default function OnboardingScreen() {
 
         {step === 1 && (
           <View style={styles.card}>
-            <Text style={styles.emoji}>👋</Text>
+            <Text style={styles.emoji}>ðŸ‘‹</Text>
             <Text style={styles.title}>Welcome to GetNotifye!</Text>
             <Text style={styles.subtitle}>
-              GetNotifye lets you place QR codes on your car, bike, luggage, or any personal item. When someone scans it, they can message or call you — without knowing your number.
+              GetNotifye lets you place QR codes on your car, bike, luggage, or any personal item. When someone scans it, they can message or call you â€” without knowing your number.
             </Text>
             <View style={styles.featureList}>
-              {['🔒 Complete privacy — your number stays hidden', '⚡ Instant notifications when someone scans', '💬 Real-time messaging and voice calls', '📊 See who scanned and when'].map((f, i) => (
+              {['ðŸ”’ Complete privacy â€” your number stays hidden', 'âš¡ Instant notifications when someone scans', 'ðŸ’¬ Real-time messaging and voice calls', 'ðŸ“Š See who scanned and when'].map((f, i) => (
                 <Text key={i} style={styles.featureItem}>{f}</Text>
               ))}
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => setStep(2)}>
-              <Text style={styles.primaryBtnText}>Let's Get Started →</Text>
+              <Text style={styles.primaryBtnText}>Let's Get Started â†’</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {step === 2 && (
           <View style={styles.card}>
-            <Text style={styles.emoji}>🏷️</Text>
+            <Text style={styles.emoji}>ðŸ·ï¸</Text>
             <Text style={styles.title}>Create Your First QR Tag</Text>
             <Text style={styles.subtitle}>Give your QR tag a name so you can recognise it. For example: "My Car", "Home Door", "Bike"</Text>
             <View style={styles.inputWrapper}>
@@ -71,10 +71,10 @@ export default function OnboardingScreen() {
               />
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={handleCreateTag} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="white" /> : <Text style={styles.primaryBtnText}>Create QR Tag ✨</Text>}
+              {isLoading ? <ActivityIndicator color="white" /> : <Text style={styles.primaryBtnText}>Create QR Tag âœ¨</Text>}
             </TouchableOpacity>
             <TouchableOpacity style={styles.backBtn} onPress={() => setStep(1)}>
-              <Text style={styles.backBtnText}>← Back</Text>
+              <Text style={styles.backBtnText}>â† Back</Text>
             </TouchableOpacity>
           </View>
         )}

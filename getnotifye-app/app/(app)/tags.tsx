@@ -143,7 +143,7 @@ export default function TagsScreen() {
 
                 </View>
 
-                {!tag.isActive && tag.adminReason && (
+                {!tag.isActive && !!tag.adminReason && (
                   <View style={{ backgroundColor: '#fef2f2', padding: 12, borderRadius: 12, marginTop: 12, borderColor: '#fecaca', borderWidth: 1 }}>
                     <Text style={{ color: '#991b1b', fontWeight: 'bold', fontSize: 14, marginBottom: 4 }}>Notice from Admin:</Text>
                     <Text style={{ color: '#7f1d1d', fontSize: 14, lineHeight: 20 }}>{tag.adminReason}</Text>
@@ -172,7 +172,7 @@ export default function TagsScreen() {
               )}
             </View>
 
-            {selectedTag && !selectedTag.isActive && selectedTag.adminReason && (
+            {selectedTag && !selectedTag.isActive && !!selectedTag.adminReason && (
               <View style={{ backgroundColor: '#fef2f2', padding: 12, borderRadius: 12, width: '100%', marginBottom: 20, borderColor: '#fecaca', borderWidth: 1 }}>
                 <Text style={{ color: '#991b1b', fontWeight: 'bold', fontSize: 14, marginBottom: 4 }}>Notice from Admin:</Text>
                 <Text style={{ color: '#7f1d1d', fontSize: 14, lineHeight: 20 }}>{selectedTag.adminReason}</Text>
