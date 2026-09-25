@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Shield, ShieldAlert, Menu, X, Users, QrCode, Search, LogOut, Activity, DollarSign, Settings, ChevronLeft, MessageSquare, PieChart, Bell, LifeBuoy, AlertTriangle, Lock, FileText, Server, Download, PhoneCall, BarChart } from 'lucide-react';
 import './index.css';

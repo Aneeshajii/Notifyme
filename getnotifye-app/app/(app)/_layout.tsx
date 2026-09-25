@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Image, Linking } from 'react-native';
 import api from '../../services/api';

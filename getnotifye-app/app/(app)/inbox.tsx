@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   TextInput, KeyboardAvoidingView, Platform, RefreshControl, Animated, Image, Linking
@@ -242,7 +242,7 @@ export default function InboxScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         {conversations.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>ðŸ’¬</Text>
+            <Text style={styles.emptyEmoji}>Ã°Å¸â€™Â¬</Text>
             <Text style={styles.emptyTitle}>No messages yet</Text>
             <Text style={styles.emptySubtitle}>When someone scans your QR and messages you, it will appear here.</Text>
           </View>
@@ -354,7 +354,7 @@ export default function InboxScreen() {
           />
           <TouchableOpacity
             style={[styles.sendBtn, !replyText.trim() && styles.sendBtnDisabled]}
-            onPress={sendReply}
+            onPress={() => sendReply(replyText)}
             disabled={!replyText.trim() || sending}
           >
             <Ionicons name="arrow-up" size={20} color="white" />

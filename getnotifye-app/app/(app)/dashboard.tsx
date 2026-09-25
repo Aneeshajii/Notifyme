@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   RefreshControl, Animated, Image
