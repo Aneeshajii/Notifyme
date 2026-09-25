@@ -120,14 +120,14 @@ export default function AppLayout() {
       <Modal key={announcement.id} visible={true} animationType="slide" transparent={true}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
           <View style={{ backgroundColor: 'white', width: '100%', borderRadius: 24, padding: 24, maxHeight: '80%' }}>
-            {announcement.imageUrl && (
+            {!!announcement.imageUrl && (
               <Image source={{ uri: announcement.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
             )}
             <ScrollView>
               <Text style={{ fontSize: 24, fontWeight: '800', marginBottom: 12, color: '#0f172a' }}>{announcement.title}</Text>
               <Text style={{ fontSize: 16, color: '#475569', lineHeight: 24, marginBottom: 24 }}>{announcement.description}</Text>
             </ScrollView>
-            {announcement.actionUrl && announcement.actionButtonText && (
+            {!!announcement.actionUrl && !!announcement.actionButtonText && (
               <TouchableOpacity onPress={() => Linking.openURL(announcement.actionUrl)} style={{ backgroundColor: '#4f46e5', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 12 }}>
                 <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>{announcement.actionButtonText}</Text>
               </TouchableOpacity>
