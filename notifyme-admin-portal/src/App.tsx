@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Shield, ShieldAlert, Menu, X, Users, QrCode, Search, LogOut, Activity, DollarSign, Settings, ChevronLeft, MessageSquare, PieChart, Bell, LifeBuoy, AlertTriangle, Lock, FileText, Server, Download, PhoneCall, BarChart } from 'lucide-react';
 import './index.css';
@@ -140,7 +140,10 @@ function App() {
   // New State for Master Admin Actions
   const [directMessageContent, setDirectMessageContent] = useState('');
   const [isBlockingUser, setIsBlockingUser] = useState(false);
-  const [blockReason, setBlockReason] = useState('');
+      const [blockReason, setBlockReason] = useState('');
+    const [isSendingEmergency, setIsSendingEmergency] = useState(false);
+    const [emergencyTitle, setEmergencyTitle] = useState('');
+    const [emergencyDesc, setEmergencyDesc] = useState('');
   const [editingTagPlaceholder, setEditingTagPlaceholder] = useState<string | null>(null);
   const [tagPlaceholderText, setTagPlaceholderText] = useState('');
   const [grantPremiumType, setGrantPremiumType] = useState<string>('');
@@ -204,7 +207,27 @@ function App() {
     }
   };
 
-  const handleTerminateUser = async () => {
+      const handleSendEmergency = async () => {
+        if (!emergencyTitle.trim() || !emergencyDesc.trim()) return alert('Fill title and description');
+        try {
+            await axios.post(${API_BASE}/announcements/admin, {
+                title: emergencyTitle,
+                description: emergencyDesc,
+                deliveryTypes: ['IN_APP'],
+                targetAudience: 'SPECIFIC',
+                selectedUsers: [selectedUser.id]
+            }, { headers: { Authorization: Bearer  } });
+            setIsSendingEmergency(false);
+            setEmergencyTitle('');
+            setEmergencyDesc('');
+            alert('Emergency message sent successfully!');
+        } catch(err) {
+            console.error(err);
+            alert('Failed to send emergency message');
+        }
+    };
+
+    const handleTerminateUser = async () => {
     if (!selectedUser) return;
     if (window.confirm('Are you sure you want to permanently delete this user?')) {
         try {
@@ -840,7 +863,8 @@ function App() {
                                           }
                                       }} style={{ padding: '12px', background: selectedUser.isBlocked ? '#ecfdf5' : '#fef3c7', color: selectedUser.isBlocked ? '#10b981' : '#d97706', border: `1px solid ${selectedUser.isBlocked ? '#a7f3d0' : '#fde68a'}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>{selectedUser.isBlocked ? 'Unblock User' : 'Block User'}</button>
                                       
-                                      <button onClick={handleTerminateUser} style={{ padding: '12px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Terminate User</button>
+                                      <button onClick={() => setIsSendingEmergency(true)} style={{ padding: '12px', background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Emergency Msg</button>
+                                        <button onClick={handleTerminateUser} style={{ padding: '12px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Terminate User</button>
                                   </div>
                               </div>
 
@@ -954,7 +978,7 @@ function App() {
                                             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc' }}>
                                                 <div>
                                                     <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>{s.deviceInfo}</h4>
-                                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>IP: {s.ipAddress} • Expires: {new Date(s.expiresAt).toLocaleDateString()}</p>
+                                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>IP: {s.ipAddress} â€¢ Expires: {new Date(s.expiresAt).toLocaleDateString()}</p>
                                                 </div>
                                                 <button onClick={() => {
                                                     handleRevokeSession(s.id);
@@ -1099,7 +1123,32 @@ function App() {
           )}
         </div>
 
-        {/* Block User Modal */}
+                {isSendingEmergency && selectedUser && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+                <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ margin: '0 0 16px', color: '#0f172a' }}>Send Emergency Message</h3>
+                    <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>This will appear as a full-screen block next time the user opens the app.</p>
+                    <input 
+                        value={emergencyTitle} 
+                        onChange={e => setEmergencyTitle(e.target.value)} 
+                        placeholder="Message Title" 
+                        style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px' }}
+                    />
+                    <textarea 
+                        value={emergencyDesc} 
+                        onChange={e => setEmergencyDesc(e.target.value)} 
+                        placeholder="Detailed message..." 
+                        style={{ width: '100%', minHeight: '100px', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px', resize: 'vertical' }}
+                    />
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                        <button onClick={() => { setIsSendingEmergency(false); setEmergencyTitle(''); setEmergencyDesc(''); }} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={handleSendEmergency} style={{ padding: '10px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Send Now</button>
+                    </div>
+                </div>
+            </div>
+          )}
+
+          {/* Block User Modal */}
         {isBlockingUser && selectedUser && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
               <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
@@ -1188,6 +1237,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

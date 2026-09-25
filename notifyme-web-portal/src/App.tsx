@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+﻿import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer/simplepeer.min.js';
@@ -106,6 +106,7 @@ function App() {
   const [user, setUser] = useState<UserType | null>(null);
   const [tags, setTags] = useState<TagType[]>([]);
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [activeTabState, setActiveTabState] = useState<'dashboard'|'tags'|'analytics'|'inbox'|'notifications'|'scan_history'|'vehicle'|'home'|'emergency'|'business'|'subscriptions'|'privacy'|'security'|'family'|'about_us'|'support'|'profile'|'settings'>('dashboard');
   
   useEffect(() => {
@@ -456,12 +457,14 @@ function urlBase64ToUint8Array(base64String: string) {
 
   const fetchTagsAndMessages = async (userId: string) => {
     try {
-      const [tagsRes, msgsRes] = await Promise.all([
-        axios.get(`${API_BASE}/tags/user/${userId}`),
-        axios.get(`${API_BASE}/messages/user/${userId}`)
+      const [tagsRes, msgsRes, annRes] = await Promise.all([
+        axios.get(${API_BASE}/tags/user/),
+        axios.get(${API_BASE}/messages/user/),
+        axios.get(${API_BASE}/announcements/active, { headers: { Authorization: Bearer  } }).catch(() => ({ data: [] }))
       ]);
       setTags(tagsRes.data);
       setMessages(msgsRes.data);
+      if (annRes && annRes.data) setAnnouncements(annRes.data);
     } catch (error) {
       console.error('Error fetching data', error);
     }
@@ -655,7 +658,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
           <div style={{ marginBottom: '16px' }}>
             <div style={{ padding: '0 16px', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => toggleCategory('account')}>
-              ACCOUNT & SECURITY {expandedCategories.account ? '▼' : '▶'}
+              ACCOUNT & SECURITY {expandedCategories.account ? 'â–¼' : 'â–¶'}
             </div>
             {expandedCategories.account && (
               <>
@@ -1014,7 +1017,7 @@ function urlBase64ToUint8Array(base64String: string) {
               <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginTop: '24px' }}>
                   <Lock size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
                   <h2 style={{ color: '#0f172a', marginBottom: '8px', textTransform: 'capitalize' }}>{activeTab.replace('_', ' ')} Module</h2>
-                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. We’re working on this feature.</p>
+                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. Weâ€™re working on this feature.</p>
               </div>
           )}
             </motion.div>
@@ -1022,6 +1025,27 @@ function urlBase64ToUint8Array(base64String: string) {
           </Suspense>
           </div>
       </main>
+
+            {/* Announcements Modal */}
+      {announcements.length > 0 && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '500px', maxHeight: '80vh', overflowY: 'auto' }}>
+            {announcements[0].imageUrl && <img src={announcements[0].imageUrl} alt="Announcement" style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px', marginBottom: '16px' }} />}
+            <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '12px', color: '#0f172a' }}>{announcements[0].title}</h2>
+            <p style={{ fontSize: '16px', color: '#475569', lineHeight: '24px', marginBottom: '24px', whiteSpace: 'pre-wrap' }}>{announcements[0].description}</p>
+            
+            {announcements[0].actionUrl && announcements[0].actionButtonText && (
+              <a href={announcements[0].actionUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', background: '#4f46e5', color: 'white', padding: '16px', borderRadius: '12px', fontWeight: 'bold', textDecoration: 'none', marginBottom: '12px' }}>
+                {announcements[0].actionButtonText}
+              </a>
+            )}
+            
+            <button onClick={() => setAnnouncements(prev => prev.slice(1))} style={{ width: '100%', padding: '16px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
+              I Understand
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Incoming Call Overlay */}
       {incomingCall && !callAccepted && (
@@ -1189,6 +1213,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default App;
+
 
 
 

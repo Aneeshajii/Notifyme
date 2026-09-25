@@ -1,5 +1,7 @@
-﻿import { Tabs, useRouter } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Image, Linking } from 'react-native';
+import api from '../../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +11,30 @@ export default function AppLayout() {
   const router = useRouter();
   const unreadCount = messages.filter((m: any) => m.status !== 'read' && m.senderRole === 'scanner').length;
 
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await api.get('/announcements/active');
+      if (res.data && res.data.length > 0) {
+        setAnnouncements(res.data);
+      }
+    } catch (err) {
+      console.log('Failed to fetch announcements:', err);
+    }
+  };
+
+  const handleDismiss = (id: string) => {
+    setAnnouncements(prev => prev.filter(a => a.id !== id));
+    // Optionally call an endpoint to mark as seen, but for now just dismiss locally for the session
+  };
+
   return (
+    <>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -90,7 +115,31 @@ export default function AppLayout() {
       <Tabs.Screen name="support" options={{ href: null, title: 'Support Center' }} />
       <Tabs.Screen name="contact" options={{ href: null, title: 'Contact Us' }} />
       <Tabs.Screen name="legal" options={{ href: null, title: 'Legal' }} />
-    </Tabs>
+        </Tabs>
+    {announcements.map(announcement => (
+      <Modal key={announcement.id} visible={true} animationType="slide" transparent={true}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: 'white', width: '100%', borderRadius: 24, padding: 24, maxHeight: '80%' }}>
+            {announcement.imageUrl && (
+              <Image source={{ uri: announcement.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
+            )}
+            <ScrollView>
+              <Text style={{ fontSize: 24, fontWeight: '800', marginBottom: 12, color: '#0f172a' }}>{announcement.title}</Text>
+              <Text style={{ fontSize: 16, color: '#475569', lineHeight: 24, marginBottom: 24 }}>{announcement.description}</Text>
+            </ScrollView>
+            {announcement.actionUrl && announcement.actionButtonText && (
+              <TouchableOpacity onPress={() => Linking.openURL(announcement.actionUrl)} style={{ backgroundColor: '#4f46e5', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>{announcement.actionButtonText}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => handleDismiss(announcement.id)} style={{ padding: 16, alignItems: 'center', backgroundColor: '#f1f5f9', borderRadius: 12 }}>
+              <Text style={{ color: '#64748b', fontWeight: 'bold', fontSize: 16 }}>I Understand</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    ))}
+    </>
   );
 }
 
@@ -150,4 +199,5 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
 });
+
 
