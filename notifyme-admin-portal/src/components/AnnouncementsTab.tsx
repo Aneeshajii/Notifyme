@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 
@@ -12,6 +12,7 @@ export default function AnnouncementsTab() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
     const [actionButtonText, setActionButtonText] = useState('');
     const [actionUrl, setActionUrl] = useState('');
     const [deliveryTypes, setDeliveryTypes] = useState<string[]>(['IN_APP']);
@@ -34,6 +35,31 @@ export default function AnnouncementsTab() {
             setAnnouncements(res.data);
         } catch (err) {
             console.error('Failed to fetch announcements');
+        }
+    };
+
+        const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('media', file);
+        try {
+            const token = localStorage.getItem('adminToken');
+            const res = await axios.post(${API_BASE}/messages/upload, formData, {
+                headers: { 
+                    Authorization: Bearer ,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            if (res.data.url) {
+                setImageUrl(res.data.url);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -129,15 +155,15 @@ export default function AnnouncementsTab() {
             {activeSection === 'create' && (
                 <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', maxWidth: '800px' }}>
                     <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Announcement Image URL</label>
+                                                <div>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#334155' }}>Announcement Image (Upload)</label>
                             <input 
-                                type="text" 
-                                value={imageUrl} 
-                                onChange={e => setImageUrl(e.target.value)} 
-                                placeholder="https://example.com/image.png" 
-                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleImageUpload} 
+                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '8px' }}
                             />
+                            {isUploading && <p style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>Uploading image...</p>}
                             {imageUrl && <img src={imageUrl} alt="Preview" style={{ marginTop: '12px', maxHeight: '200px', borderRadius: '8px', objectFit: 'contain' }} />}
                         </div>
 
@@ -147,7 +173,7 @@ export default function AnnouncementsTab() {
                                 type="text" 
                                 value={title} 
                                 onChange={e => setTitle(e.target.value)} 
-                                placeholder="🎉 New Feature Available!" 
+                                placeholder="ðŸŽ‰ New Feature Available!" 
                                 required
                                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '18px', fontWeight: 'bold' }}
                             />
@@ -305,3 +331,4 @@ export default function AnnouncementsTab() {
         </div>
     );
 }
+

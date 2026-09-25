@@ -144,6 +144,8 @@ function App() {
     const [isSendingEmergency, setIsSendingEmergency] = useState(false);
     const [emergencyTitle, setEmergencyTitle] = useState('');
     const [emergencyDesc, setEmergencyDesc] = useState('');
+    const [emergencyImage, setEmergencyImage] = useState('');
+    const [isUploadingEmergency, setIsUploadingEmergency] = useState(false);
   const [editingTagPlaceholder, setEditingTagPlaceholder] = useState<string | null>(null);
   const [tagPlaceholderText, setTagPlaceholderText] = useState('');
   const [grantPremiumType, setGrantPremiumType] = useState<string>('');
@@ -207,12 +209,32 @@ function App() {
     }
   };
 
-      const handleSendEmergency = async () => {
+          const handleEmergencyImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploadingEmergency(true);
+        const formData = new FormData();
+        formData.append('media', file);
+        try {
+            const res = await axios.post(${API_BASE}/messages/upload, formData, {
+                headers: { Authorization: Bearer , 'Content-Type': 'multipart/form-data' }
+            });
+            if (res.data.url) setEmergencyImage(res.data.url);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to upload image');
+        } finally {
+            setIsUploadingEmergency(false);
+        }
+    };
+
+    const handleSendEmergency = async () => {
         if (!emergencyTitle.trim() || !emergencyDesc.trim()) return alert('Fill title and description');
         try {
             await axios.post(${API_BASE}/announcements/admin, {
                 title: emergencyTitle,
                 description: emergencyDesc,
+                imageUrl: emergencyImage,
                 deliveryTypes: ['IN_APP'],
                 targetAudience: 'SPECIFIC',
                 selectedUsers: [selectedUser.id]
@@ -872,274 +894,21 @@ function App() {
                               <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                                   <h4 style={{ color: '#0f172a', margin: '0 0 16px' }}>Direct Communication</h4>
                                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>Send a direct message to the user's app inbox.</p>
-                                  <textarea value={directMessageContent} onChange={(e) => setDirectMessageContent(e.target.value)} placeholder="Type message to user..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '80px', marginBottom: '12px', resize: 'vertical' }}></textarea>
-                                  <button onClick={handleSendDirectMessage} style={{ width: '100%', padding: '12px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Send Message</button>
-                              </div>
-                          </div>
-
-                          {/* Right Column: Tags & Activity */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                        <h3 style={{ margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <QrCode size={20} color="#4f46e5"/> QR Code Management
-                                        </h3>
-                                        <span style={{ fontSize: '12px', background: '#e2e8f0', padding: '4px 8px', borderRadius: '100px', color: '#475569', fontWeight: 'bold' }}>
-                                            Limit: {tags.filter(t => t.ownerId === selectedUser.id).length} / {selectedUser.subscription?.maxQrCodes || 1} Used
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                                        {tags.filter(t => t.ownerId === selectedUser.id).map(tag => (
-                                            <div key={tag.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                      <strong style={{ color: '#0f172a' }}>{tag.name}</strong>
-                                                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                          <span style={{ fontSize: '12px', background: tag.status === 'active' ? '#ecfdf5' : (tag.status === 'paused' ? '#fef3c7' : '#fef2f2'), color: tag.status === 'active' ? '#10b981' : (tag.status === 'paused' ? '#d97706' : '#ef4444'), padding: '2px 8px', borderRadius: '100px', fontWeight: 'bold' }}>{tag.status}</span>
-                                                          {tag.status !== 'deleted' && (
-                                                            <>
-                                                              <button onClick={() => {
-                                                                  if (tag.status === 'active') {
-                                                                      setPendingTagAction(prev => ({...prev, [tag.tagId]: 'pause'}));
-                                                                  } else {
-                                                                      handleTagStatusUpdate(tag.tagId, tag.status);
-                                                                  }
-                                                              }} style={{ padding: '2px 8px', background: tag.status === 'active' ? '#fef3c7' : '#ecfdf5', color: tag.status === 'active' ? '#d97706' : '#10b981', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>{tag.status === 'active' ? 'Pause' : 'Resume'}</button>
-                                                              <button onClick={() => setPendingTagAction(prev => ({...prev, [tag.tagId]: 'delete'}))} style={{ padding: '2px 8px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Del</button>
-                                                            </>
-                                                          )}
-                                                      </div>
-                                                  </div>
-                                                  <div style={{ fontSize: '14px', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
-                                                      <span>Tag ID: <strong style={{color:'#4f46e5'}}>{tag.tagId}</strong></span>
-                                                      <span style={{ fontSize: '12px' }}>Scans: <strong>{tag._count?.scans || 0}</strong></span>
-                                                  </div>
-                                                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                                      Created: {new Date(tag.createdAt).toLocaleDateString()}
-                                                  </div>
-                                                  {pendingTagAction[tag.tagId] && (
-                                                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
-                                                          <div style={{ fontSize: '12px', fontWeight: 'bold', color: pendingTagAction[tag.tagId] === 'delete' ? '#ef4444' : '#d97706', marginBottom: '4px' }}>
-                                                              Reason for {pendingTagAction[tag.tagId] === 'delete' ? 'Deletion' : 'Pausing'}:
-                                                          </div>
-                                                          <div style={{ display: 'flex', gap: '4px' }}>
-                                                              <input type="text" value={tagActionReason[tag.tagId] || ''} onChange={e => setTagActionReason(prev => ({...prev, [tag.tagId]: e.target.value}))} placeholder="Required..." style={{ flex: 1, padding: '4px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                                                              <button onClick={() => {
-                                                                  const reason = tagActionReason[tag.tagId];
-                                                                  if (!reason || reason.trim() === '') return alert('Reason is required');
-                                                                  if (pendingTagAction[tag.tagId] === 'delete') handleDeleteTag(tag.tagId, reason);
-                                                                  else handleTagStatusUpdate(tag.tagId, tag.status, reason);
-                                                              }} style={{ background: '#4f46e5', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Confirm</button>
-                                                              <button onClick={() => setPendingTagAction(prev => ({...prev, [tag.tagId]: null}))} style={{ background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
-                                                          </div>
-                                                      </div>
-                                                  )}
-                                                  {tag.adminReason && (
-                                                      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '8px', marginTop: '4px', fontSize: '12px' }}>
-                                                          <strong style={{ color: '#ef4444' }}>Admin Note:</strong> <span style={{ color: '#991b1b' }}>{tag.adminReason}</span>
-                                                      </div>
-                                                  )}
-                                                  <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
-                                                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
-                                                      <span>Scanner Placeholder:</span>
-                                                      {!editingTagPlaceholder || editingTagPlaceholder !== tag.tagId ? (
-                                                          <button onClick={() => { setEditingTagPlaceholder(tag.tagId); setTagPlaceholderText(tag.placeholderMessage || ''); }} style={{ background: 'none', border: 'none', color: '#4f46e5', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>Edit</button>
-                                                      ) : null}
-                                                  </div>
-                                                  {editingTagPlaceholder === tag.tagId ? (
-                                                      <div style={{ display: 'flex', gap: '4px' }}>
-                                                          <input type="text" value={tagPlaceholderText} onChange={e => setTagPlaceholderText(e.target.value)} placeholder="Message for scanners..." style={{ flex: 1, padding: '4px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                                                          <button onClick={() => handleUpdatePlaceholder(tag.tagId)} style={{ background: '#4f46e5', color: 'white', border: 'none', borderRadius: '4px', fontSize: '10px', padding: '0 8px', cursor: 'pointer' }}>Save</button>
-                                                      </div>
-                                                  ) : (
-                                                      <div style={{ fontSize: '12px', color: '#0f172a', fontStyle: tag.placeholderMessage ? 'normal' : 'italic' }}>{tag.placeholderMessage || "No message set"}</div>
-                                                  )}
-                                              </div>
-                                          </div>
-                                      ))}
-                                      {tags.filter(t => t.ownerId === selectedUser.id).length === 0 && <p style={{ color: '#94a3b8' }}>No active tags found.</p>}
-                                  </div>
-                              </div>
-
-                              <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                    <h3 style={{ margin: '0 0 20px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}><MessageSquare size={20} color="#4f46e5"/> Recent Inbox Messages</h3>
-                                    {loadingDetails ? (
-                                        <p style={{ color: '#94a3b8' }}>Loading messages...</p>
-                                    ) : (
-                                        <ChatViewer messages={selectedUserMessages} user={selectedUser} />
-                                    )}
-                                </div>
-
-                                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginBottom: '24px', marginTop: '24px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h3 style={{ margin: 0, color: '#0f172a' }}>Active Device Sessions</h3>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        {selectedUserSessions.map(s => (
-                                            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#f8fafc' }}>
-                                                <div>
-                                                    <h4 style={{ margin: '0 0 4px', color: '#0f172a' }}>{s.deviceInfo}</h4>
-                                                    <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>IP: {s.ipAddress} â€¢ Expires: {new Date(s.expiresAt).toLocaleDateString()}</p>
-                                                </div>
-                                                <button onClick={() => {
-                                                    handleRevokeSession(s.id);
-                                                    setSelectedUserSessions(prev => prev.filter(session => session.id !== s.id));
-                                                }} style={{ padding: '8px 16px', background: 'white', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Revoke</button>
-                                            </div>
-                                        ))}
-                                        {selectedUserSessions.length === 0 && <div style={{ color: '#94a3b8' }}>No active sessions found.</div>}
-                                    </div>
-                                </div>
-
-                                <div style={{ background: 'white', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                      <h3 style={{ margin: '0 0 20px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}><ShieldAlert size={20} color="#4f46e5"/> Audit Logs</h3>
-                                      
-                                      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-                                          <select 
-                                            value={auditLogCategoryFilter} 
-                                            onChange={(e) => setAuditLogCategoryFilter(e.target.value)}
-                                            style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', flex: 1 }}
-                                          >
-                                              <option>All Activity</option>
-                                              <option>Authentication</option>
-                                              <option>Profile</option>
-                                              <option>QR Codes</option>
-                                              <option>Subscription</option>
-                                              <option>Security</option>
-                                              <option>Support</option>
-                                          </select>
-                                          <div style={{ position: 'relative', flex: 2 }}>
-                                              <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-                                              <input 
-                                                type="text" 
-                                                value={auditLogSearchQuery} 
-                                                onChange={(e) => setAuditLogSearchQuery(e.target.value)}
-                                                placeholder="Search activity..." 
-                                                style={{ width: '100%', padding: '8px 8px 8px 32px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                                              />
-                                          </div>
-                                      </div>
-
-                                      {(() => {
-                                          const filteredLogs = selectedUserAuditLogs.filter(log => {
-                                              const actionLower = log.action.toLowerCase();
-                                              const detailsLower = (log.details || '').toLowerCase();
-                                              const matchesSearch = actionLower.includes(auditLogSearchQuery.toLowerCase()) || detailsLower.includes(auditLogSearchQuery.toLowerCase());
-                                              if (!matchesSearch) return false;
-                                              
-                                              switch(auditLogCategoryFilter) {
-                                                  case 'Authentication': return actionLower.includes('login') || actionLower.includes('logout') || actionLower.includes('account');
-                                                  case 'Profile': return actionLower.includes('profile');
-                                                  case 'QR Codes': return actionLower.includes('qr_');
-                                                  case 'Subscription': return actionLower.includes('subscrib');
-                                                  case 'Security': return actionLower.includes('password') || actionLower.includes('mfa') || actionLower.includes('block');
-                                                  case 'Support': return actionLower.includes('ticket');
-                                                  default: return true;
-                                              }
-                                          });
-
-                                            return filteredLogs.length > 0 ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
-                                                    {filteredLogs.map(log => {
-                                                        const { actor, humanAction } = formatAuditLogMessage(log);
-                                                        return (
-                                                            <div key={log.id} style={{ padding: '12px', borderLeft: '4px solid #4f46e5', background: '#f8fafc', borderRadius: '0 8px 8px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <strong style={{ color: '#0f172a', fontSize: '14px' }}>{humanAction}</strong>
-                                                                    <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(log.createdAt).toLocaleString()}</span>
-                                                                </div>
-                                                                <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>
-                                                                    <span style={{ fontWeight: '600' }}>By:</span> {actor}
-                                                                </p>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>No audit logs found matching criteria.</p>
-                                          );
-                                      })()}
-                                  </div>
-                          </div>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-
-              {activeTab === 'tags' && (
-                <>
-                  <div className="header-actions">
-                    <div><h1>Tag Management</h1><p>Overview of all active QR tags in the system.</p></div>
-                  </div>
-                  <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                    <div className="table-responsive"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
-                        <thead>
-                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                <th style={{ padding: '16px 24px', color: '#64748b' }}>Tag ID</th>
-                                <th style={{ padding: '16px 24px', color: '#64748b' }}>Name / Ref</th>
-                                <th style={{ padding: '16px 24px', color: '#64748b' }}>Owner</th>
-                                <th style={{ padding: '16px 24px', color: '#64748b' }}>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tags.map(tag => (
-                                <tr key={tag.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#4f46e5' }}>{tag.tagId}</td>
-                                    <td style={{ padding: '16px 24px', color: '#475569' }}>{tag.name} {tag.plateNumber ? `(${tag.plateNumber})` : ''}</td>
-                                    <td style={{ padding: '16px 24px', color: '#0f172a' }}>{tag.owner?.name || 'Unknown'}</td>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <span style={{ background: tag.status === 'active' ? '#ecfdf5' : '#fef2f2', color: tag.status === 'active' ? '#10b981' : '#ef4444', padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold' }}>
-                                            {tag.status.toUpperCase()}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table></div>
-                  </div>
-                </>
-              )}
-
-              {activeTab === 'analytics' && <AnalyticsTab />}
-              {activeTab === 'ai-alerts' && <SecurityAlertsTab />}
-              {activeTab === 'monitoring' && <MonitoringTab />}
-              {activeTab === 'support' && <SupportTab />}
-              {activeTab === 'reports' && <ReportsTab />}
-              {activeTab === 'subscriptions' && <SubscriptionsTab />}
-              {activeTab === 'communications' && <CommunicationsTab />}
-              {activeTab === 'announcements' && <AnnouncementsTab />}
-              {activeTab === 'settings' && <GlobalSettings />}
-              
-              {/* Placeholders for remaining tabs to ensure complete routing */}
-              {['notifications', 'abuse', 'content'].includes(activeTab) && (
-                  <div style={{ background: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                      <Lock size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
-                      <h2 style={{ color: '#0f172a', marginBottom: '8px', textTransform: 'capitalize' }}>{activeTab} Module</h2>
-                      <p style={{ color: '#64748b' }}>This enterprise module is currently being provisioned. Features like RBAC and AI Fraud Detection will appear here.</p>
-                  </div>
-              )}
-
-            </>
-          )}
-        </div>
-
-                {isSendingEmergency && selectedUser && (
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-                <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-                    <h3 style={{ margin: '0 0 16px', color: '#0f172a' }}>Send Emergency Message</h3>
-                    <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '16px' }}>This will appear as a full-screen block next time the user opens the app.</p>
-                    <input 
-                        value={emergencyTitle} 
-                        onChange={e => setEmergencyTitle(e.target.value)} 
-                        placeholder="Message Title" 
-                        style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px' }}
-                    />
-                    <textarea 
+                                                      <textarea 
                         value={emergencyDesc} 
                         onChange={e => setEmergencyDesc(e.target.value)} 
                         placeholder="Detailed message..." 
-                        style={{ width: '100%', minHeight: '100px', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px', resize: 'vertical' }}
+                        style={{ width: '100%', minHeight: '100px', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px', resize: 'vertical' }}
                     />
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>Optional Image Attachment:</label>
+                    <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleEmergencyImageUpload} 
+                        style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px' }}
+                    />
+                    {isUploadingEmergency && <p style={{ color: '#4f46e5', fontSize: '12px', marginBottom: '12px' }}>Uploading...</p>}
+                    {emergencyImage && <img src={emergencyImage} alt="Preview" style={{ width: '100%', height: '150px', objectFit: 'contain', borderRadius: '8px', marginBottom: '24px' }} />}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button onClick={() => { setIsSendingEmergency(false); setEmergencyTitle(''); setEmergencyDesc(''); }} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
                         <button onClick={handleSendEmergency} style={{ padding: '10px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Send Now</button>
@@ -1154,12 +923,21 @@ function App() {
               <div style={{ background: 'white', padding: '32px', borderRadius: '16px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
                   <h3 style={{ margin: '0 0 16px', color: '#0f172a' }}>Block User Account</h3>
                   <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>Provide a reason for suspending this account. This will be sent as a system message to their inbox.</p>
-                  <textarea 
-                      value={blockReason} 
-                      onChange={e => setBlockReason(e.target.value)} 
-                      placeholder="Violation of terms..." 
-                      style={{ width: '100%', minHeight: '100px', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px', resize: 'vertical' }}
-                  />
+                                      <textarea 
+                        value={emergencyDesc} 
+                        onChange={e => setEmergencyDesc(e.target.value)} 
+                        placeholder="Detailed message..." 
+                        style={{ width: '100%', minHeight: '100px', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px', resize: 'vertical' }}
+                    />
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#64748b' }}>Optional Image Attachment:</label>
+                    <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleEmergencyImageUpload} 
+                        style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '12px' }}
+                    />
+                    {isUploadingEmergency && <p style={{ color: '#4f46e5', fontSize: '12px', marginBottom: '12px' }}>Uploading...</p>}
+                    {emergencyImage && <img src={emergencyImage} alt="Preview" style={{ width: '100%', height: '150px', objectFit: 'contain', borderRadius: '8px', marginBottom: '24px' }} />}
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                       <button onClick={() => { setIsBlockingUser(false); setBlockReason(''); }} style={{ padding: '10px 20px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
                       <button onClick={handleBlockUser} style={{ padding: '10px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Confirm Block</button>
@@ -1237,6 +1015,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
