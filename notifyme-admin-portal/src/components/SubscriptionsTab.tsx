@@ -11,13 +11,18 @@ interface SubscriptionPlan {
     maxQrCodes: number;
     benefits: string; // JSON string
     isActive: boolean;
+    allowAudioCall: boolean;
+    allowVideoCall: boolean;
+    allowVoiceNotes: boolean;
+    allowImageUpload: boolean;
+    allowLocationShare: boolean;
 }
 
 const SubscriptionsTab: React.FC = () => {
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ name: '', price: 0, maxQrCodes: 1, isActive: true });
+    const [formData, setFormData] = useState({ name: '', price: 0, maxQrCodes: 1, isActive: true, allowAudioCall: false, allowVideoCall: false, allowVoiceNotes: false, allowImageUpload: false, allowLocationShare: false });
     const [benefits, setBenefits] = useState<string[]>([]);
     const [newBenefit, setNewBenefit] = useState('');
 
@@ -89,13 +94,13 @@ const SubscriptionsTab: React.FC = () => {
 
     const handleEditClick = (plan: SubscriptionPlan) => {
         setIsEditing(plan.id);
-        setFormData({ name: plan.name, price: plan.price, maxQrCodes: plan.maxQrCodes, isActive: plan.isActive });
+        setFormData({ name: plan.name, price: plan.price, maxQrCodes: plan.maxQrCodes, isActive: plan.isActive, allowAudioCall: !!plan.allowAudioCall, allowVideoCall: !!plan.allowVideoCall, allowVoiceNotes: !!plan.allowVoiceNotes, allowImageUpload: !!plan.allowImageUpload, allowLocationShare: !!plan.allowLocationShare });
         setBenefits(JSON.parse(plan.benefits || '[]'));
     };
 
     const handleNewClick = () => {
         setIsEditing('new');
-        setFormData({ name: '', price: 0, maxQrCodes: 1, isActive: true });
+        setFormData({ name: '', price: 0, maxQrCodes: 1, isActive: true, allowAudioCall: false, allowVideoCall: false, allowVoiceNotes: false, allowImageUpload: false, allowLocationShare: false });
         setBenefits([]);
     };
 
@@ -119,7 +124,7 @@ const SubscriptionsTab: React.FC = () => {
                             <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} type="text" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                         </div>
                         <div>
-                            <label style={{ display: 'block', fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>Price (₹)</label>
+                            <label style={{ display: 'block', fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>Price (â‚¹)</label>
                             <input value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} type="number" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                         </div>
                         <div>
@@ -133,6 +138,32 @@ const SubscriptionsTab: React.FC = () => {
                             <input type="checkbox" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} style={{ width: '16px', height: '16px' }} />
                             Plan is Active (Visible to users)
                         </label>
+                                        </div>
+
+                    <div style={{ marginBottom: '16px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#334155' }}>Feature Access Gating</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#0f172a' }}>
+                                <input type="checkbox" checked={formData.allowAudioCall} onChange={e => setFormData({...formData, allowAudioCall: e.target.checked})} style={{ width: '16px', height: '16px' }} />
+                                Audio Calling
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#0f172a' }}>
+                                <input type="checkbox" checked={formData.allowVideoCall} onChange={e => setFormData({...formData, allowVideoCall: e.target.checked})} style={{ width: '16px', height: '16px' }} />
+                                Video Calling
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#0f172a' }}>
+                                <input type="checkbox" checked={formData.allowVoiceNotes} onChange={e => setFormData({...formData, allowVoiceNotes: e.target.checked})} style={{ width: '16px', height: '16px' }} />
+                                Voice Notes (Mic)
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#0f172a' }}>
+                                <input type="checkbox" checked={formData.allowImageUpload} onChange={e => setFormData({...formData, allowImageUpload: e.target.checked})} style={{ width: '16px', height: '16px' }} />
+                                Image Upload
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#0f172a' }}>
+                                <input type="checkbox" checked={formData.allowLocationShare} onChange={e => setFormData({...formData, allowLocationShare: e.target.checked})} style={{ width: '16px', height: '16px' }} />
+                                Location Sharing
+                            </label>
+                        </div>
                     </div>
 
                     <div style={{ marginBottom: '24px' }}>
@@ -145,8 +176,8 @@ const SubscriptionsTab: React.FC = () => {
                             {benefits.map((b, idx) => (
                                 <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        <button onClick={() => handleMoveBenefit(idx, 'up')} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : '#64748b' }}>▲</button>
-                                        <button onClick={() => handleMoveBenefit(idx, 'down')} disabled={idx === benefits.length - 1} style={{ background: 'none', border: 'none', cursor: idx === benefits.length - 1 ? 'default' : 'pointer', color: idx === benefits.length - 1 ? '#cbd5e1' : '#64748b' }}>▼</button>
+                                        <button onClick={() => handleMoveBenefit(idx, 'up')} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#cbd5e1' : '#64748b' }}>â–²</button>
+                                        <button onClick={() => handleMoveBenefit(idx, 'down')} disabled={idx === benefits.length - 1} style={{ background: 'none', border: 'none', cursor: idx === benefits.length - 1 ? 'default' : 'pointer', color: idx === benefits.length - 1 ? '#cbd5e1' : '#64748b' }}>â–¼</button>
                                     </div>
                                     <span style={{ flex: 1, color: '#0f172a' }}>{b}</span>
                                     <button onClick={() => handleRemoveBenefit(idx)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={18} /></button>
@@ -180,7 +211,7 @@ const SubscriptionsTab: React.FC = () => {
                             return (
                                 <tr key={plan.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '16px 24px', fontWeight: 'bold', color: '#0f172a' }}>{plan.name}</td>
-                                    <td style={{ padding: '16px 24px', color: '#475569' }}>₹{plan.price}</td>
+                                    <td style={{ padding: '16px 24px', color: '#475569' }}>â‚¹{plan.price}</td>
                                     <td style={{ padding: '16px 24px', color: '#475569' }}>{plan.maxQrCodes}</td>
                                     <td style={{ padding: '16px 24px', color: '#475569' }}>{parsedBenefits.length} items</td>
                                     <td style={{ padding: '16px 24px' }}>

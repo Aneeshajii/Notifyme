@@ -132,7 +132,20 @@ export default function InboxScreen() {
     }
   };
 
+    const handleFeatureCheck = (featureKey: string, featureName: string) => {
+    if (!user?.isPremium || !user?.subscription) {
+      alert(Upgrade to Premium to use  + featureName + .);
+      return false;
+    }
+    if (!user.subscription[featureKey]) {
+      alert(Your current plan does not support  + featureName + . Please upgrade your plan.);
+      return false;
+    }
+    return true;
+  };
+
   const pickImage = async () => {
+    if (!handleFeatureCheck('allowImageUpload', 'Image Sharing')) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
@@ -164,6 +177,7 @@ export default function InboxScreen() {
   };
 
   const shareLocation = async () => {
+    if (!handleFeatureCheck('allowLocationShare', 'Location Sharing')) return;
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       alert('Permission to access location was denied');
@@ -182,6 +196,7 @@ export default function InboxScreen() {
   };
 
   const startRecording = async () => {
+    if (!handleFeatureCheck('allowVoiceNotes', 'Voice Notes')) return;
     try {
       const perm = await Audio.requestPermissionsAsync();
       if (perm.status !== 'granted') return alert('Microphone permission required');
@@ -242,7 +257,7 @@ export default function InboxScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         {conversations.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyEmoji}>Ã°Å¸â€™Â¬</Text>
+            <Text style={styles.emptyEmoji}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬</Text>
             <Text style={styles.emptyTitle}>No messages yet</Text>
             <Text style={styles.emptySubtitle}>When someone scans your QR and messages you, it will appear here.</Text>
           </View>
@@ -334,7 +349,7 @@ export default function InboxScreen() {
           }}
         />
         <View style={styles.inputBar}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => alert('Voice recording coming in next update!')}>
+          <TouchableOpacity style={styles.iconBtn} onPress={recording ? stopRecording : startRecording}>
             <Ionicons name="mic" size={24} color="#8e8e93" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={pickImage}>

@@ -237,7 +237,7 @@ router.get('/admin/all', verifyToken, requireRole('MASTER_ADMIN', 'ADMIN'), asyn
 // Admin create a new plan
 router.post('/', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
     try {
-        const { name, price, maxQrCodes, benefits, isActive } = req.body;
+        const { name, price, maxQrCodes, benefits, isActive, allowAudioCall, allowVideoCall, allowVoiceNotes, allowImageUpload, allowLocationShare } = req.body;
         const newPlan = await prisma.subscriptionPlan.create({
             data: {
                 name,
@@ -257,7 +257,7 @@ router.post('/', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
 // Admin edit plan
 router.put('/:id', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
     try {
-        const { name, price, maxQrCodes, benefits, isActive } = req.body;
+        const { name, price, maxQrCodes, benefits, isActive, allowAudioCall, allowVideoCall, allowVoiceNotes, allowImageUpload, allowLocationShare } = req.body;
         const updatedPlan = await prisma.subscriptionPlan.update({
             where: { id: req.params.id },
             data: {
@@ -288,3 +288,4 @@ router.delete('/:id', verifyToken, requireRole('MASTER_ADMIN'), async (req, res)
 });
 
 module.exports = router;
+

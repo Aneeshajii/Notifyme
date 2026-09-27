@@ -179,7 +179,20 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
         }
     };
 
+        const handleFeatureCheck = (featureKey: string, featureName: string) => {
+        if (!user?.isPremium || !user?.subscription) {
+            alert(Upgrade to Premium to use  + featureName + .);
+            return false;
+        }
+        if (!user.subscription[featureKey]) {
+            alert(Your current plan does not support  + featureName + . Please upgrade your plan.);
+            return false;
+        }
+        return true;
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!handleFeatureCheck('allowImageUpload', 'Image Sharing')) return;
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const url = await uploadMedia(file, file.name.split('.').pop() || 'jpg');
@@ -190,6 +203,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
     };
 
     const shareLocation = async () => {
+        if (!handleFeatureCheck('allowLocationShare', 'Location Sharing')) return;
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (position) => {
                 await handleSendReply("My Location", 'location', null, position.coords.latitude, position.coords.longitude);

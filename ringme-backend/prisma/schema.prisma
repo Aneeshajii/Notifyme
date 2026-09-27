@@ -79,6 +79,11 @@ model SubscriptionPlan {
   price       Float
   maxQrCodes  Int
   benefits    String   @default("[]") // JSON string array of benefits
+    allowAudioCall    Boolean  @default(false)
+    allowVideoCall    Boolean  @default(false)
+    allowVoiceNotes   Boolean  @default(false)
+    allowImageUpload  Boolean  @default(false)
+    allowLocationShare Boolean @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
