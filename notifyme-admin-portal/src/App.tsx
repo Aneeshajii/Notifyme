@@ -669,7 +669,13 @@ function App() {
             <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading ecosystem data...</div>
           ) : (
             <>
-              {activeTab === 'dashboard' && (
+              {activeTab === 'announcements' && <AnnouncementsTab />}
+
+                {activeTab === 'subscriptions' && <SubscriptionsTab />}
+
+                {activeTab === 'communications' && <CommunicationsTab />}
+
+                {activeTab === 'dashboard' && (
                 <>
                   <div className="header-actions">
                     <div><h1>System Overview</h1><p>Real-time ecosystem analytics.</p></div>
@@ -1015,6 +1021,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
