@@ -458,9 +458,9 @@ function urlBase64ToUint8Array(base64String: string) {
   const fetchTagsAndMessages = async (userId: string) => {
     try {
       const [tagsRes, msgsRes, annRes] = await Promise.all([
-        axios.get(${API_BASE}/tags/user/),
-        axios.get(${API_BASE}/messages/user/),
-        axios.get(${API_BASE}/announcements/active, { headers: { Authorization: Bearer  } }).catch(() => ({ data: [] }))
+        axios.get(`${API_BASE}/tags/user/`),
+        axios.get(`${API_BASE}/messages/user/`),
+        axios.get(`${API_BASE}/announcements/active`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).catch(() => ({ data: [] }))
       ]);
       setTags(tagsRes.data);
       setMessages(msgsRes.data);
@@ -658,7 +658,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
           <div style={{ marginBottom: '16px' }}>
             <div style={{ padding: '0 16px', fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => toggleCategory('account')}>
-              ACCOUNT & SECURITY {expandedCategories.account ? 'â–¼' : 'â–¶'}
+              ACCOUNT & SECURITY {expandedCategories.account ? 'Ã¢â€“Â¼' : 'Ã¢â€“Â¶'}
             </div>
             {expandedCategories.account && (
               <>
@@ -1017,7 +1017,7 @@ function urlBase64ToUint8Array(base64String: string) {
               <div style={{ background: 'white', padding: '48px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', marginTop: '24px' }}>
                   <Lock size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
                   <h2 style={{ color: '#0f172a', marginBottom: '8px', textTransform: 'capitalize' }}>{activeTab.replace('_', ' ')} Module</h2>
-                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. Weâ€™re working on this feature.</p>
+                  <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto' }}>Coming soon. WeÃ¢â‚¬â„¢re working on this feature.</p>
               </div>
           )}
             </motion.div>
@@ -1213,6 +1213,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default App;
+
 
 
 
