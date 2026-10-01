@@ -302,7 +302,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
                       
                       <h2 style={{ fontSize: '20px', color: '#64748b', fontWeight: '600', margin: '0 0 16px' }}>{plan.name}</h2>
                       <div style={{ fontSize: '48px', fontWeight: '800', color: '#0f172a', marginBottom: '8px', letterSpacing: '-2px', display: 'flex', alignItems: 'baseline' }}>
-                          â‚¹{plan.price} <span style={{ fontSize: '16px', fontWeight: '500', color: '#64748b', letterSpacing: 'normal', marginLeft: '4px' }}>/mo</span>
+                          &#8377; {plan.price} <span style={{ fontSize: '16px', fontWeight: '500', color: '#64748b', letterSpacing: 'normal', marginLeft: '4px' }}>/mo</span>
                       </div>
                       
                       <p style={{ color: '#475569', fontSize: '15px', marginBottom: '32px', lineHeight: '1.5' }}>

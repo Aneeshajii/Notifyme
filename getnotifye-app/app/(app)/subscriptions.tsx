@@ -135,7 +135,7 @@ export default function SubscriptionsScreen() {
                 
                 <Text style={styles.planName}>{plan.name}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.price}>Ã¢â€šÂ¹{plan.price}</Text>
+                  <Text style={styles.price}>{String.fromCharCode(8377)} {plan.price}</Text>
                   <Text style={styles.period}>/mo</Text>
                 </View>
                 
