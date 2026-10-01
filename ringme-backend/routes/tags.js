@@ -112,7 +112,8 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
             allowMessages: true,
             allowAudioCalls: true,
             allowVideoCalls: true,
-            allowImageSharing: true
+            allowImageSharing: true,
+            subscription: true
           }
         }
       }
@@ -157,8 +158,8 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
         isPremium: tag.owner.isPremium,
         placeholderMessage: tag.placeholderMessage,
         allowMessages: tag.owner.allowMessages,
-        allowAudioCalls: tag.owner.isPremium ? tag.owner.allowAudioCalls : false,
-        allowVideoCalls: tag.owner.isPremium ? tag.owner.allowVideoCalls : false,
+        allowAudioCalls: (tag.owner.isPremium && tag.owner.subscription?.allowAudioCall) ? tag.owner.allowAudioCalls : false,
+        allowVideoCalls: (tag.owner.isPremium && tag.owner.subscription?.allowVideoCall) ? tag.owner.allowVideoCalls : false,
         allowImageSharing: tag.owner.allowImageSharing,
         phone: tag.owner.hidePhone ? null : tag.owner.phone,
         email: tag.owner.hideEmail ? null : tag.owner.email
