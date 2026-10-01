@@ -46,9 +46,9 @@ export default function AnnouncementsTab() {
         formData.append('media', file);
         try {
             const token = localStorage.getItem('adminToken');
-            const res = await axios.post(${API_BASE}/messages/upload, formData, {
+            const res = await axios.post(`${API_BASE}/messages/upload`, formData, {
                 headers: { 
-                    Authorization: Bearer ,
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'multipart/form-data'
                 }
             });
