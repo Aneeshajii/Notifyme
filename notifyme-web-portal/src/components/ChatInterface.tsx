@@ -181,11 +181,11 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
 
         const handleFeatureCheck = (featureKey: string, featureName: string) => {
         if (!user?.isPremium || !user?.subscription) {
-            alert(Upgrade to Premium to use  + featureName + .);
+            alert('Upgrade to Premium to use ' + featureName + '.');
             return false;
         }
         if (!user.subscription[featureKey]) {
-            alert(Your current plan does not support  + featureName + . Please upgrade your plan.);
+            alert('Your current plan does not support ' + featureName + '. Please upgrade your plan.');
             return false;
         }
         return true;
@@ -592,5 +592,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
         </div>
     );
 }
+
+
 
 
