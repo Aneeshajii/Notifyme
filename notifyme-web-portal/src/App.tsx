@@ -460,7 +460,7 @@ function urlBase64ToUint8Array(base64String: string) {
       const [tagsRes, msgsRes, annRes] = await Promise.all([
         axios.get(`${API_BASE}/tags/user/`),
         axios.get(`${API_BASE}/messages/user/`),
-        axios.get(`${API_BASE}/announcements/active`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).catch(() => ({ data: [] }))
+        axios.get(`${API_BASE}/announcements/active`).catch(() => ({ data: [] }))
       ]);
       setTags(tagsRes.data);
       setMessages(msgsRes.data);
