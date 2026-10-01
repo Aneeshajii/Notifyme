@@ -134,11 +134,11 @@ export default function InboxScreen() {
 
     const handleFeatureCheck = (featureKey: string, featureName: string) => {
     if (!user?.isPremium || !user?.subscription) {
-      alert(Upgrade to Premium to use  + featureName + .);
+      alert('Upgrade to Premium to use ' + featureName + '.');
       return false;
     }
     if (!user.subscription[featureKey]) {
-      alert(Your current plan does not support  + featureName + . Please upgrade your plan.);
+      alert('Your current plan does not support ' + featureName + '. Please upgrade your plan.');
       return false;
     }
     return true;
@@ -450,3 +450,5 @@ const styles = StyleSheet.create({
   sendBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#c7c7cc' },
 });
+
+

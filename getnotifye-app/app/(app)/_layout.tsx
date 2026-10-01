@@ -121,7 +121,7 @@ export default function AppLayout() {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
           <View style={{ backgroundColor: 'white', width: '100%', borderRadius: 24, padding: 24, maxHeight: '80%' }}>
             {!!announcement.imageUrl && (
-              <Image source={{ uri: announcement.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
+              <Image source={{ uri: announcement.imageUrl.startsWith('/') ? api.defaults.baseURL?.replace('/api', '') + announcement.imageUrl : announcement.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 16, marginBottom: 16 }} resizeMode="cover" />
             )}
             <ScrollView>
               <Text style={{ fontSize: 24, fontWeight: '800', marginBottom: 12, color: '#0f172a' }}>{announcement.title}</Text>
