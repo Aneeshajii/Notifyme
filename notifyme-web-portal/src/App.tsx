@@ -1030,7 +1030,7 @@ function urlBase64ToUint8Array(base64String: string) {
       {announcements.length > 0 && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '500px', maxHeight: '80vh', overflowY: 'auto' }}>
-            {announcements[0].imageUrl && <img src={announcements[0].imageUrl} alt="Announcement" style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px', marginBottom: '16px' }} />}
+            {announcements[0].imageUrl && <img src={announcements[0].imageUrl.startsWith('/') ? API_BASE.replace('/api', '') + announcements[0].imageUrl : announcements[0].imageUrl} alt="Announcement" style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px', marginBottom: '16px' }} />}
             <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '12px', color: '#0f172a' }}>{announcements[0].title}</h2>
             <p style={{ fontSize: '16px', color: '#475569', lineHeight: '24px', marginBottom: '24px', whiteSpace: 'pre-wrap' }}>{announcements[0].description}</p>
             
