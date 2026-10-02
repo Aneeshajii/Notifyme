@@ -244,7 +244,12 @@ router.post('/', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) => {
                 price: parseFloat(price),
                 maxQrCodes: parseInt(maxQrCodes, 10),
                 benefits: JSON.stringify(benefits || []),
-                isActive: isActive ?? true
+                isActive: isActive ?? true,
+                allowAudioCall: allowAudioCall ?? false,
+                allowVideoCall: allowVideoCall ?? false,
+                allowVoiceNotes: allowVoiceNotes ?? false,
+                allowImageUpload: allowImageUpload ?? false,
+                allowLocationShare: allowLocationShare ?? false
             }
         });
         res.status(201).json(newPlan);
@@ -265,7 +270,12 @@ router.put('/:id', verifyToken, requireRole('MASTER_ADMIN'), async (req, res) =>
                 price: price !== undefined ? parseFloat(price) : undefined,
                 maxQrCodes: maxQrCodes !== undefined ? parseInt(maxQrCodes, 10) : undefined,
                 benefits: benefits ? JSON.stringify(benefits) : undefined,
-                isActive
+                isActive,
+                allowAudioCall,
+                allowVideoCall,
+                allowVoiceNotes,
+                allowImageUpload,
+                allowLocationShare
             }
         });
         res.json(updatedPlan);
