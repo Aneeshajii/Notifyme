@@ -20,6 +20,8 @@ interface TagData {
   allowAudioCalls?: boolean;
   allowVideoCalls?: boolean;
   allowImageSharing?: boolean;
+  allowVoiceNotes?: boolean;
+  allowLocationShare?: boolean;
 }
 
 const GetNotifyeLogo = ({ size = 48 }: { size?: number }) => (
@@ -465,9 +467,9 @@ function ScannerProfile() {
                                         <Paperclip size={22} />
                                     </button>
                                 )}
-                                <button onClick={toggleRecording} style={{ background: isRecording ? '#ef4444' : 'transparent', borderRadius: '50%', padding: '6px', border: 'none', cursor: 'pointer', color: isRecording ? 'white' : '#64748b' }}>
+                                {tagData.allowVoiceNotes !== false && (<button onClick={toggleRecording} style={{ background: isRecording ? '#ef4444' : 'transparent', borderRadius: '50%', padding: '6px', border: 'none', cursor: 'pointer', color: isRecording ? 'white' : '#64748b' }}>
                                     {isRecording ? <MicOff size={22} /> : <Mic size={22} />}
-                                </button>
+                                </button>)}
                                 
                                 {isRecording ? (
                                     <div style={{ flex: 1, color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -498,7 +500,7 @@ function ScannerProfile() {
                 </div>
             )}
 
-            <button onClick={shareLocation} style={{ background: 'white', color: '#0f172a', border: '1px solid rgba(0,0,0,0.05)', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+            {tagData.allowLocationShare !== false && (<button onClick={shareLocation} style={{ background: 'white', color: '#0f172a', border: '1px solid rgba(0,0,0,0.05)', padding: '24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', width: '100%', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)', transition: 'all 0.2s', fontSize: '20px', fontWeight: '700' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
               <div style={{ background: '#fef2f2', padding: '16px', borderRadius: '50%' }}>
                   <MapPin size={28} color="#ef4444" />
               </div>
