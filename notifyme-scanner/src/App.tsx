@@ -505,7 +505,7 @@ function ScannerProfile() {
                   <MapPin size={28} color="#ef4444" />
               </div>
               Send Live Location
-            </button>
+            </button>)}
 
           </div>
         )}
