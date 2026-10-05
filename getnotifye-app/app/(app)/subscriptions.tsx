@@ -54,7 +54,9 @@ export default function SubscriptionsScreen() {
   };
 
   const currentPlanId = user?.subscription?.planId || user?.subscriptionId;
-  const currentPlan = plans.find(p => p.id === currentPlanId);
+  const basicPlanId = plans.find(p => p.name.toLowerCase() === 'basic' || p.price === 0)?.id;
+  const effectiveCurrentPlanId = currentPlanId || basicPlanId;
+  const currentPlan = plans.find(p => p.id === effectiveCurrentPlanId);
 
   if (loading) {
     return (
@@ -121,7 +123,7 @@ export default function SubscriptionsScreen() {
 
         <View style={styles.plansContainer}>
           {plans.map((plan) => {
-            const isCurrent = currentPlanId === plan.id;
+            const isCurrent = effectiveCurrentPlanId === plan.id;
             let benefits: string[] = [];
             try { benefits = JSON.parse(plan.benefits || "[]"); } catch (e) {}
             if (plan.allowAudioCall && !benefits.includes('Audio Calling')) benefits.push('Audio Calling');
