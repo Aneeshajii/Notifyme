@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AppLayout() {
-  const { messages } = useAuth();
+    const { messages, user } = useAuth();
   const router = useRouter();
   const unreadCount = messages.filter((m: any) => m.status !== 'read' && m.senderRole === 'scanner').length;
 
@@ -34,8 +34,30 @@ export default function AppLayout() {
   };
 
   return (
+
     <>
+    {user && user.emailVerified === false && (
+      <View style={{ backgroundColor: '#fef3c7', padding: 12, paddingTop: 50, borderBottomWidth: 1, borderBottomColor: '#f59e0b', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 10 }}>
+          <Ionicons name="warning" size={20} color="#d97706" />
+          <Text style={{ color: '#92400e', marginLeft: 8, fontSize: 13, fontWeight: '500', flexShrink: 1 }}>
+            Please verify your email to unlock all features.
+          </Text>
+        </View>
+        <TouchableOpacity 
+          style={{ backgroundColor: '#d97706', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 }}
+          onPress={() => {
+            api.post('/auth/resend-verification', {})
+              .then(() => alert('Verification email sent! Check your inbox.'))
+              .catch(err => alert(err?.response?.data?.message || 'Failed to resend.'));
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: '600', fontSize: 12 }}>Resend</Text>
+        </TouchableOpacity>
+      </View>
+    )}
     <Tabs
+
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,

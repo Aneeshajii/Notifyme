@@ -7,6 +7,7 @@ import { SOCKET_URL } from '../constants/config';
 interface User {
   id: string;
   email: string;
+  emailVerified?: boolean;
   name?: string;
   lastName?: string;
   phone?: string;
