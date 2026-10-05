@@ -28,6 +28,8 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
   }, [countdown]);
   
   const currentPlanId = profileData?.subscriptionId;
+    const basicPlanId = plans.find(p => p.name.toLowerCase() === 'basic' || p.price === 0)?.id;
+    const effectiveCurrentPlanId = currentPlanId || basicPlanId;
 
   useEffect(() => {
       const fetchPlans = async () => {
@@ -271,7 +273,7 @@ export default function Subscriptions({ profileData, onSubscriptionUpdate }: { p
       <div className="subscriptions-grid">
           
           {plans.map((plan) => {
-              const isCurrent = currentPlanId === plan.id;
+              const isCurrent = effectiveCurrentPlanId === plan.id;
                 const targetPlanName = new URLSearchParams(window.location.search).get('plan');
                 const isTarget = targetPlanName && plan.name.toLowerCase() === targetPlanName.toLowerCase();
               let benefits = [];
