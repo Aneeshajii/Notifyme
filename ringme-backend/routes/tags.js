@@ -22,7 +22,7 @@ const getScanUrl = (uuid) => {
 };
 
 // POST /api/tags/create
-router.post('/create', verifyToken, requireVerifiedEmail, async (req, res) => {
+router.post('/create', verifyToken, async (req, res) => {
   try {
     const ownerId = req.user.id;
     const { name, plateNumber } = req.body;
