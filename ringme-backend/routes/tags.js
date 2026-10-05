@@ -105,6 +105,7 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
             name: true, 
             phone: true, 
             email: true,
+            emailVerified: true,
             isBlocked: true, 
             isPremium: true,
             hidePhone: true,
@@ -129,6 +130,10 @@ router.get('/:uuid', qrScanLimiter, async (req, res) => {
 
     if (tag.owner.isBlocked) {
       return res.status(403).json({ message: 'This account is currently unavailable.' });
+    }
+
+    if (tag.owner.emailVerified === false) {
+      return res.status(403).json({ message: 'The owner of this QR code has not verified their account yet.' });
     }
 
     if (scannerId) {
