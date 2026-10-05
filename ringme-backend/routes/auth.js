@@ -9,7 +9,15 @@ const path = require('path');
 const { authenticator } = require('otplib');
 const qrcode = require('qrcode');
 const { JWT_SECRET, verifyToken, requireRole } = require('../middleware/auth');
+const { sendVerificationEmail } = require('../utils/email');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10,
+    message: { message: 'Too many requests from this IP, please try again after an hour' }
+});
 
 // Setup Multer for Profile Picture Uploads
 const storage = multer.diskStorage({
@@ -105,7 +113,7 @@ router.post('/web-handoff/exchange', async (req, res) => {
 
 // POST /api/auth/register
 // Registers a new user
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, password, name, lastName, googleId, phone } = req.body;
     
@@ -153,6 +161,7 @@ router.post('/register', async (req, res) => {
     });
     
     const tokens = generateTokens(user);
+    await sendVerificationEmail(user);
     
     await prisma.auditLog.create({
       data: {
@@ -1298,5 +1307,67 @@ router.delete('/blocked/:scannerId', verifyToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+
+// POST /api/auth/verify-email
+router.post('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ message: 'Missing token' });
+
+        const jwt = require('jsonwebtoken');
+        const JWT_SECRET = process.env.JWT_SECRET || 'super-secure-production-secret-replace-me';
+        
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ message: 'Invalid or expired token' });
+        }
+
+        if (decoded.type !== 'email_verification') {
+            return res.status(400).json({ message: 'Invalid token type' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        
+        if (user.email !== decoded.email) {
+            return res.status(400).json({ message: 'Email mismatch. Have you changed your email?' });
+        }
+
+        if (user.emailVerified) {
+            return res.status(400).json({ message: 'Email already verified' });
+        }
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { emailVerified: true }
+        });
+
+        res.json({ message: 'Email verified successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// POST /api/auth/resend-verification
+router.post('/resend-verification', verifyToken, authLimiter, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        
+        if (user.emailVerified) {
+            return res.status(400).json({ message: 'Email already verified' });
+        }
+
+        await sendVerificationEmail(user);
+        res.json({ message: 'Verification email sent' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 module.exports = router;

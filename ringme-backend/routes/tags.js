@@ -3,7 +3,7 @@ const router = express.Router();
 const qrcode = require('qrcode');
 const crypto = require('crypto');
 const prisma = require('../prismaClient');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, requireRole, requireVerifiedEmail } = require('../middleware/auth');
 
 const rateLimit = require('express-rate-limit');
 
@@ -22,7 +22,7 @@ const getScanUrl = (uuid) => {
 };
 
 // POST /api/tags/create
-router.post('/create', verifyToken, async (req, res) => {
+router.post('/create', verifyToken, requireVerifiedEmail, async (req, res) => {
   try {
     const ownerId = req.user.id;
     const { name, plateNumber } = req.body;

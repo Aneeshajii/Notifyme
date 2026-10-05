@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../prismaClient');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, requireRole, requireVerifiedEmail } = require('../middleware/auth');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/subscriptions/create-order
-router.post('/create-order', verifyToken, async (req, res) => {
+router.post('/create-order', verifyToken, requireVerifiedEmail, async (req, res) => {
     try {
         const { planId } = req.body;
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
@@ -60,7 +60,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
 });
 
 // POST /api/subscriptions/create-payment-link
-router.post('/create-payment-link', verifyToken, async (req, res) => {
+router.post('/create-payment-link', verifyToken, requireVerifiedEmail, async (req, res) => {
     try {
         const { planId } = req.body;
         const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });

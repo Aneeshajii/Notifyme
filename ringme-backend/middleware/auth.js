@@ -37,8 +37,30 @@ const requireRole = (...allowedRoles) => {
     };
 };
 
+
+
+const requireVerifiedEmail = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+        
+        if (!user || !user.emailVerified) {
+            return res.status(403).json({ message: 'Email verification required', code: 'EMAIL_UNVERIFIED' });
+        }
+        next();
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     verifyToken,
     requireRole,
-    JWT_SECRET
+    JWT_SECRET,
+    requireVerifiedEmail
 };
+
