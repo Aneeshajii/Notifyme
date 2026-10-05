@@ -33,7 +33,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage,
-    limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit for media
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit for media
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('audio/') || file.mimetype.startsWith('video/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only media files are allowed.'));
+        }
+    }
 });
 
 const messageRateLimiter = rateLimit({
