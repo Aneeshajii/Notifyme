@@ -25,6 +25,7 @@ const ScanHistory = lazy(() => import('./components/ScanHistory'));
 const SupportCenter = lazy(() => import('./components/SupportCenter'));
 import AboutUs from './components/AboutUs';
 import PublicHomepage from './components/PublicHomepage';
+import VerifyEmail from './pages/VerifyEmail';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://notifyme-api-px9n.onrender.com/api';
 
@@ -33,6 +34,7 @@ interface UserType {
   name: string;
   lastName?: string;
   email: string;
+  emailVerified?: boolean;
   phone?: string;
   address?: string;
   pincode?: string;
@@ -101,6 +103,10 @@ axios.interceptors.response.use(
 );
 
 function App() {
+  const isVerifyEmail = window.location.pathname.includes('/verify-email');
+  if (isVerifyEmail) {
+    return <VerifyEmail />;
+  }
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingSession, setIsCheckingSession] = useState<boolean>(true);
   const [user, setUser] = useState<UserType | null>(null);
@@ -580,6 +586,10 @@ function urlBase64ToUint8Array(base64String: string) {
   };
 
   const handleCreateTag = async () => {
+    if (user && user.emailVerified === false) {
+      alert('Please verify your email address to create QR codes.');
+      return;
+    }
     const tagName = prompt('Enter a name for this tag (e.g., My Tesla):');
     if (!tagName || !user) return;
     try {
@@ -639,6 +649,27 @@ function urlBase64ToUint8Array(base64String: string) {
   return (
     <div className="dashboard-container fade-in">
       <audio ref={callerAudio} />
+
+      {user && user.emailVerified === false && (
+        <div style={{ backgroundColor: '#fef3c7', borderBottom: '1px solid #f59e0b', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TriangleAlert size={18} color="#d97706" />
+            <span style={{ color: '#92400e', fontSize: '14px', fontWeight: '500' }}>
+              Please verify your email address to unlock full access to GetNotify features.
+            </span>
+          </div>
+          <button 
+            onClick={() => {
+              axios.post(`${API_BASE}/auth/resend-verification`, {}, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
+              }).then(() => alert('Verification email sent! Check your inbox.')).catch(err => alert(err.response?.data?.message || 'Failed to resend.'));
+            }}
+            style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+          >
+            Resend Email
+          </button>
+        </div>
+      )}
 
       {/* Sidebar */}
       <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
