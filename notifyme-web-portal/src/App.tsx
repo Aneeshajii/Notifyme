@@ -650,16 +650,6 @@ function urlBase64ToUint8Array(base64String: string) {
     <div className="dashboard-container fade-in">
       <audio ref={callerAudio} />
 
-` }
-              }).then(() => alert('Verification email sent! Check your inbox.')).catch(err => alert(err.response?.data?.message || 'Failed to resend.'));
-            }}
-            style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-          >
-            Resend Email
-          </button>
-        </div>
-      )}
-
       {/* Sidebar */}
       <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="brand">
@@ -722,8 +712,7 @@ function urlBase64ToUint8Array(base64String: string) {
           </div>
           <button 
             onClick={() => {
-              axios.post(\`${API_BASE}/auth/resend-verification\`, {}, {
-                headers: { Authorization: \`Bearer ${localStorage.getItem('userToken')}\` }
+              axios.post(`${API_BASE}/auth/resend-verification`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
               }).then(() => alert('Verification email sent! Check your inbox.')).catch(err => alert(err.response?.data?.message || 'Failed to resend.'));
             }}
             style={{ backgroundColor: '#d97706', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
@@ -1254,6 +1243,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default App;
+
 
 
 
