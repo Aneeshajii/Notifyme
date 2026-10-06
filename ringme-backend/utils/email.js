@@ -5,7 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secure-production-secret-rep
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: process.env.SMTP_PORT || 587,
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+    secure: process.env.SMTP_PORT == '465',
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
