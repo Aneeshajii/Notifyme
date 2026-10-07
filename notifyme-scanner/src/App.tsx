@@ -286,7 +286,7 @@ function ScannerProfile() {
                   setIsSendingMsg(false);
               };
               
-              mediaRecorder.start(500);
+              mediaRecorder.start();
               setIsRecording(true);
               setRecordingTime(0);
           } catch (err) {
