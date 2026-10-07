@@ -9,7 +9,7 @@ const sendVerificationEmail = async (user) => {
         { expiresIn: '24h' }
     );
 
-    const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
+    const WEB_URL = process.env.WEB_URL && !process.env.WEB_URL.includes('localhost') ? process.env.WEB_URL : 'https://notifymehh.vercel.app';
     const verificationUrl = `${WEB_URL}/verify-email?token=${token}`;
 
     const htmlContent = `
