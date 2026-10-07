@@ -217,7 +217,10 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
 
     const toggleRecording = async () => {
         if (isRecording) {
-            if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+            if (mediaRecorderRef.current) {
+                try { mediaRecorderRef.current.requestData(); } catch(e) {}
+                mediaRecorderRef.current.stop();
+            }
             setIsRecording(false);
             setRecordingTime(0);
         } else {
@@ -252,7 +255,7 @@ export default function ChatInterface({ messages, setMessages, user, fetchTagsAn
                     if (url) await handleSendReply('Voice Message', 'audio', url);
                 };
                 
-                mediaRecorder.start(500); // 500ms timeslice for cross-browser reliability
+                mediaRecorder.start(); // Remove timeslice for better cross-browser reliability (especially Safari)
                 setIsRecording(true);
                 setRecordingTime(0);
             } catch (err) {
