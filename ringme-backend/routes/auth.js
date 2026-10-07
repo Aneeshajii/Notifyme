@@ -1362,7 +1362,8 @@ router.post('/resend-verification', verifyToken, authLimiter, async (req, res) =
             return res.status(400).json({ message: 'Email already verified' });
         }
 
-        await sendVerificationEmail(user);
+        const sent = await sendVerificationEmail(user);
+        if (!sent) throw new Error('Failed to send verification email. Please try again.');
         res.json({ message: 'Verification email sent' });
     } catch (error) {
         res.status(500).json({ message: error.message });
