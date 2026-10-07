@@ -16,6 +16,9 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
+  const [isOtp, setIsOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [registrationToken, setRegistrationToken] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -95,9 +98,9 @@ export default function LoginScreen() {
             <View style={styles.cardHeader}>
               <Ionicons name="shield" size={32} color="#4f46e5" />
             </View>
-            <Text style={styles.cardTitle}>{isRegister ? 'Create Account' : 'Login to continue'}</Text>
+            <Text style={styles.cardTitle}>{isOtp ? 'Verify Email' : isRegister ? 'Create Account' : 'Login to continue'}</Text>
             <Text style={styles.cardSubtitle}>
-              {isRegister ? 'Join GetNotifye today' : 'Please log in to use this feature and manage your GetNotifye account.'}
+              {isOtp ? 'We sent a 6-digit code to your email' : isRegister ? 'Join GetNotifye today' : 'Please log in to use this feature and manage your GetNotifye account.'}
             </Text>
 
             {isRegister && (
