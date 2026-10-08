@@ -217,7 +217,7 @@ function App() {
         formData.append('media', file);
         try {
             const res = await axios.post(`${API_BASE}/messages/upload`, formData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'multipart/form-data' }
+                headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}`, 'Content-Type': 'multipart/form-data' }
             });
             if (res.data.url) setEmergencyImage(res.data.url);
         } catch (err) {
@@ -238,7 +238,7 @@ function App() {
                 deliveryTypes: ['IN_APP'],
                 targetAudience: 'SPECIFIC',
                 selectedUsers: [selectedUser.id]
-            }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+            }, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
             setIsSendingEmergency(false);
             setEmergencyTitle('');
             setEmergencyDesc('');
@@ -494,7 +494,24 @@ function App() {
       }
   };
 
-  const handleLogout = async () => {
+      useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response?.status === 401) {
+                    console.warn("401 intercepted");
+                    localStorage.removeItem('adminToken');
+                    setToken(null);
+                    setIsAuthenticated(false);
+                    setIsMfaStep(false);
+                }
+                return Promise.reject(error);
+            }
+        );
+        return () => axios.interceptors.response.eject(interceptor);
+    }, []);
+
+const handleLogout = async () => {
       try {
           await axios.post(`${API_BASE}/auth/logout`);
       } catch (err) {
