@@ -1,3 +1,4 @@
+import { DeviceEventEmitter } from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { API_BASE } from '../constants/config';
@@ -24,6 +25,11 @@ api.interceptors.response.use(
       } catch {
         await SecureStore.deleteItemAsync('userToken');
         await SecureStore.deleteItemAsync('refreshToken');
+      }
+    }
+    if (error.response?.status === 403) {
+      if (error.response.data?.message === 'Account suspended. Contact support.' || error.response.data?.message === 'Account is blocked') {
+        DeviceEventEmitter.emit('user-blocked');
       }
     }
     return Promise.reject(error);

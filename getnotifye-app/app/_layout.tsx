@@ -4,12 +4,19 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Text, DeviceEventEmitter, TouchableOpacity } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 // Note: expo-notifications is removed here because it breaks Expo Go on Android SDK 53+.
 // Push notifications will require a custom EAS development build.
 
 function RootLayoutNav() {
+  const [isBlocked, setIsBlocked] = useState(false);
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('user-blocked', () => setIsBlocked(true));
+    return () => sub.remove();
+  }, []);
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -31,6 +38,30 @@ function RootLayoutNav() {
       }
     }
   }, [isAuthenticated, isLoading, user, segments]);
+
+  if (isBlocked) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <View style={{ backgroundColor: '#ef4444', padding: 20, borderRadius: 50, marginBottom: 20 }}>
+          <Text style={{ fontSize: 40 }}>🚫</Text>
+        </View>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 10 }}>Account Suspended</Text>
+        <Text style={{ fontSize: 16, color: '#94a3b8', textAlign: 'center', marginBottom: 30 }}>
+          Your account has been blocked by the administration. You can no longer access the app.
+        </Text>
+        <TouchableOpacity 
+          style={{ backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+          onPress={async () => {
+             await SecureStore.deleteItemAsync('userToken');
+             await SecureStore.deleteItemAsync('refreshToken');
+             setIsBlocked(false);
+             router.replace('/(auth)/login');
+          }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Return to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isLoading) {
     return (
