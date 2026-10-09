@@ -28,6 +28,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+    loginWithApple: (identityToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
   fetchTagsAndMessages: (userId: string) => Promise<void>;
@@ -139,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user, tags, messages, socket: socketRef.current,
       isLoading, isAuthenticated,
-      login, loginWithGoogle, logout, refreshUserData, fetchTagsAndMessages
+      login, loginWithGoogle, loginWithApple, logout, refreshUserData, fetchTagsAndMessages
     }}>
       {children}
     </AuthContext.Provider>
