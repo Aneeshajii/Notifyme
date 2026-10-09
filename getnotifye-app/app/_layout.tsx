@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
-import { ActivityIndicator, View, Text, DeviceEventEmitter, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, View, Text, DeviceEventEmitter, TouchableOpacity, Linking } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 // Note: expo-notifications is removed here because it breaks Expo Go on Android SDK 53+.
@@ -46,11 +46,19 @@ function RootLayoutNav() {
           <Text style={{ fontSize: 40 }}>🚫</Text>
         </View>
         <Text style={{ fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 10 }}>Account Suspended</Text>
-        <Text style={{ fontSize: 16, color: '#94a3b8', textAlign: 'center', marginBottom: 30 }}>
+        <Text style={{ fontSize: 16, color: '#94a3b8', textAlign: 'center', marginBottom: 10 }}>
           Your account has been blocked by the administration. You can no longer access the app.
         </Text>
+        <Text style={{ fontSize: 14, color: '#f87171', textAlign: 'center', marginBottom: 30, fontWeight: 'bold' }}>
+          Let us know if you think we made a mistake.
+        </Text>
         <TouchableOpacity 
-          style={{ backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+          style={{ backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginBottom: 16, width: '100%', alignItems: 'center' }}
+          onPress={() => Linking.openURL('mailto:support@getnotifye.com')}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Contact Support</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={{ backgroundColor: '#334155', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, width: '100%', alignItems: 'center' }}
           onPress={async () => {
              await SecureStore.deleteItemAsync('userToken');
              await SecureStore.deleteItemAsync('refreshToken');
