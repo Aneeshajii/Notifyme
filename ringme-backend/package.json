@@ -17,6 +17,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/client": "^5.21.0",
     "@vercel/blob": "^2.8.0",
+    "apple-signin-auth": "^2.1.0",
     "argon2": "^0.45.1",
     "axios": "^1.19.0",
     "cloudinary": "^2.10.0",
