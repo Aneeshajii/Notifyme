@@ -101,8 +101,9 @@ export default function PublicHomepage({ handleProtectedAction, setActiveTab }: 
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <li><button onClick={() => setActiveTab && setActiveTab('about_us')} style={{ background: 'none', border: 'none', padding: 0, color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px', cursor: 'pointer' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>About Us</button></li>
               <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Refund Policy</a></li>
-              <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Terms & Conditions</a></li>
-              <li><a href="#" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Privacy Policy</a></li>
+              <li><a href="/terms" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Terms & Conditions</a></li>
+              <li><a href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Privacy Policy</a></li>
+              <li><a href="/support" style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s', fontSize: '15px' }} onMouseOver={e=>e.currentTarget.style.color='white'} onMouseOut={e=>e.currentTarget.style.color='#94a3b8'}>Support & Contact</a></li>
             </ul>
           </div>
 
