@@ -1282,14 +1282,7 @@ function urlBase64ToUint8Array(base64String: string) {
               </>
             )}
 
-            <div style={{ marginTop: '24px', fontSize: '12px', color: '#94a3b8', lineHeight: '1.5' }}>
-                  By continuing, you agree to our{' '}
-                  <a href="/terms" target="_blank" style={{ color: '#4f46e5', textDecoration: 'underline' }}>Terms of Service</a>
-                  {' '}and{' '}
-                  <a href="/privacy" target="_blank" style={{ color: '#4f46e5', textDecoration: 'underline' }}>Privacy Policy</a>.
-              </div>
-
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
               <button onClick={() => { 
                   setShowLoginModal(false); 
                   setPendingAction(null); 
